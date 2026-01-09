@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Header extends StatelessWidget {
-  Header({super.key});
+  const Header({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +17,7 @@ class Header extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
             children: [
@@ -24,7 +25,6 @@ class Header extends StatelessWidget {
                 'assets/images/Logo.png',
                 height: 50,
               ),
-              SizedBox(width: 10),
               const Text(
                 'KOOK INK',
                 style: TextStyle(
@@ -38,13 +38,13 @@ class Header extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_none, size: 25),
-                color: Colors.black,
+                icon: const Icon(Icons.notifications_none,
+                    size: 30, color: Color.fromARGB(255, 70, 70, 70)),
                 onPressed: () {},
               ),
               IconButton(
-                icon: const Icon(Icons.send, size: 25),
-                color: Colors.black,
+                icon: const Icon(Icons.mode_comment_outlined,
+                    size: 25, color: Color.fromARGB(255, 70, 70, 70)),
                 onPressed: () {},
               ),
             ],

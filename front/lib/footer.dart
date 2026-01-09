@@ -6,10 +6,11 @@ class Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      height: 60, // hauteur fixe pour le footer
+      decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: const Color.fromARGB(255, 206, 206, 206),
+            color: Color.fromARGB(255, 206, 206, 206),
             width: 1,
           ),
         ),
@@ -17,32 +18,31 @@ class Footer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
-            icon: const Icon(Icons.home_outlined, size: 30),
+            icon: const Icon(Icons.home_outlined,
+                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.search_outlined, size: 30),
+            icon: const Icon(Icons.search_outlined,
+                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.add_outlined,
-                size: 35,
-                color: Color.fromARGB(
-                  251,
-                  248,
-                  165,
-                  87,
-                )),
+            icon: const Icon(Icons.web_stories_outlined,
+                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.web_stories_outlined, size: 30),
+            icon: const Icon(Icons.forum_outlined,
+                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.person_outline, size: 30),
+            icon: const Icon(Icons.person_outline,
+                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
             onPressed: () {},
           ),
         ],
