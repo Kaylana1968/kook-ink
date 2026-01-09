@@ -1,32 +1,56 @@
 import 'package:flutter/material.dart';
 
-class Header extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-
-  const Header({
-    super.key,
-    required this.title,
-  });
+class Header extends StatelessWidget {
+  Header({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: const Color(0xFFF5F5F5),
-      elevation: 0,
-      title: Row(
-        children: [
-          Image.asset(
-            'assets/images/Logo.png',
-            height: 30,
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Color.fromARGB(255, 206, 206, 206),
+            width: 1,
           ),
-          const SizedBox(width: 10),
-          Text(title),
+        ),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Image.asset(
+                'assets/images/Logo.png',
+                height: 50,
+              ),
+              SizedBox(width: 10),
+              const Text(
+                'KOOK INK',
+                style: TextStyle(
+                  color: Color.fromARGB(251, 248, 165, 87),
+                  fontWeight: FontWeight.normal,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none, size: 25),
+                color: Colors.black,
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: const Icon(Icons.send, size: 25),
+                color: Colors.black,
+                onPressed: () {},
+              ),
+            ],
+          ),
         ],
       ),
-      centerTitle: false,
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
