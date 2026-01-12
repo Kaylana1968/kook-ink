@@ -44,3 +44,21 @@ def update_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
         print(f"An error occurred: {e}")
     finally:
         db.close()
+
+@router.delete("/recipe/{recipe_id}")
+def delete_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
+    recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
+
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    db.delete(recipe)
+    
+    try:
+        db.commit()
+        print(f"Recipe deleted successfully with ID: {recipe.id}")
+    except Exception as e:
+        db.rollback()
+        print(f"An error occurred: {e}")
+    finally:
+        db.close()
+
