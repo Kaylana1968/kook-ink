@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class Header extends StatelessWidget {
-  const Header({super.key});
+  final Function(int) onItemSelected;
+
+  const Header({super.key, required this.onItemSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -40,12 +42,12 @@ class Header extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.notifications_none,
                     size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-                onPressed: () {},
+                onPressed: () => onItemSelected(5),
               ),
               IconButton(
                 icon: const Icon(Icons.mode_comment_outlined,
                     size: 25, color: Color.fromARGB(255, 70, 70, 70)),
-                onPressed: () {},
+                onPressed: () => onItemSelected(6),
               ),
             ],
           ),

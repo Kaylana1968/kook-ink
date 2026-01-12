@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 
 class Footer extends StatelessWidget {
-  const Footer({super.key});
+  final int currentIndex;
+  final Function(int) onItemSelected;
+
+  const Footer({super.key, required this.currentIndex, required this.onItemSelected});
+
+  Color _iconColor(int index) {
+    return currentIndex == index
+        ? const Color.fromARGB(251, 248, 165, 87)
+        : const Color.fromARGB(255, 70, 70, 70);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60, // hauteur fixe pour le footer
+      height: 60,
       decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -18,32 +27,26 @@ class Footer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           IconButton(
-            icon: const Icon(Icons.home_outlined,
-                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-            onPressed: () {},
+            icon: Icon(Icons.home_outlined, size: 30, color: _iconColor(0)),
+            onPressed: () => onItemSelected(0),
           ),
           IconButton(
-            icon: const Icon(Icons.search_outlined,
-                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-            onPressed: () {},
+            icon: Icon(Icons.search_outlined, size: 30, color: _iconColor(1)),
+            onPressed: () => onItemSelected(1),
           ),
           IconButton(
-            icon: const Icon(Icons.web_stories_outlined,
-                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-            onPressed: () {},
+            icon: Icon(Icons.web_stories_outlined, size: 30, color: _iconColor(2)),
+            onPressed: () => onItemSelected(2),
           ),
           IconButton(
-            icon: const Icon(Icons.forum_outlined,
-                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-            onPressed: () {},
+            icon: Icon(Icons.forum_outlined, size: 30, color: _iconColor(3)),
+            onPressed: () => onItemSelected(3),
           ),
           IconButton(
-            icon: const Icon(Icons.person_outline,
-                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-            onPressed: () {},
+            icon: Icon(Icons.person_outline, size: 30, color: _iconColor(4)),
+            onPressed: () => onItemSelected(4),
           ),
         ],
       ),
