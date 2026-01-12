@@ -3,12 +3,6 @@ import 'header.dart';
 import 'footer.dart';
 
 import 'home_screen.dart';
-import 'search_screen.dart';
-import 'forum_screen.dart';
-import 'profile_screen.dart';
-import 'mini_screen.dart';
-import 'notification_screen.dart';
-import 'message_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,9 +13,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const MyHomePage(),
+      home: MyHomePage(),
     );
   }
 }
@@ -34,21 +28,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _currentIndex = 0;
+  Widget page = const HomeScreen();
 
-  final List<Widget> _pages = const [
-    HomeScreen(),
-    SearchScreen(),
-    MiniScreen(),
-    ForumScreen(),
-    ProfileScreen(),
-    MessageScreen(),
-    NotificationScreen(),
-  ];
 
-  void _changePage(int index) {
+  void _changePage(Widget selectedPage) {
     setState(() {
-      _currentIndex = index;
+      page = selectedPage;
     });
   }
 
@@ -60,9 +45,9 @@ class _MyHomePageState extends State<MyHomePage> {
           Header(
             onItemSelected: _changePage,
           ),
-          Expanded(child: _pages[_currentIndex]),
+          Expanded(child: page),
           Footer(
-            currentIndex: _currentIndex,
+            currentPage: page,
             onItemSelected: _changePage,
           ),
         ],

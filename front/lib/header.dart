@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:front/message_screen.dart';
+import 'package:front/notification_screen.dart';
 
 class Header extends StatelessWidget {
-  final Function(int) onItemSelected;
+  final Function(Widget) onItemSelected;
 
   const Header({super.key, required this.onItemSelected});
 
@@ -16,7 +18,7 @@ class Header extends StatelessWidget {
           ),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -42,12 +44,12 @@ class Header extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.notifications_none,
                     size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-                onPressed: () => onItemSelected(5),
+                onPressed: () => onItemSelected(const NotificationScreen()),
               ),
               IconButton(
                 icon: const Icon(Icons.mode_comment_outlined,
                     size: 25, color: Color.fromARGB(255, 70, 70, 70)),
-                onPressed: () => onItemSelected(6),
+                onPressed: () => onItemSelected(const MessageScreen()),
               ),
             ],
           ),

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:front/forum_screen.dart';
+import 'package:front/home_screen.dart';
+import 'package:front/mini_screen.dart';
+import 'package:front/profile_screen.dart';
+import 'package:front/search_screen.dart';
 
 class Footer extends StatelessWidget {
-  final int currentIndex;
-  final Function(int) onItemSelected;
+  final Function(Widget) onItemSelected;
+  final Widget currentPage;
 
-  const Footer({super.key, required this.currentIndex, required this.onItemSelected});
+  const Footer({super.key, required this.currentPage, required this.onItemSelected});
 
-  Color _iconColor(int index) {
-    return currentIndex == index
+  Color getIconColor(Widget page) {
+    return currentPage == page
         ? const Color.fromARGB(251, 248, 165, 87)
         : const Color.fromARGB(255, 70, 70, 70);
   }
@@ -29,24 +34,24 @@ class Footer extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           IconButton(
-            icon: Icon(Icons.home_outlined, size: 30, color: _iconColor(0)),
-            onPressed: () => onItemSelected(0),
+            icon: Icon(Icons.home_outlined, size: 30, color: getIconColor(const HomeScreen())),
+            onPressed: () => onItemSelected(const HomeScreen()),
           ),
           IconButton(
-            icon: Icon(Icons.search_outlined, size: 30, color: _iconColor(1)),
-            onPressed: () => onItemSelected(1),
+            icon: Icon(Icons.search_outlined, size: 30, color: getIconColor(const SearchScreen())),
+            onPressed: () => onItemSelected(const SearchScreen()),
           ),
           IconButton(
-            icon: Icon(Icons.web_stories_outlined, size: 30, color: _iconColor(2)),
-            onPressed: () => onItemSelected(2),
+            icon: Icon(Icons.web_stories_outlined, size: 30, color: getIconColor(const MiniScreen())),
+            onPressed: () => onItemSelected(const MiniScreen()),
           ),
           IconButton(
-            icon: Icon(Icons.forum_outlined, size: 30, color: _iconColor(3)),
-            onPressed: () => onItemSelected(3),
+            icon: Icon(Icons.forum_outlined, size: 30, color: getIconColor(const ForumScreen())),
+            onPressed: () => onItemSelected(const ForumScreen()),
           ),
           IconButton(
-            icon: Icon(Icons.person_outline, size: 30, color: _iconColor(4)),
-            onPressed: () => onItemSelected(4),
+            icon: Icon(Icons.person_outline, size: 30, color: getIconColor(const ProfileScreen())),
+            onPressed: () => onItemSelected(const ProfileScreen()),
           ),
         ],
       ),
