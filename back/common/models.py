@@ -7,7 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     Enum
 )
-from database import Base
+from .database import Base
 import enum
 
 
