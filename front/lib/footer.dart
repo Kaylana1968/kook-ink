@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profil.dart';
 
 class Footer extends StatelessWidget {
   const Footer({super.key});
@@ -40,10 +41,18 @@ class Footer extends StatelessWidget {
                 size: 30, color: Color.fromARGB(255, 70, 70, 70)),
             onPressed: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.person_outline,
-                size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-            onPressed: () {},
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => Profile()),
+              );
+            },
+            child: Icon(
+              Icons.person_outline,
+              size: 30,
+              color: Color.fromARGB(255, 70, 70, 70),
+            ),
           ),
         ],
       ),
