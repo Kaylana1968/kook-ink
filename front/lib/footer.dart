@@ -4,6 +4,7 @@ import 'package:front/home_screen.dart';
 import 'package:front/mini_screen.dart';
 import 'package:front/profile_screen.dart';
 import 'package:front/search_screen.dart';
+import 'package:front/recipe_screen.dart';
 
 class Footer extends StatelessWidget {
   final Function(Widget) onItemSelected;
@@ -43,6 +44,11 @@ class Footer extends StatelessWidget {
             icon: Icon(Icons.search_outlined,
                 size: 30, color: getIconColor(const SearchScreen())),
             onPressed: () => onItemSelected(const SearchScreen()),
+          ),
+          IconButton(
+            icon: Icon(Icons.add_outlined,
+                size: 30, color: getIconColor(const RecipeScreen())),
+            onPressed: () => onItemSelected(const RecipeScreen()),
           ),
           IconButton(
             icon: Icon(Icons.web_stories_outlined,

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from datetime import datetime
 from common import database, models
 
 router = APIRouter()
 
+"""
 @router.post("/recipe")
 def upload_recipe(db: Session = Depends(database.get_db)):
     recipe = models.Recipe(
@@ -25,8 +26,33 @@ def upload_recipe(db: Session = Depends(database.get_db)):
         print(f"An error occurred: {e}")
     finally:
         db.close()
+"""
+#Créer une recette       
+@router.post("/recipe")
+def upload_recipe(
+    description: str = Form(...),
+    difficulty: int = Form(...),
+    image_link: str = Form(...),
+    video_link: str = Form(...),
+    user_id: int = Form(...),
+    db: Session = Depends(database.get_db)
+):
+    recipe = models.Recipe(
+        description=description,
+        difficulty=difficulty,
+        image_link=image_link,
+        video_link=video_link,
+        user_id=user_id,
+        created_at=datetime.utcnow()
+    )
+
+    db.add(recipe)
+    db.commit()
+    db.refresh(recipe)
+
+    return {"message": "Recette créer", "id": recipe.id}
     
-    
+#Modifier une recette  
 @router.patch("/recipe/{recipe_id}")
 def update_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
     recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
@@ -45,6 +71,7 @@ def update_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
     finally:
         db.close()
 
+#Supprimer une recette
 @router.delete("/recipe/{recipe_id}")
 def delete_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
     recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
