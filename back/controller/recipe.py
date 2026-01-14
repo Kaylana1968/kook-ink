@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
-from datetime import datetime
 from common import database, models
 
 router = APIRouter()
@@ -13,8 +12,7 @@ def upload_recipe(db: Session = Depends(database.get_db)):
         difficulty=3,
         image_link="https://example.com/pasta.jpg",
         video_link="https://example.com/pasta.mp4",
-        user_id=1,
-        created_at=datetime.utcnow()
+        user_id=1
     )
     db.add(recipe)
 
