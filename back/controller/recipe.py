@@ -43,7 +43,6 @@ def upload_recipe(
         image_link=image_link,
         video_link=video_link,
         user_id=user_id,
-        created_at=datetime.utcnow()
     )
 
     db.add(recipe)
