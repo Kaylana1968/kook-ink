@@ -2,18 +2,16 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
+    Float,
     Text,
     DateTime,
     ForeignKey,
-    Enum
+    Enum,
+    func,
 )
 from .database import Base
 import enum
 
-
-# =======================
-# ENUMS
-# =======================
 
 class CategoryEnum(enum.Enum):
     Burger = "Burger"
@@ -21,35 +19,23 @@ class CategoryEnum(enum.Enum):
     Pate = "Pate"
 
 
-# =======================
-# USER & FOLLOW
-# =======================
-
 class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String)
-    email = Column(String)
+    username = Column(String, unique=True)
+    email = Column(String, unique=True)
     password = Column(String)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class Follow(Base):
     __tablename__ = "follow"
 
-    following_user_id = Column(
-        Integer, ForeignKey("user.id"), primary_key=True
-    )
-    followed_user_id = Column(
-        Integer, ForeignKey("user.id"), primary_key=True
-    )
-    created_at = Column(DateTime)
+    following_user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    followed_user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    created_at = Column(DateTime, server_default=func.now())
 
-
-# =======================
-# POSTS
-# =======================
 
 class Post(Base):
     __tablename__ = "post"
@@ -57,17 +43,17 @@ class Post(Base):
     id = Column(Integer, primary_key=True)
     description = Column(Text)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class ForumPost(Base):
     __tablename__ = "forum_post"
 
     id = Column(Integer, primary_key=True)
-    title = Column(Text)
-    description = Column(Text)
+    title = Column(Text, nullable=False)
+    description = Column(Text, nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class Mini(Base):
@@ -76,12 +62,8 @@ class Mini(Base):
     id = Column(Integer, primary_key=True)
     description = Column(Text)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
 
-
-# =======================
-# PRIVATE MESSAGES
-# =======================
 
 class PrivateMessage(Base):
     __tablename__ = "private_message"
@@ -90,73 +72,61 @@ class PrivateMessage(Base):
     message = Column(Text, nullable=False)
     sender_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     receiver_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
 
-
-# =======================
-# RECIPES
-# =======================
 
 class Recipe(Base):
     __tablename__ = "recipe"
 
     id = Column(Integer, primary_key=True)
+    name = Column(Text, nullable=False)
     description = Column(Text)
     difficulty = Column(Integer)
-    image_link = Column(String)
+    image_link = Column(String, nullable=False)
     video_link = Column(String)
+    preparation_time = Column(Integer)
+    baking_time = Column(Integer)
+    person = Column(Integer)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
 
-
-# =======================
-# CATEGORY TABLES
-# =======================
 
 class RecipeCategory(Base):
     __tablename__ = "recipe_category"
 
-    id = Column(Integer, primary_key=True)
-    category = Column(Enum(CategoryEnum))
-    recipe_id = Column(Integer, ForeignKey("recipe.id"))
+    category = Column(Enum(CategoryEnum), primary_key=True)
+    recipe_id = Column(Integer, ForeignKey("recipe.id"), primary_key=True)
 
 
 class ForumPostCategory(Base):
     __tablename__ = "forum_post_category"
 
-    id = Column(Integer, primary_key=True)
-    category = Column(Enum(CategoryEnum))
-    forum_post_id = Column(Integer, ForeignKey("forum_post.id"))
+    category = Column(Enum(CategoryEnum), primary_key=True)
+    forum_post_id = Column(Integer, ForeignKey("forum_post.id"), primary_key=True)
 
 
 class MiniCategory(Base):
     __tablename__ = "mini_category"
 
-    id = Column(Integer, primary_key=True)
-    category = Column(Enum(CategoryEnum))
-    mini_id = Column(Integer, ForeignKey("mini.id"))
+    category = Column(Enum(CategoryEnum), primary_key=True)
+    mini_id = Column(Integer, ForeignKey("mini.id"), primary_key=True)
 
 
 class PostCategory(Base):
     __tablename__ = "post_category"
 
-    id = Column(Integer, primary_key=True)
-    category = Column(Enum(CategoryEnum))
-    post_id = Column(Integer, ForeignKey("post.id"))
+    category = Column(Enum(CategoryEnum), primary_key=True)
+    post_id = Column(Integer, ForeignKey("post.id"), primary_key=True)
 
-
-# =======================
-# COMMENTS
-# =======================
 
 class RecipeComment(Base):
     __tablename__ = "recipe_comment"
 
     id = Column(Integer, primary_key=True)
     content = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    recipe_id = Column(Integer, ForeignKey("recipe.id"))
-    created_at = Column(DateTime)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    recipe_id = Column(Integer, ForeignKey("recipe.id"), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class MiniComment(Base):
@@ -164,9 +134,9 @@ class MiniComment(Base):
 
     id = Column(Integer, primary_key=True)
     content = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    mini_id = Column(Integer, ForeignKey("mini.id"))
-    created_at = Column(DateTime)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    mini_id = Column(Integer, ForeignKey("mini.id"), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class PostComment(Base):
@@ -174,80 +144,71 @@ class PostComment(Base):
 
     id = Column(Integer, primary_key=True)
     content = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    post_id = Column(Integer, ForeignKey("post.id"))
-    created_at = Column(DateTime)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    post_id = Column(Integer, ForeignKey("post.id"), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
 
-
-# =======================
-# LIKES
-# =======================
 
 class RecipeLike(Base):
     __tablename__ = "recipe_like"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    recipe_id = Column(Integer, ForeignKey("recipe.id"))
+    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    recipe_id = Column(Integer, ForeignKey("recipe.id"), primary_key=True)
 
 
 class MiniLike(Base):
     __tablename__ = "mini_like"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    mini_id = Column(Integer, ForeignKey("mini.id"))
+    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    mini_id = Column(Integer, ForeignKey("mini.id"), primary_key=True)
 
 
 class PostLike(Base):
     __tablename__ = "post_like"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("user.id"))
-    post_id = Column(Integer, ForeignKey("post.id"))
+    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    post_id = Column(Integer, ForeignKey("post.id"), primary_key=True)
 
-
-# =======================
-# FORUM RESPONSES
-# =======================
 
 class ForumPostResponse(Base):
     __tablename__ = "forum_post_response"
 
     id = Column(Integer, primary_key=True)
-    content = Column(String)
-    forum_post_id = Column(Integer, ForeignKey("forum_post.id"))
-    user_id = Column(Integer, ForeignKey("user.id"))
-    created_at = Column(DateTime)
+    content = Column(String, nullable=False)
+    forum_post_id = Column(Integer, ForeignKey("forum_post.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class ForumPostResponseUpvote(Base):
     __tablename__ = "forum_post_response_upvote"
 
-    id = Column(Integer, primary_key=True)
     forum_post_response_id = Column(
-        Integer, ForeignKey("forum_post_response.id")
+        Integer, ForeignKey("forum_post_response.id"), primary_key=True
     )
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
 
 
-# =======================
-# RECIPE DETAILS
-# =======================
-
-class Ingredient(Base):
-    __tablename__ = "ingredient"
+class RecipeIngredient(Base):
+    __tablename__ = "recipe_ingredient"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    ingredient_id = Column(Integer, ForeignKey("ingredient.id"), nullable=False)
     quantity = Column(Integer)
     recipe_id = Column(Integer, ForeignKey("recipe.id"))
 
 
-class Stage(Base):
-    __tablename__ = "stage"
+class Step(Base):
+    __tablename__ = "step"
 
     id = Column(Integer, primary_key=True)
     number = Column(Integer)
     content = Column(String)
     recipe_id = Column(Integer, ForeignKey("recipe.id"))
+
+
+class Ingredient(Base):
+    __tablename__ = "ingredient"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True)

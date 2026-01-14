@@ -24,6 +24,7 @@ sequenceDiagram
     actor User
     User->>+App: Accès à la page des minis
     App->>+Back: HTTP GET /mini
+    Back->>+Back: Filtre des minis par un algorithme 
     Back->>+BDD: Récupération des 10 premiers minis
     BDD->>+Back: Récupération 10 premiers minis OK
     Back->>+App: Envoi 10 minis
@@ -31,6 +32,7 @@ sequenceDiagram
     Cloudinary->>+App: Envoi des fichiers vidéos
     User->>+App: Scroll 5 minis
     App->>+Back: HTTP GET /mini?skip=5&take=5
+    Back->>+Back: Filtre des minis par un algorithme 
     Back->>+BDD: Récupération des 5 minis suivants
     BDD->>+Back: Récupération des 5 minis suivants 
     App->>+Cloudinary: Récupération des fichiers vidéos
@@ -43,15 +45,17 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    actor User
-    User->>+App: Clic bouton publier recette
+    actor User1
+    actor User2
+    User1->>+App: Clic bouton publier recette
     App->>+Back: HTTP POST /recette
     Back->>+Cloudinary: Envoi image de la recette
     Cloudinary->>+Back: Envoi le lien de l'image
     Back->>+BDD: Sauvegarde de la recette
     BDD->>+Back: Sauvegarde OK
     Back->>+App: Recette affichée dans le profil
-
+    Back->>+Firebase: Envoi notif PUSH
+    Firebase->>+User2: notif PUSH "User1 a publié une nouvelle recette 
 ```
 
 ---
@@ -68,5 +72,4 @@ sequenceDiagram
     Back->>+App: Envoi recettes, minis et posts
     App->>+Cloudinary: Récupération image/vidéo des recettes, minis et posts
     Cloudinary->>+App: Envoi image/vidéo
-
 ```
