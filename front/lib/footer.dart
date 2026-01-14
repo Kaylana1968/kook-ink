@@ -11,8 +11,8 @@ class Footer extends StatelessWidget {
 
   const Footer({super.key, required this.currentPage, required this.onItemSelected});
 
-  Color getIconColor(Widget page) {
-    return currentPage == page
+  Color IconColor(Widget page) {
+    return currentPage.runtimeType == page.runtimeType
         ? const Color.fromARGB(251, 248, 165, 87)
         : const Color.fromARGB(255, 70, 70, 70);
   }
@@ -34,23 +34,23 @@ class Footer extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           IconButton(
-            icon: Icon(Icons.home_outlined, size: 30, color: getIconColor(const HomeScreen())),
+            icon: Icon(Icons.home_outlined, size: 30, color: IconColor(const HomeScreen())),
             onPressed: () => onItemSelected(const HomeScreen()),
           ),
           IconButton(
-            icon: Icon(Icons.search_outlined, size: 30, color: getIconColor(const SearchScreen())),
+            icon: Icon(Icons.search_outlined, size: 30, color: IconColor(const SearchScreen())),
             onPressed: () => onItemSelected(const SearchScreen()),
           ),
           IconButton(
-            icon: Icon(Icons.web_stories_outlined, size: 30, color: getIconColor(const MiniScreen())),
+            icon: Icon(Icons.web_stories_outlined, size: 30, color: IconColor(const MiniScreen())),
             onPressed: () => onItemSelected(const MiniScreen()),
           ),
           IconButton(
-            icon: Icon(Icons.forum_outlined, size: 30, color: getIconColor(const ForumScreen())),
+            icon: Icon(Icons.forum_outlined, size: 30, color: IconColor(const ForumScreen())),
             onPressed: () => onItemSelected(const ForumScreen()),
           ),
           IconButton(
-            icon: Icon(Icons.person_outline, size: 30, color: getIconColor(const ProfileScreen())),
+            icon: Icon(Icons.person_outline, size: 30, color: IconColor(const ProfileScreen())),
             onPressed: () => onItemSelected(const ProfileScreen()),
           ),
         ],
