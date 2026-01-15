@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:front/auth_service.dart';
 import 'package:http/http.dart' as http;
 
+const Color themeColor = Color.fromARGB(251, 248, 165, 87);
+
 class IngredientInput {
   TextEditingController name = TextEditingController();
   TextEditingController quantity = TextEditingController();
@@ -75,6 +77,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
           "ingredients": ingredients.map((i) => i.toJson()).toList(),
         }),
       );
+
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Recette créée avec succès")),
@@ -93,18 +96,45 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
   }
 
-  Widget champ(String label, TextEditingController controller,
-      {int maxLines = 1, TextInputType? type}) {
+  Widget champ(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+    TextInputType? type,
+    String? hint,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: type,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: type,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(
+                fontSize: 13,
+                color: Colors.grey,
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: themeColor, width: 1),
+              ),
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: themeColor, width: 1),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -112,147 +142,447 @@ class _RecipeScreenState extends State<RecipeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 248, 247, 246),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            champ("Lien image", imageLinkController),
-            champ("Lien vidéo (optionnel)", videoLinkController),
-            champ("Nom", nameController),
-            champ("Astuce", tipsController),
-            champ("Difficulté (1-5)", difficultyController,
-                type: TextInputType.number),
-            champ("Temps de préparation", preparationTimeController,
-                type: TextInputType.number),
-            champ("Temps de cuisson", bakingTimeController,
-                type: TextInputType.number),
-            champ("Nombre de personnes", personController,
-                type: TextInputType.number),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            champ(
+              "Ajouter une image *",
+              imageLinkController,
+              hint: "URL de l’image",
+            ),
+            champ(
+              "Ajouter une vidéo",
+              videoLinkController,
+              hint: "URL de la vidéo",
+            ),
+            champ(
+              "Nom *",
+              nameController,
+              hint: "Ex: Lasagne",
+            ),
+            champ(
+              "Astuce",
+              tipsController,
+              hint: "Ex: Rajouter du sel",
+            ),
+            champ(
+              "Difficulté (1-5) *",
+              difficultyController,
+              type: TextInputType.number,
+              hint: "Ex: 2",
+            ),
+            Row(
               children: [
-                const Text(
-                  "Étapes",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                ...List.generate(stepControllers.length, (index) {
-                  return Row(
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: TextField(
-                            controller: stepControllers[index],
-                            decoration: InputDecoration(
-                              labelText: "Étape ${index + 1}",
-                              border: const OutlineInputBorder(),
+                      // PREPARATION
+                      const Row(
+                        children: [
+                          Icon(Icons.timer_outlined,
+                              color: Colors.black, size: 20),
+                          SizedBox(width: 6),
+                          Text(
+                            "Préparation *",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.black,
                             ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: preparationTimeController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          hintText: "Ex: 30 min",
+                          hintStyle:
+                              TextStyle(fontSize: 12, color: Colors.grey),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: themeColor, width: 1),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: themeColor, width: 1),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: stepControllers.length > 1
-                            ? () {
-                                setState(() {
-                                  stepControllers.removeAt(index);
-                                });
-                              }
-                            : null,
+                    ],
+                  ),
+                ),
+
+                // CUISSON
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.local_fire_department_outlined,
+                              color: Colors.black, size: 20),
+                          SizedBox(width: 6),
+                          Text(
+                            "Cuisson *",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: bakingTimeController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          hintText: "Ex: 30 min",
+                          hintStyle:
+                              TextStyle(fontSize: 12, color: Colors.grey),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: themeColor, width: 1),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: themeColor, width: 1),
+                          ),
+                        ),
                       ),
                     ],
-                  );
-                }),
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      stepControllers.add(TextEditingController());
-                    });
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text("Ajouter une étape"),
+                  ),
                 ),
+
+                // PORTIONS
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.group_outlined,
+                              color: Colors.black, size: 20),
+                          SizedBox(width: 6),
+                          Text(
+                            "Portions *",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: personController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          hintText: "Ex: 4",
+                          hintStyle:
+                              TextStyle(fontSize: 12, color: Colors.grey),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: themeColor, width: 1),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: themeColor, width: 1),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               ],
             ),
+
+            // ÉTAPES
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Ingrédients",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Text(
+                      "Étapes de préparation",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: themeColor,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          stepControllers.add(TextEditingController());
+                        });
+                      },
+                      icon: const Icon(Icons.add, color: themeColor),
+                      label: const Text(
+                        "Ajouter",
+                        style: TextStyle(color: themeColor),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                ...List.generate(ingredients.length, (index) {
-                  final ingredient = ingredients[index];
-
-                  return Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: TextField(
-                          controller: ingredient.name,
-                          decoration: const InputDecoration(labelText: "Nom"),
+                const SizedBox(height: 10),
+                ...List.generate(
+                  stepControllers.length,
+                  (index) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 14, right: 12),
+                          child: Text(
+                            "${index + 1}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 2,
-                        child: TextField(
-                          controller: ingredient.quantity,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: "Qté"),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: TextField(
+                              controller: stepControllers[index],
+                              decoration: const InputDecoration(
+                                hintText: "Décrivez cette étape ...",
+                                hintStyle:
+                                    TextStyle(fontSize: 12, color: Colors.grey),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: themeColor, width: 1),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: themeColor, width: 1),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 2,
-                        child: DropdownButtonFormField<String>(
-                          value: ingredient.unit,
-                          items: const [
-                            DropdownMenuItem(value: "u", child: Text("unité")),
-                            DropdownMenuItem(value: "g", child: Text("g")),
-                            DropdownMenuItem(value: "kg", child: Text("kg")),
-                            DropdownMenuItem(value: "mL", child: Text("mL")),
-                            DropdownMenuItem(value: "L", child: Text("L")),
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              ingredient.unit = value!;
-                            });
-                          },
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.black),
+                          onPressed: stepControllers.length > 1
+                              ? () => setState(
+                                  () => stepControllers.removeAt(index))
+                              : null,
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: ingredients.length > 1
-                            ? () => setState(() => ingredients.removeAt(index))
-                            : null,
-                      ),
-                    ],
-                  );
-                }),
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      ingredients.add(IngredientInput());
-                    });
+                      ],
+                    );
                   },
-                  icon: const Icon(Icons.add),
-                  label: const Text("Ajouter un ingrédient"),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+
+            // INGRÉDIENTS
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Text(
+                      "Ingrédients",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: themeColor,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          ingredients.add(IngredientInput());
+                        });
+                      },
+                      icon: const Icon(Icons.add, color: themeColor),
+                      label: const Text(
+                        "Ajouter",
+                        style: TextStyle(color: themeColor),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ...List.generate(
+                  ingredients.length,
+                  (index) {
+                    final ingredient = ingredients[index];
+
+                    return Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Nom *",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                  )),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: ingredient.name,
+                                decoration: const InputDecoration(
+                                  hintText: "Ex: Chocolat",
+                                  hintStyle: TextStyle(
+                                      fontSize: 12, color: Colors.grey),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: themeColor, width: 1),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: themeColor, width: 1),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Quantité *",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                  )),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: ingredient.quantity,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  hintText: "Ex: 3",
+                                  hintStyle: TextStyle(
+                                      fontSize: 12, color: Colors.grey),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: themeColor, width: 1),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: themeColor, width: 1),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "",
+                              ),
+                              const SizedBox(height: 6),
+                              DropdownButtonFormField<String>(
+                                value: ingredient.unit,
+                                decoration: const InputDecoration(
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: themeColor, width: 1),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: themeColor, width: 1),
+                                  ),
+                                ),
+                                items: const [
+                                  DropdownMenuItem(
+                                      value: "u",
+                                      child: Text(
+                                        "Unité",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      )),
+                                  DropdownMenuItem(
+                                      value: "g",
+                                      child: Text(
+                                        "g",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      )),
+                                  DropdownMenuItem(
+                                      value: "kg",
+                                      child: Text(
+                                        "kg",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      )),
+                                  DropdownMenuItem(
+                                      value: "mL",
+                                      child: Text(
+                                        "mL",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      )),
+                                  DropdownMenuItem(
+                                      value: "L",
+                                      child: Text(
+                                        "L",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      )),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    ingredient.unit = value!;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                color: Colors.black),
+                            onPressed: ingredients.length > 1
+                                ? () =>
+                                    setState(() => ingredients.removeAt(index))
+                                : null,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+
+            // BOUTON
+            const SizedBox(height: 30),
             SizedBox(
               width: double.infinity,
-              height: 48,
+              height: 40,
               child: ElevatedButton(
                 onPressed: isLoading ? null : sendRecipeForm,
+                style: ElevatedButton.styleFrom(
+                  side: const BorderSide(color: themeColor, width: 1),
+                  backgroundColor: const Color.fromARGB(255, 248, 247, 246),
+                ),
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Créer la recette"),
+                    : const Text("Créer la recette",
+                        style: TextStyle(color: themeColor)),
               ),
             ),
           ],
