@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:front/auth_service.dart';
 import 'package:front/forum_screen.dart';
 import 'package:front/home_screen.dart';
 import 'package:front/mini_screen.dart';
 import 'package:front/profile_screen.dart';
 import 'package:front/search_screen.dart';
 import 'package:front/recipe_screen.dart';
-import 'package:front/login_screen.dart';
 
 class Footer extends StatelessWidget {
   final Function(Widget) onItemSelected;
   final Widget currentPage;
-  final bool isLoggedIn;
 
   const Footer({
     super.key,
     required this.currentPage,
     required this.onItemSelected,
-    required this.isLoggedIn,
   });
 
   Color getIconColor(Widget page) {
     return currentPage.runtimeType == page.runtimeType
         ? const Color.fromARGB(251, 248, 165, 87)
         : const Color.fromARGB(255, 70, 70, 70);
+  }
+
+  Future<bool> checkLoginStatus() async {
+    AuthService authService = AuthService();
+    String? token = await authService.getToken(); // Assume this method exists
+    return token != null && token.isNotEmpty;
   }
 
   @override
@@ -69,15 +73,7 @@ class Footer extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.person_outline,
                 size: 30, color: getIconColor(const ProfileScreen())),
-            onPressed: () {
-              if (isLoggedIn) {
-                onItemSelected(const ProfileScreen());
-              } else {
-                onItemSelected(
-                  const LoginForm(),
-                );
-              }
-            },
+            onPressed: () => onItemSelected(const ProfileScreen()),
           ),
         ],
       ),

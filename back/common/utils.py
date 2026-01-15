@@ -3,7 +3,7 @@ import jwt, os
 from dotenv import load_dotenv
 from passlib.context import CryptContext
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from common import database, models
+from common import models
 
 load_dotenv()
 secret_key = os.getenv("SECRET_KEY")

@@ -38,10 +38,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _setLoggedIn(bool value) {
+  void _onLogin(bool state) {
     setState(() {
-      isLoggedIn = value;
+      isLoggedIn = state;
     });
+
+    print(state);
   }
 
   @override
@@ -55,11 +57,12 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(child: page),
           Footer(
             currentPage: page,
-            isLoggedIn: isLoggedIn,
             onItemSelected: (selectedPage) {
-              if (selectedPage is LoginForm) {
+              if (selectedPage is ProfileScreen && !isLoggedIn) {
                 _changePage(
-                  LoginForm(),
+                  LoginForm(
+                    onLogin: _onLogin,
+                  ),
                 );
               } else {
                 _changePage(selectedPage);

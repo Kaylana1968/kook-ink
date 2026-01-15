@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:front/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LoginForm extends StatefulWidget {
-  const LoginForm({Key? key}) : super(key: key);
+  final Function(bool) onLogin;
+  const LoginForm({super.key, required this.onLogin,});
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -13,6 +15,7 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService authService = AuthService();
 
   String errorMessage = "";
 
@@ -23,7 +26,7 @@ class _LoginFormState extends State<LoginForm> {
         final password = _passwordController.text;
 
         final response = await http.post(
-          Uri.parse('http://127.0.0.1:8000/login'),
+          Uri.parse('http://10.0.2.2:8000/login'),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
             "email": email,
@@ -32,18 +35,24 @@ class _LoginFormState extends State<LoginForm> {
         );
 
         if (response.statusCode == 200) {
-          print(response.body);
+          final Map<String, dynamic> data = jsonDecode(response.body);
+
+          await authService.saveToken(data["token"]);
+
+          widget.onLogin(true);
         } else {
           final data = jsonDecode(response.body);
           setState(() {
             errorMessage = data["detail"] ?? "Erreur inconnue";
           });
+          widget.onLogin(false);
         }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Erreur : $e")),
       );
+      widget.onLogin(false);
     }
   }
 

@@ -6,7 +6,6 @@ from common import database, models, utils
 router = APIRouter()
 
 from pydantic import BaseModel
-from typing import List, Optional
 
 class LoginBody(BaseModel):
     email: str
@@ -20,13 +19,13 @@ def create_test_user(
     user = models.User(
         username="test",
         email="test@gmail.com",
-        password="test"
+        password=utils.hash_password("test")
     )
 
     db.add(user)
     db.commit()
 
-    return {"message": "Utilisateur connecté"}
+    return {"message": "Utilisateur créé"}
 
 
 # LOGIN 
@@ -41,12 +40,10 @@ def login(
     if (user == None):
         raise HTTPException(status_code=404, detail="User not found")
 
-    if body.password != user.password:
+    if not utils.verify_password(body.password, user.password):
         raise HTTPException(status_code=404, detail="Invalid credentials")
-
-    print(user.id)
 
     return {
         "message": "Utilisateur connecté",
-        "user_id": user.id
+        "token": utils.generate_token(user)
     }
