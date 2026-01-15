@@ -15,7 +15,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.orange,
+          surface: Colors.white,
+        ),
+      ),
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
     );
@@ -59,14 +66,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Handle the loading state simply at the top
+    // Handle the loading state simply at the top
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator(color: Colors.orange)),
       );
     }
 
-    // 2. Return a clean Scaffold without FutureBuilder nesting
+    // Return a clean Scaffold without FutureBuilder nesting
     return Scaffold(
       body: Column(
         children: [

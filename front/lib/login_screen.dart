@@ -5,7 +5,10 @@ import 'dart:convert';
 
 class LoginForm extends StatefulWidget {
   final Function() onLogin;
-  const LoginForm({super.key, required this.onLogin,});
+  const LoginForm({
+    super.key,
+    required this.onLogin,
+  });
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -26,7 +29,7 @@ class _LoginFormState extends State<LoginForm> {
         final password = _passwordController.text;
 
         final response = await http.post(
-          Uri.parse('http://10.0.2.2:8000/login'),
+          Uri.parse('http://127.0.0.1:8000/login'),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
             "email": email,

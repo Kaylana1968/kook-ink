@@ -55,7 +55,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       String? token = await authService.getToken();
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/recipe'),
+        Uri.parse('http://127.0.0.1:8000/recipe'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -142,7 +142,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 248, 247, 246),
+      backgroundColor: const Color.fromARGB(255, 254, 254, 254),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -266,7 +266,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                               color: Colors.black, size: 20),
                           SizedBox(width: 6),
                           Text(
-                            "Portions *",
+                            "Portion *",
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.black,
@@ -307,7 +307,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                       "Étapes de préparation",
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: themeColor,
                       ),
                     ),
@@ -390,7 +390,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                       "Ingrédients",
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: themeColor,
                       ),
                     ),

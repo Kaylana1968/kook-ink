@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<List<dynamic>> fetchRecipes() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/recipe'),
+        Uri.parse('http://127.0.0.1:8000/recipe'),
         headers: {"Content-Type": "application/json"},
       );
 
@@ -96,22 +96,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// --- INSTAGRAM STYLE POST COMPONENT ---
-
+// POST COMPONENT
 class RecipePost extends StatelessWidget {
   final Map<String, dynamic> recipe;
   const RecipePost({super.key, required this.recipe});
 
   @override
   Widget build(BuildContext context) {
-    // Logic for total time
-    final int totalTime =
-        (recipe['preparation_time'] ?? 0) + (recipe['baking_time'] ?? 0);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Header (User Info)
+        // Header (User Info)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
@@ -133,7 +128,7 @@ class RecipePost extends StatelessWidget {
           ),
         ),
 
-        // 2. Image (Instagram square look)
+        // Image
         AspectRatio(
           aspectRatio: 1,
           child: Image.network(
@@ -147,7 +142,7 @@ class RecipePost extends StatelessWidget {
           ),
         ),
 
-        // 3. Action Buttons
+        // Buttons(icons)
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Row(
@@ -156,7 +151,6 @@ class RecipePost extends StatelessWidget {
               SizedBox(width: 15),
               Icon(Icons.chat_bubble_outline, size: 26),
               SizedBox(width: 15),
-              Icon(Icons.send_outlined, size: 26),
               Spacer(),
               Icon(Icons.bookmark_border, size: 28),
             ],
@@ -173,30 +167,22 @@ class RecipePost extends StatelessWidget {
               Text(
                 recipe['name'].toUpperCase(),
                 style:
-                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               ),
               const SizedBox(height: 4),
 
-              // Tips / Description
-              if (recipe['tips'] != null)
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(color: Colors.black87, fontSize: 14),
-                    children: [
-                      const TextSpan(
-                          text: "Astuce: ",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      TextSpan(text: recipe['tips']),
-                    ],
-                  ),
-                ),
-
-              const SizedBox(height: 8),
-
-              // Metadata (Time, Difficulty, Servings)
+              // Time, Difficulty, Servings
               Row(
                 children: [
-                  _infoChip(Icons.timer_outlined, "$totalTime min"),
+                  _infoChip(
+                    Icons.timer_outlined,
+                    "${recipe['preparation_time'] ?? 0} min",
+                  ),
+                  const SizedBox(width: 12),
+                  _infoChip(
+                    Icons.local_fire_department_outlined,
+                    "${recipe['baking_time'] ?? 0} min",
+                  ),
                   const SizedBox(width: 12),
                   _infoChip(Icons.trending_up, "Niv. ${recipe['difficulty']}"),
                   const SizedBox(width: 12),
@@ -206,13 +192,12 @@ class RecipePost extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 24), // Space between posts
+        const SizedBox(height: 24), // Space posts
         const Divider(height: 1, thickness: 0.5),
       ],
     );
   }
 
-  // Helper for small metadata tags
   Widget _infoChip(IconData icon, String label) {
     return Row(
       children: [
