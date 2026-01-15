@@ -20,7 +20,7 @@ class Footer extends StatelessWidget {
   });
 
   Color getIconColor(Widget page) {
-    return currentPage == page
+    return currentPage.runtimeType == page.runtimeType
         ? const Color.fromARGB(251, 248, 165, 87)
         : const Color.fromARGB(255, 70, 70, 70);
   }
@@ -74,7 +74,7 @@ class Footer extends StatelessWidget {
                 onItemSelected(const ProfileScreen());
               } else {
                 onItemSelected(
-                  LoginForm(),
+                  const LoginForm(),
                 );
               }
             },
