@@ -50,4 +50,3 @@ def login(
         "message": "Utilisateur connecté",
         "user_id": user.id
     }
-

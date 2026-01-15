@@ -24,14 +24,15 @@ class _LoginFormState extends State<LoginForm> {
 
         final response = await http.post(
           Uri.parse('http://127.0.0.1:8000/login'),
-          body: {
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
             "email": email,
             "password": password,
-          },
+          }),
         );
 
         if (response.statusCode == 200) {
-          print(response);
+          print(response.body);
         } else {
           final data = jsonDecode(response.body);
           setState(() {
