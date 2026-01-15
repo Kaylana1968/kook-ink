@@ -4,52 +4,72 @@ from common import database, models
 
 router = APIRouter()
 
-"""
-@router.post("/recipe")
-def upload_recipe(db: Session = Depends(database.get_db)):
-    recipe = models.Recipe(
-        description="Delicious Homemade Pasta",
-        difficulty=3,
-        image_link="https://example.com/pasta.jpg",
-        video_link="https://example.com/pasta.mp4",
-        user_id=1
-    )
-    db.add(recipe)
+from pydantic import BaseModel
+from typing import List, Optional
 
-    try:
-        db.commit()
-        print(f"Recipe added successfully with ID: {recipe.id}")
-    except Exception as e:
-        db.rollback()
-        print(f"An error occurred: {e}")
-    finally:
-        db.close()
-"""
-#Créer une recette       
+class IngredientCreate(BaseModel):
+    name: str
+    quantity: float
+    unit: models.UnitEnum
+
+
+class RecipeCreate(BaseModel):
+    name: str
+    tips: Optional[str] = None
+    difficulty: int
+    preparation_time: int
+    baking_time: int
+    person: int
+    image_link: Optional[str] = None
+    video_link: Optional[str] = None
+    user_id: int
+    steps: List[str]
+    ingredients: List[IngredientCreate]
+
+
+# CREATE A RECIPE 
 @router.post("/recipe")
 def upload_recipe(
-    description: str = Form(...),
-    difficulty: int = Form(...),
-    image_link: str = Form(...),
-    video_link: str = Form(...),
-    user_id: int = Form(...),
+    recipe: RecipeCreate,
     db: Session = Depends(database.get_db)
 ):
-    recipe = models.Recipe(
-        description=description,
-        difficulty=difficulty,
-        image_link=image_link,
-        video_link=video_link,
-        user_id=user_id,
+    db_recipe = models.Recipe(
+        name=recipe.name,
+        tips=recipe.tips,
+        difficulty=recipe.difficulty,
+        preparation_time=recipe.preparation_time,
+        baking_time=recipe.baking_time,
+        person=recipe.person,
+        image_link=recipe.image_link,
+        video_link=recipe.video_link,
+        user_id=recipe.user_id,
     )
 
-    db.add(recipe)
+    db.add(db_recipe)
     db.commit()
-    db.refresh(recipe)
+    db.refresh(db_recipe)
 
-    return {"message": "Recette créer", "id": recipe.id}
+    for i in range(len(recipe.steps)):
+        db.add(models.Step(
+            content=recipe.steps[i],
+            number=i + 1,
+            recipe_id=db_recipe.id
+        ))
+
+    for ingredient in recipe.ingredients:
+        db.add(models.RecipeIngredient(
+            ingredient=ingredient.name,
+            quantity=ingredient.quantity,
+            unit=ingredient.unit.value,
+            recipe_id=db_recipe.id
+        ))
+
+    db.commit()
+
+    return {"message": "Recette créée", "id": db_recipe.id}
+
     
-#Modifier une recette  
+# UPDATE A RECIPE
 @router.patch("/recipe/{recipe_id}")
 def update_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
     recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
@@ -57,7 +77,7 @@ def update_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
     
-    recipe.description = "coucou"
+    recipe.tips = "coucou"
     try:
         db.commit()
         db.refresh(recipe)
@@ -68,7 +88,7 @@ def update_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
     finally:
         db.close()
 
-#Supprimer une recette
+# DELETE A RECIPE
 @router.delete("/recipe/{recipe_id}")
 def delete_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
     recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()

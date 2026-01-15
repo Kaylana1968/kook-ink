@@ -5,6 +5,7 @@ import 'package:front/mini_screen.dart';
 import 'package:front/profile_screen.dart';
 import 'package:front/search_screen.dart';
 import 'package:front/recipe_screen.dart';
+import 'package:front/login_screen.dart';
 
 class Footer extends StatelessWidget {
   final Function(Widget) onItemSelected;
@@ -63,7 +64,13 @@ class Footer extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.person_outline,
                 size: 30, color: getIconColor(const ProfileScreen())),
-            onPressed: () => onItemSelected(const ProfileScreen()),
+            onPressed: () {
+              if (user) {
+                onItemSelected(const ProfileScreen());
+              } else {
+                onItemSelected(const LoginForm());
+              }
+            },
           ),
         ],
       ),

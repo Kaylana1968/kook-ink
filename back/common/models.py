@@ -17,7 +17,13 @@ class CategoryEnum(enum.Enum):
     Burger = "Burger"
     Italien = "Italien"
     Pate = "Pate"
-
+    
+class UnitEnum(enum.Enum):
+    kg = "kg"
+    g = "g"
+    mL = "mL"
+    L = "L"
+    u = "u"
 
 class User(Base):
     __tablename__ = "user"
@@ -80,7 +86,7 @@ class Recipe(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
-    description = Column(Text)
+    tips = Column(Text)
     difficulty = Column(Integer)
     image_link = Column(String, nullable=False)
     video_link = Column(String)
@@ -193,8 +199,9 @@ class RecipeIngredient(Base):
     __tablename__ = "recipe_ingredient"
 
     id = Column(Integer, primary_key=True)
-    ingredient_id = Column(Integer, ForeignKey("ingredient.id"), nullable=False)
-    quantity = Column(Integer)
+    ingredient = Column(String, nullable=False)
+    unit = Column(Enum(UnitEnum), nullable=False)
+    quantity = Column(Float)
     recipe_id = Column(Integer, ForeignKey("recipe.id"))
 
 
@@ -205,10 +212,3 @@ class Step(Base):
     number = Column(Integer)
     content = Column(String)
     recipe_id = Column(Integer, ForeignKey("recipe.id"))
-
-
-class Ingredient(Base):
-    __tablename__ = "ingredient"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True)

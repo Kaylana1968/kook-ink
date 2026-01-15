@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from common import database, models
-from controller import recipe
+from controller import recipe, login
 
 app = FastAPI()
 
@@ -20,6 +20,7 @@ def read_user(db: Session = Depends(database.get_db)):
 
 
 app.include_router(recipe.router)
+app.include_router(login.router)
 
 if __name__ == "__main__":
     import uvicorn
