@@ -119,7 +119,7 @@ class RecipePost extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                "Utilisateur #${recipe['user_id']}",
+                recipe['user']['username'],
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
@@ -165,7 +165,7 @@ class RecipePost extends StatelessWidget {
             children: [
               // Recipe Name
               Text(
-                recipe['name'].toUpperCase(),
+                recipe['name'],
                 style:
                     const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               ),

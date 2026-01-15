@@ -32,7 +32,22 @@ class RecipeCreate(BaseModel):
 def get_recipes(db: Session = Depends(database.get_db)):
     recipes = db.query(models.Recipe).limit(10).all()
 
-    return {"recipes": recipes}
+    to_return = []
+    for recipe in recipes: 
+        user = db.get(models.User, recipe.user_id)
+        to_return.append({
+            "name": recipe.name,
+            "tips": recipe.tips,
+            "difficulty": recipe.difficulty,
+            "preparation_time": recipe.preparation_time,
+            "baking_time": recipe.baking_time,
+            "person": recipe.person,
+            "image_link": recipe.image_link,
+            "video_link": recipe.video_link,
+            "user": user
+        })
+
+    return {"recipes": to_return}
 
 
 # CREATE A RECIPE
