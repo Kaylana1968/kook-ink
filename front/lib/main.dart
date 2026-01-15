@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'header.dart';
 import 'footer.dart';
 import 'home_screen.dart';
+import 'login_screen.dart';
+import 'profile_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -53,8 +55,21 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(child: page),
           Footer(
             currentPage: page,
-            onItemSelected: _changePage,
             isLoggedIn: isLoggedIn,
+            onItemSelected: (selectedPage) {
+              if (selectedPage is LoginForm) {
+                _changePage(
+                  LoginForm(
+                    onLoginSuccess: () {
+                      _setLoggedIn(true);
+                      _changePage(const ProfileScreen());
+                    },
+                  ),
+                );
+              } else {
+                _changePage(selectedPage);
+              }
+            },
           ),
         ],
       ),

@@ -73,7 +73,11 @@ class Footer extends StatelessWidget {
               if (isLoggedIn) {
                 onItemSelected(const ProfileScreen());
               } else {
-                onItemSelected(const LoginForm());
+                onItemSelected(
+                  LoginForm(
+                    onLoginSuccess: () {},
+                  ),
+                );
               }
             },
           ),

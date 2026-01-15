@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LoginForm extends StatefulWidget {
-  const LoginForm({Key? key}) : super(key: key);
+  final VoidCallback onLoginSuccess;
+
+  const LoginForm({Key? key, required this.onLoginSuccess}) : super(key: key);
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -12,13 +16,29 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
+  String errorMessage = "";
+
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text;
       final password = _passwordController.text;
 
-      debugPrint("Email: $email");
-      debugPrint("Mot de passe: $password");
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/login'),
+        body: {
+          "email": email,
+          "password": password,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        widget.onLoginSuccess(); // <--- IMPORTANT
+      } else {
+        final data = jsonDecode(response.body);
+        setState(() {
+          errorMessage = data["detail"] ?? "Erreur inconnue";
+        });
+      }
     }
   }
 
@@ -75,6 +95,9 @@ class _LoginFormState extends State<LoginForm> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+              if (errorMessage.isNotEmpty)
+                Text(errorMessage, style: const TextStyle(color: Colors.red)),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
