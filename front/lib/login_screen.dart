@@ -17,26 +17,32 @@ class _LoginFormState extends State<LoginForm> {
   String errorMessage = "";
 
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      final email = _emailController.text;
-      final password = _passwordController.text;
+    try {
+      if (_formKey.currentState!.validate()) {
+        final email = _emailController.text;
+        final password = _passwordController.text;
 
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/login'),
-        body: {
-          "email": email,
-          "password": password,
-        },
-      );
+        final response = await http.post(
+          Uri.parse('http://127.0.0.1:8000/login'),
+          body: {
+            "email": email,
+            "password": password,
+          },
+        );
 
-      if (response.statusCode == 200) {
-        print(response);
-      } else {
-        final data = jsonDecode(response.body);
-        setState(() {
-          errorMessage = data["detail"] ?? "Erreur inconnue";
-        });
+        if (response.statusCode == 200) {
+          print(response);
+        } else {
+          final data = jsonDecode(response.body);
+          setState(() {
+            errorMessage = data["detail"] ?? "Erreur inconnue";
+          });
+        }
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur : $e")),
+      );
     }
   }
 
@@ -86,9 +92,6 @@ class _LoginFormState extends State<LoginForm> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return "Veuillez entrer votre mot de passe";
-                  }
-                  if (value.length < 6) {
-                    return "Minimum 6 caractères";
                   }
                   return null;
                 },
