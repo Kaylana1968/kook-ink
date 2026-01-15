@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -6,10 +7,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Text(
-        'Accueil',
-        style: TextStyle(fontSize: 24),
-      ),
+      child: LoginForm(),
     );
   }
 }

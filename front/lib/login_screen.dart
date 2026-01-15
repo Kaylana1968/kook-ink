@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:front/auth_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({Key? key}) : super(key: key);
@@ -11,14 +14,25 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text;
       final password = _passwordController.text;
 
-      debugPrint("Email: $email");
-      debugPrint("Mot de passe: $password");
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/login'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+        }),
+      );
+
+      print(response);
     }
   }
 
@@ -68,9 +82,6 @@ class _LoginFormState extends State<LoginForm> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return "Veuillez entrer votre mot de passe";
-                  }
-                  if (value.length < 6) {
-                    return "Minimum 6 caractères";
                   }
                   return null;
                 },
