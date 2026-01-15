@@ -59,12 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onItemSelected: (selectedPage) {
               if (selectedPage is LoginForm) {
                 _changePage(
-                  LoginForm(
-                    onLoginSuccess: () {
-                      _setLoggedIn(true);
-                      _changePage(const ProfileScreen());
-                    },
-                  ),
+                  LoginForm(),
                 );
               } else {
                 _changePage(selectedPage);

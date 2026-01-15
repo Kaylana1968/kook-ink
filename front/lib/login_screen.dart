@@ -3,9 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LoginForm extends StatefulWidget {
-  final VoidCallback onLoginSuccess;
-
-  const LoginForm({Key? key, required this.onLoginSuccess}) : super(key: key);
+  const LoginForm({Key? key}) : super(key: key);
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -32,7 +30,7 @@ class _LoginFormState extends State<LoginForm> {
       );
 
       if (response.statusCode == 200) {
-        widget.onLoginSuccess(); // <--- IMPORTANT
+        print(response);
       } else {
         final data = jsonDecode(response.body);
         setState(() {
