@@ -8,6 +8,10 @@ router = APIRouter()
 from pydantic import BaseModel
 from typing import List, Optional
 
+class LoginBody(BaseModel):
+    email: str
+    password: str
+
 
 @router.post("/create-test-user")
 def create_test_user(
@@ -28,18 +32,19 @@ def create_test_user(
 # LOGIN 
 @router.post("/login")
 def login(
-    email: str,
-    password: str,
+    body: LoginBody,
     db: Session = Depends(database.get_db)
 ):
-    query = select(models.User).where(models.User.email == email)
+    query = select(models.User).where(models.User.email == body.email)
     user = db.execute(query).scalars().first()
 
     if (user == None):
         raise HTTPException(status_code=404, detail="User not found")
 
-    if password != user.password:
+    if body.password != user.password:
         raise HTTPException(status_code=404, detail="Invalid credentials")
+
+    print(user.id)
 
     return {
         "message": "Utilisateur connecté",
