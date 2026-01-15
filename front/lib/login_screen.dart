@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LoginForm extends StatefulWidget {
-  final Function(bool) onLogin;
+  final Function() onLogin;
   const LoginForm({super.key, required this.onLogin,});
 
   @override
@@ -39,20 +39,18 @@ class _LoginFormState extends State<LoginForm> {
 
           await authService.saveToken(data["token"]);
 
-          widget.onLogin(true);
+          widget.onLogin();
         } else {
           final data = jsonDecode(response.body);
           setState(() {
             errorMessage = data["detail"] ?? "Erreur inconnue";
           });
-          widget.onLogin(false);
         }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Erreur : $e")),
       );
-      widget.onLogin(false);
     }
   }
 

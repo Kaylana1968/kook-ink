@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/auth_service.dart';
 import 'header.dart';
 import 'footer.dart';
 import 'home_screen.dart';
@@ -29,43 +30,55 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Widget page = const HomeScreen();
-  bool isLoggedIn = false;
+  Widget _currentPage = const HomeScreen();
+  bool _isLoggedIn = false;
+  bool _isLoading = true; // Flag to handle the initial check
 
-  void _changePage(Widget selectedPage) {
-    setState(() {
-      page = selectedPage;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
   }
 
-  void _onLogin(bool state) {
-    setState(() {
-      isLoggedIn = state;
-    });
+  Future<void> _checkAuth() async {
+    final token = await AuthService().getToken();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = token != null && token.isNotEmpty;
+        _isLoading = false; // Check is done
+      });
+    }
+  }
 
-    print(state);
+  void _onLogin() {
+    setState(() {
+      _isLoggedIn = true;
+      _currentPage = const ProfileScreen();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // 1. Handle the loading state simply at the top
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Colors.orange)),
+      );
+    }
+
+    // 2. Return a clean Scaffold without FutureBuilder nesting
     return Scaffold(
       body: Column(
         children: [
-          Header(
-            onItemSelected: _changePage,
-          ),
-          Expanded(child: page),
+          Header(onItemSelected: (p) => setState(() => _currentPage = p)),
+          Expanded(child: _currentPage),
           Footer(
-            currentPage: page,
+            currentPage: _currentPage,
             onItemSelected: (selectedPage) {
-              if (selectedPage is ProfileScreen && !isLoggedIn) {
-                _changePage(
-                  LoginForm(
-                    onLogin: _onLogin,
-                  ),
-                );
+              if (selectedPage is ProfileScreen && !_isLoggedIn) {
+                setState(() => _currentPage = LoginForm(onLogin: _onLogin));
               } else {
-                _changePage(selectedPage);
+                setState(() => _currentPage = selectedPage);
               }
             },
           ),
