@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
-from common import database, models
+from common import database, models, utils
 
 router = APIRouter()
 
@@ -23,7 +23,6 @@ class RecipeCreate(BaseModel):
     person: int
     image_link: Optional[str] = None
     video_link: Optional[str] = None
-    user_id: int
     steps: List[str]
     ingredients: List[IngredientCreate]
 
@@ -38,7 +37,7 @@ def get_recipes(db: Session = Depends(database.get_db)):
 
 # CREATE A RECIPE
 @router.post("/recipe")
-def upload_recipe(recipe: RecipeCreate, db: Session = Depends(database.get_db)):
+def upload_recipe(recipe: RecipeCreate, user=Depends(utils.get_user), db: Session = Depends(database.get_db)):
     db_recipe = models.Recipe(
         name=recipe.name,
         tips=recipe.tips,
@@ -48,7 +47,7 @@ def upload_recipe(recipe: RecipeCreate, db: Session = Depends(database.get_db)):
         person=recipe.person,
         image_link=recipe.image_link,
         video_link=recipe.video_link,
-        user_id=recipe.user_id,
+        user_id=int(user["id"]),
     )
 
     db.add(db_recipe)

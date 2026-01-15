@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:front/auth_service.dart';
 import 'package:http/http.dart' as http;
 
 class IngredientInput {
@@ -36,6 +37,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
   List<TextEditingController> stepControllers = [
     TextEditingController(),
   ];
+  AuthService authService = AuthService();
 
   bool isLoading = false;
 
@@ -48,10 +50,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
           .where((t) => t.isNotEmpty)
           .toList();
 
+      String? token = await authService.getToken();
+
       final response = await http.post(
         Uri.parse('http://10.0.2.2:8000/recipe'),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           "name": nameController.text,
@@ -66,7 +71,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
           "video_link": videoLinkController.text.isEmpty
               ? null
               : videoLinkController.text,
-          "user_id": 1,
           "steps": steps,
           "ingredients": ingredients.map((i) => i.toJson()).toList(),
         }),
