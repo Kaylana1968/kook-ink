@@ -28,10 +28,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Widget page = const HomeScreen();
+  bool isLoggedIn = false;
 
   void _changePage(Widget selectedPage) {
     setState(() {
       page = selectedPage;
+    });
+  }
+
+  void _setLoggedIn(bool value) {
+    setState(() {
+      isLoggedIn = value;
     });
   }
 
@@ -47,6 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Footer(
             currentPage: page,
             onItemSelected: _changePage,
+            isLoggedIn: isLoggedIn,
           ),
         ],
       ),

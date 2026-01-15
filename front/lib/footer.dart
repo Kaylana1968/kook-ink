@@ -10,9 +10,14 @@ import 'package:front/login_screen.dart';
 class Footer extends StatelessWidget {
   final Function(Widget) onItemSelected;
   final Widget currentPage;
+  final bool isLoggedIn;
 
-  const Footer(
-      {super.key, required this.currentPage, required this.onItemSelected});
+  const Footer({
+    super.key,
+    required this.currentPage,
+    required this.onItemSelected,
+    required this.isLoggedIn,
+  });
 
   Color getIconColor(Widget page) {
     return currentPage == page
@@ -65,7 +70,7 @@ class Footer extends StatelessWidget {
             icon: Icon(Icons.person_outline,
                 size: 30, color: getIconColor(const ProfileScreen())),
             onPressed: () {
-              if (user) {
+              if (isLoggedIn) {
                 onItemSelected(const ProfileScreen());
               } else {
                 onItemSelected(const LoginForm());
