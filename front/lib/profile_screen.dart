@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:front/auth_service.dart';
 
+// ------------------ API CONFIG ------------------
+class ApiConfig {
+  static const String baseUrl = 'http://127.0.0.1:8000';
+  static Uri recipes() => Uri.parse('$baseUrl/recipe');
+  static Uri posts() => Uri.parse('$baseUrl/post');
+}
+
+// ------------------ PROFILE SCREEN ------------------
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -18,11 +27,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _recipeFuture = fetchRecipes();
   }
 
+  // ------------------ FETCH RECIPES ------------------
   Future<List<dynamic>> fetchRecipes() async {
-    final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/recipe'),
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await http.get(ApiConfig.recipes());
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -38,6 +45,128 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  // ------------------ CREATE POST ------------------
+  Future<void> createPost(String description) async {
+    final response = await http.post(
+      Uri.parse('http://127.0.0.1:8000/post'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "description": description,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      print("Post créé avec succès");
+    } else {
+      throw Exception("Erreur lors de la création du post");
+    }
+  }
+
+// MODAL FORMULAIRE CREATION D'UN POST
+  void _openCreatePostModal() {
+    final TextEditingController descriptionController = TextEditingController();
+    AuthService authService = AuthService();
+    bool isLoading = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> sendPostForm() async {
+              final description = descriptionController.text.trim();
+              if (description.isEmpty) return;
+
+              setModalState(() => isLoading = true); // active le loader
+
+              try {
+                // Récupère le token depuis AuthService
+                final token = await authService.getToken();
+
+                final response = await http.post(
+                  Uri.parse('http://127.0.0.1:8000/post'),
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer $token",
+                  },
+                  body: jsonEncode({"description": description}),
+                );
+
+                if (response.statusCode == 200 || response.statusCode == 201) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Post publié ✅")),
+                  );
+                  Navigator.pop(context);
+                  _refresh(); // recharge la grille des recettes
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            "Erreur lors de la publication ❌ : ${response.statusCode}")),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Erreur ❌ : $e")),
+                );
+              } finally {
+                setModalState(() => isLoading = false);
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Créer un post",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descriptionController,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      hintText: "Écris une description...",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : sendPostForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                      ),
+                      child: isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text("Publier"),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ------------------ BUILD ------------------
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -48,6 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // HEADER
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -100,8 +230,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () {},
-                        child: const Text('Partager le profil'),
+                        onPressed: _openCreatePostModal,
+                        child: const Text('Créer un post'),
                       ),
                     ),
                   ],
@@ -137,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ONGLET POSTS
+  // ------------------ POSTS ------------------
   Widget _postsGrid() {
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
@@ -152,7 +282,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ONGLET RECETTES
+  // ------------------ RECETTES ------------------
   Widget _recettesGrid3() {
     return FutureBuilder<List<dynamic>>(
       future: _recipeFuture,
@@ -176,6 +306,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         return GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
           padding: const EdgeInsets.all(6),
           itemCount: recipes.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -188,13 +320,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final recipe = recipes[index];
 
             return Card(
-              elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // IMAGE
                   ClipRRect(
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(10)),
@@ -203,11 +335,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 120,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        height: 120,
-                        color: Colors.grey.shade300,
-                        child: const Icon(Icons.image),
-                      ),
                     ),
                   ),
                   Padding(
@@ -215,8 +342,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // NOM
                         Text(
-                          recipe['title'] ?? 'Sans titre',
+                          recipe['name'] ?? 'Sans nom',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -224,11 +352,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
+                        // INFOS
                         _infoChip(Icons.timer_outlined,
                             "${recipe['preparation_time'] ?? 0} min"),
                         _infoChip(Icons.local_fire_department_outlined,
                             "${recipe['baking_time'] ?? 0} min"),
+                        if (recipe['difficulty'] != null)
+                          _infoChip(Icons.trending_up,
+                              "Niv. ${recipe['difficulty']}"),
+                        if (recipe['person'] != null)
+                          _infoChip(Icons.people_outline,
+                              "${recipe['person']} pers."),
                       ],
                     ),
                   ),
@@ -257,7 +392,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ONGLET FAVORIS
+  // ------------------ FAVORIS ------------------
   Widget _favorisList() {
     return ListView.builder(
       itemCount: 5,
@@ -271,7 +406,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// ICONS STYLE
+// ------------------ STAT ------------------
 class _Stat extends StatelessWidget {
   final String value;
   final String label;
