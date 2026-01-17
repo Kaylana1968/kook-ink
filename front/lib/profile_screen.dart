@@ -21,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Future<List<dynamic>> _recipeFuture = Future.value([]);
   Future<List<dynamic>> _postFuture = Future.value([]);
+  int? _postCount;
 
   @override
   void initState() {
@@ -31,14 +32,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// FETCH POSTS
   Future<List<dynamic>> fetchPosts() async {
-    final response = await http.get(
-      ApiConfig.posts(),
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await http
+        .get(ApiConfig.posts(), headers: {"Content-Type": "application/json"});
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['posts'];
+      final posts = data['posts'] as List<dynamic>;
+
+      setState(() {
+        _postCount = posts.length;
+      });
+
+      return posts;
     } else {
       throw Exception('Erreur serveur');
     }
@@ -160,15 +165,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.all(16),
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    CircleAvatar(radius: 40),
-                    Spacer(),
-                    _Stat(value: '12', label: 'Posts'),
-                    _Stat(value: '340', label: 'Followers'),
-                    _Stat(value: '180', label: 'Following'),
+                    const CircleAvatar(radius: 40),
+                    _PostCountWidget(postFuture: _postFuture),
+                    const _Stat(value: '340', label: 'Followers'),
+                    const _Stat(value: '180', label: 'Following'),
                   ],
                 ),
               ),
@@ -411,4 +416,23 @@ Widget _infoChip(IconData icon, String label) {
       ),
     ],
   );
+}
+
+// COUNT
+class _PostCountWidget extends StatelessWidget {
+  final Future<List<dynamic>> postFuture;
+  const _PostCountWidget({required this.postFuture});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<dynamic>>(
+      future: postFuture,
+      builder: (context, snapshot) {
+        int count = 0;
+        if (snapshot.hasData) count = snapshot.data!.length;
+
+        return _Stat(value: count.toString(), label: 'Posts');
+      },
+    );
+  }
 }
