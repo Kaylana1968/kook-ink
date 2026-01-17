@@ -237,7 +237,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         return ListView.builder(
           itemCount: posts.length,
-          itemBuilder: (context, index) => PostProfile(post: posts[index]),
+          itemBuilder: (context, index) => PostProfile(
+            post: posts[index],
+            onRefresh: _refresh,
+          ),
         );
       },
     );
@@ -274,10 +277,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 // POST CLASS
+/// ================= POST CLASS =================
 class PostProfile extends StatelessWidget {
   final Map<String, dynamic> post;
+  final VoidCallback onRefresh;
 
-  const PostProfile({super.key, required this.post});
+  const PostProfile({
+    super.key,
+    required this.post,
+    required this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -286,11 +295,79 @@ class PostProfile extends StatelessWidget {
         ListTile(
           leading: const CircleAvatar(child: Icon(Icons.person)),
           title: Text(post['description'] ?? ''),
-          trailing: const Icon(Icons.more_horiz),
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'edit') {
+                // TODO: Ajouter la logique pour modifier le post
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Modifier post non implémenté")),
+                );
+              } else if (value == 'delete') {
+                await _deletePost(context);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'edit',
+                child: Text('Modifier'),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Text('Supprimer'),
+              ),
+            ],
+          ),
         ),
         const Divider(),
       ],
     );
+  }
+
+  Future<void> _deletePost(BuildContext context) async {
+    final postId = post['id'];
+    if (postId == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirmer la suppression"),
+        content: const Text("Voulez-vous vraiment supprimer ce post ?"),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Annuler")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Supprimer")),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final response = await http.delete(
+        Uri.parse('http://127.0.0.1:8000/post/$postId'),
+        headers: {"Content-Type": "application/json"},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Post supprimé ✅")),
+        );
+        onRefresh(); // Recharge la liste
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  "Erreur lors de la suppression : ${response.statusCode}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur : $e")),
+      );
+    }
   }
 }
 
