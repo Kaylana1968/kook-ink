@@ -6,8 +6,6 @@ sequenceDiagram
     actor User2
     User->>+App: Clic bouton Créer commentaire
     App->>+Back: HTTP POST /forum-post/comment
-    Back->>+ChatGPT: Modération commentaire
-    ChatGPT->>+Back: Commentaire OK
     Back->>+BDD: Sauvegarde du commentaire
     BDD->>+Back: Sauvegarde OK
     Back->>+App: Commentaire enregistré
@@ -24,7 +22,7 @@ sequenceDiagram
     actor User
     User->>+App: Accès à la page des minis
     App->>+Back: HTTP GET /mini
-    Back->>+Back: Filtre des minis par un algorithme 
+    Back->>+Back: Filtre des minis par un algorithme
     Back->>+BDD: Récupération des 10 premiers minis
     BDD->>+Back: Récupération 10 premiers minis OK
     Back->>+App: Envoi 10 minis
@@ -32,9 +30,9 @@ sequenceDiagram
     Cloudinary->>+App: Envoi des fichiers vidéos
     User->>+App: Scroll 5 minis
     App->>+Back: HTTP GET /mini?skip=5&take=5
-    Back->>+Back: Filtre des minis par un algorithme 
+    Back->>+Back: Filtre des minis par un algorithme
     Back->>+BDD: Récupération des 5 minis suivants
-    BDD->>+Back: Récupération des 5 minis suivants 
+    BDD->>+Back: Récupération des 5 minis suivants
     App->>+Cloudinary: Récupération des fichiers vidéos
     Cloudinary->>+App: Envoi des fichiers vidéos OK
 ```
@@ -55,7 +53,7 @@ sequenceDiagram
     BDD->>+Back: Sauvegarde OK
     Back->>+App: Recette affichée dans le profil
     Back->>+Firebase: Envoi notif PUSH
-    Firebase->>+User2: notif PUSH "User1 a publié une nouvelle recette 
+    Firebase->>+User2: notif PUSH "User1 a publié une nouvelle recette
 ```
 
 ---
