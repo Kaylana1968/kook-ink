@@ -6,8 +6,7 @@ sequenceDiagram
     actor User2
     User->>+App: Clic bouton Créer commentaire
     App->>+Back: HTTP POST /forum-post/comment
-    Back->>+ChatGPT: Modération commentaire
-    ChatGPT->>+Back: Commentaire OK
+    Back->>+Back: Modération commentaire
     Back->>+BDD: Sauvegarde du commentaire
     BDD->>+Back: Sauvegarde OK
     Back->>+App: Commentaire enregistré
