@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:front/auth_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 const Color themeColor = Color.fromARGB(251, 248, 165, 87);
 
@@ -47,6 +48,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
     setState(() => isLoading = true);
 
     try {
+      final String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
+     
       final steps = stepControllers
           .map((c) => c.text.trim())
           .where((t) => t.isNotEmpty)
@@ -55,7 +58,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
       String? token = await authService.getToken();
 
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/recipe'),
+        Uri.parse('$baseUrl/recipe'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

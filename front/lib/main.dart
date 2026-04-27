@@ -5,8 +5,10 @@ import 'footer.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 

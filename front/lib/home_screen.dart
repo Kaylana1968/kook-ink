@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,8 +21,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<List<dynamic>> fetchRecipes() async {
     try {
+      final String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
+
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/recipe'),
+        Uri.parse('$baseUrl/recipe'),
         headers: {"Content-Type": "application/json"},
       );
 

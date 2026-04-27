@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:front/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class LoginForm extends StatefulWidget {
   final Function() onLogin;
@@ -24,12 +25,14 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _login() async {
     try {
+      final String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
+
       if (_formKey.currentState!.validate()) {
         final email = _emailController.text;
         final password = _passwordController.text;
 
         final response = await http.post(
-          Uri.parse('http://127.0.0.1:8000/login'),
+          Uri.parse('$baseUrl/login'),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
             "email": email,
