@@ -4,23 +4,26 @@ from common import database, models, utils
 
 router = APIRouter()
 
-from pydantic import BaseModel
 
-class Following(BaseModel):
-    description: str
-    
-    
-# GET ALL FOLLOWING
-@router.get("/following")
-def get_posts(db: Session = Depends(database.get_db)):
-    posts = db.query(models.Post).limit(10).all()
+# GET FOLLOWERS / FOLLOWING COUNT
+@router.get("/follow/count")
+def get_follow_counts(
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db)
+):
+    user_id = int(user["id"])
 
-    to_return = []
-    for post in posts: 
-        user = db.get(models.User, post.user_id)
-        to_return.append({
-            "description": post.description,
-            "user": user
-        })
+    # combien JE suis
+    following_count = db.query(models.Follow).filter(
+        models.Follow.following_user_id == user_id
+    ).count()
 
-    return {"posts": to_return}
+    # combien ME suivent
+    followers_count = db.query(models.Follow).filter(
+        models.Follow.followed_user_id == user_id
+    ).count()
+
+    return {
+        "followers": followers_count,
+        "following": following_count
+    }

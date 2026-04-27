@@ -11,6 +11,7 @@ class ApiConfig {
   static Uri recipes() => Uri.parse('$baseUrl/recipe');
   static Uri posts() => Uri.parse('$baseUrl/post');
   static Uri postById(dynamic id) => Uri.parse('$baseUrl/post/$id');
+  static Uri followCount() => Uri.parse('$baseUrl/follow/count');
 }
 
 // PROFILE SCREEN
@@ -25,11 +26,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<List<dynamic>> _recipeFuture = Future.value([]);
   Future<List<dynamic>> _postFuture = Future.value([]);
 
+  int followers = 0;
+  int following = 0;
+
   @override
   void initState() {
     super.initState();
     _recipeFuture = fetchRecipes();
     _postFuture = fetchPosts();
+    fetchFollowCount();
   }
 
   Future<List<dynamic>> fetchPosts() async {
@@ -57,6 +62,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> fetchFollowCount() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      ApiConfig.followCount(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      setState(() {
+        followers = data['followers'];
+        following = data['following'];
+      });
+    } else {
+      print("Erreur follow count : ${response.statusCode}");
+      print(response.body);
+    }
+  }
+
   Future<void> _refresh() async {
     setState(() {
       _postFuture = fetchPosts();
@@ -65,6 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     await _postFuture;
     await _recipeFuture;
+    await fetchFollowCount();
   }
 
   void _openCreatePostModal() {
@@ -223,8 +253,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     const CircleAvatar(radius: 40),
                     _PostCountWidget(postFuture: _postFuture),
-                    const _Stat(value: '340', label: 'Followers'),
-                    const _Stat(value: '180', label: 'Following'),
+                    _Stat(value: followers.toString(), label: 'Followers'),
+                    _Stat(value: following.toString(), label: 'Following'),
                   ],
                 ),
               ),
@@ -325,8 +355,7 @@ class PostProfile extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Erreur suppression : ${response.statusCode}"),
-          ),
+              content: Text("Erreur suppression : ${response.statusCode}")),
         );
       }
     }
@@ -381,9 +410,6 @@ class PostProfile extends StatelessWidget {
       }),
     );
 
-    print('UPDATE STATUS: ${response.statusCode}');
-    print('UPDATE BODY: ${response.body}');
-
     if (response.statusCode == 200) {
       await onRefresh();
 
@@ -396,8 +422,7 @@ class PostProfile extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur modification : ${response.statusCode}'),
-          ),
+              content: Text('Erreur modification : ${response.statusCode}')),
         );
       }
     }
@@ -561,7 +586,7 @@ Widget _infoChip(IconData icon, String label) {
   );
 }
 
-// COUNT
+// COUNT POSTS
 class _PostCountWidget extends StatelessWidget {
   final Future<List<dynamic>> postFuture;
 
@@ -575,6 +600,7 @@ class _PostCountWidget extends StatelessWidget {
       future: postFuture,
       builder: (context, snapshot) {
         int count = 0;
+
         if (snapshot.hasData) {
           count = snapshot.data!.length;
         }
