@@ -9,6 +9,8 @@ from pydantic import BaseModel
 class PostCreate(BaseModel):
     description: str
     
+class PostUpdate(BaseModel):
+    description: str
     
 # GET ALL POST
 @router.get("/post")
@@ -57,3 +59,32 @@ def delete_recipe(post_id: int, db: Session = Depends(database.get_db)):
         print(f"An error occurred: {e}")
     finally:
         db.close()
+        
+@router.put("/post/{post_id}")
+def update_post(
+    post_id: int,
+    post_update: PostUpdate,
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db)
+):
+    post = db.query(models.Post).filter(models.Post.id == post_id).first()
+
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if post.user_id != int(user["id"]):
+        raise HTTPException(status_code=403, detail="Not allowed to edit this post")
+
+    post.description = post_update.description
+
+    db.commit()
+    db.refresh(post)
+
+    return {
+        "message": "Post modifié",
+        "post": {
+            "id": post.id,
+            "description": post.description,
+            "user_id": post.user_id,
+        }
+    }

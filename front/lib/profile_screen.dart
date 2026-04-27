@@ -6,8 +6,10 @@ import 'package:front/auth_service.dart';
 // API CONFIG
 class ApiConfig {
   static const String baseUrl = 'http://127.0.0.1:8000';
+
   static Uri recipes() => Uri.parse('$baseUrl/recipe');
   static Uri posts() => Uri.parse('$baseUrl/post');
+  static Uri postById(dynamic id) => Uri.parse('$baseUrl/post/$id');
 }
 
 // PROFILE SCREEN
@@ -21,7 +23,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Future<List<dynamic>> _recipeFuture = Future.value([]);
   Future<List<dynamic>> _postFuture = Future.value([]);
-  int? _postCount;
 
   @override
   void initState() {
@@ -30,26 +31,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _postFuture = fetchPosts();
   }
 
-  /// FETCH POSTS
   Future<List<dynamic>> fetchPosts() async {
-    final response = await http
-        .get(ApiConfig.posts(), headers: {"Content-Type": "application/json"});
+    final response = await http.get(
+      ApiConfig.posts(),
+      headers: {"Content-Type": "application/json"},
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final posts = data['posts'] as List<dynamic>;
-
-      setState(() {
-        _postCount = posts.length;
-      });
-
-      return posts;
+      return data['posts'] as List<dynamic>;
     } else {
-      throw Exception('Erreur serveur');
+      throw Exception('Erreur serveur posts');
     }
   }
 
-  // FETCH RECIPES
   Future<List<dynamic>> fetchRecipes() async {
     final response = await http.get(ApiConfig.recipes());
 
@@ -57,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final data = jsonDecode(response.body);
       return data['recipes'];
     } else {
-      throw Exception('Erreur serveur');
+      throw Exception('Erreur serveur recettes');
     }
   }
 
@@ -66,9 +61,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _postFuture = fetchPosts();
       _recipeFuture = fetchRecipes();
     });
+
+    await _postFuture;
+    await _recipeFuture;
   }
 
-  // CREATE POST MODAL
   void _openCreatePostModal() {
     final TextEditingController descriptionController = TextEditingController();
     AuthService authService = AuthService();
@@ -102,8 +99,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
 
                 if (response.statusCode == 200 || response.statusCode == 201) {
-                  Navigator.pop(context);
-                  _refresh();
+                  if (context.mounted) Navigator.pop(context);
+                  await _refresh();
                 }
               } finally {
                 setModalState(() => isLoading = false);
@@ -154,7 +151,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // BUILD
+  Widget _postsTab() {
+    return FutureBuilder<List<dynamic>>(
+      future: _postFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final posts = snapshot.data!;
+
+        if (posts.isEmpty) {
+          return const Center(child: Text("Aucun post"));
+        }
+
+        return ListView.builder(
+          itemCount: posts.length,
+          itemBuilder: (context, index) => PostProfile(
+            post: posts[index],
+            onRefresh: _refresh,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _recipesTab() {
+    return FutureBuilder<List<dynamic>>(
+      future: _recipeFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final recipes = snapshot.data!;
+
+        if (recipes.isEmpty) {
+          return const Center(child: Text("Aucune recette"));
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(6),
+          itemCount: recipes.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.65,
+            crossAxisSpacing: 6,
+            mainAxisSpacing: 6,
+          ),
+          itemBuilder: (context, index) => RecipeCard(recipe: recipes[index]),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -177,8 +227,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-
-              /// BUTTONS
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -192,8 +240,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-
-              /// TABS
               const TabBar(
                 labelColor: Colors.black,
                 indicatorColor: Colors.black,
@@ -203,7 +249,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Tab(text: 'Favoris'),
                 ],
               ),
-
               SizedBox(
                 height: 600,
                 child: TabBarView(
@@ -220,108 +265,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
-  // POSTS TAB
-  Widget _postsTab() {
-    return FutureBuilder<List<dynamic>>(
-      future: _postFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final posts = snapshot.data!;
-        if (posts.isEmpty) {
-          return const Center(child: Text("Aucun post"));
-        }
-
-        return ListView.builder(
-          itemCount: posts.length,
-          itemBuilder: (context, index) => PostProfile(
-            post: posts[index],
-            onRefresh: _refresh,
-          ),
-        );
-      },
-    );
-  }
-
-  // RECIPES TAB
-  Widget _recipesTab() {
-    return FutureBuilder<List<dynamic>>(
-      future: _recipeFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final recipes = snapshot.data!;
-        if (recipes.isEmpty) {
-          return const Center(child: Text("Aucune recette"));
-        }
-
-        return GridView.builder(
-          padding: const EdgeInsets.all(6),
-          itemCount: recipes.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.65,
-            crossAxisSpacing: 6,
-            mainAxisSpacing: 6,
-          ),
-          itemBuilder: (context, index) => RecipeCard(recipe: recipes[index]),
-        );
-      },
-    );
-  }
 }
 
 // POST CLASS
-/// ================= POST CLASS =================
 class PostProfile extends StatelessWidget {
   final Map<String, dynamic> post;
-  final VoidCallback onRefresh;
+  final Future<void> Function() onRefresh;
 
   const PostProfile({
     super.key,
     required this.post,
     required this.onRefresh,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ListTile(
-          leading: const CircleAvatar(child: Icon(Icons.person)),
-          title: Text(post['description'] ?? ''),
-          trailing: PopupMenuButton<String>(
-            onSelected: (value) async {
-              if (value == 'edit') {
-                // TODO: Ajouter la logique pour modifier le post
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Modifier post non implémenté")),
-                );
-              } else if (value == 'delete') {
-                await _deletePost(context);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Text('Modifier'),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Text('Supprimer'),
-              ),
-            ],
-          ),
-        ),
-        const Divider(),
-      ],
-    );
-  }
 
   Future<void> _deletePost(BuildContext context) async {
     final postId = post['id'];
@@ -334,40 +289,149 @@ class PostProfile extends StatelessWidget {
         content: const Text("Voulez-vous vraiment supprimer ce post ?"),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Annuler")),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Annuler"),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("Supprimer")),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Supprimer"),
+          ),
         ],
       ),
     );
 
     if (confirm != true) return;
 
-    try {
-      final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/post/$postId'),
-        headers: {"Content-Type": "application/json"},
-      );
+    final token = await AuthService().getToken();
 
-      if (response.statusCode == 200 || response.statusCode == 204) {
+    final response = await http.delete(
+      ApiConfig.postById(postId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      await onRefresh();
+
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Post supprimé ✅")),
         );
-        onRefresh(); // Recharge la liste
-      } else {
+      }
+    } else {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  "Erreur lors de la suppression : ${response.statusCode}")),
+            content: Text("Erreur suppression : ${response.statusCode}"),
+          ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur : $e")),
-      );
     }
+  }
+
+  Future<void> _editPost(BuildContext context) async {
+    final TextEditingController controller = TextEditingController(
+      text: post['description'] ?? '',
+    );
+
+    final newDescription = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Modifier le post'),
+          content: TextField(
+            controller: controller,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Description',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, controller.text.trim());
+              },
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newDescription == null || newDescription.isEmpty) return;
+
+    final token = await AuthService().getToken();
+
+    final response = await http.put(
+      ApiConfig.postById(post['id']),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'description': newDescription,
+      }),
+    );
+
+    print('UPDATE STATUS: ${response.statusCode}');
+    print('UPDATE BODY: ${response.body}');
+
+    if (response.statusCode == 200) {
+      await onRefresh();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post modifié')),
+        );
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur modification : ${response.statusCode}'),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          leading: const CircleAvatar(child: Icon(Icons.person)),
+          title: Text(post['description'] ?? ''),
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'edit') {
+                await _editPost(context);
+              } else if (value == 'delete') {
+                await _deletePost(context);
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'edit',
+                child: Text('Modifier'),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text('Supprimer'),
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+      ],
+    );
   }
 }
 
@@ -386,7 +450,6 @@ class RecipeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // IMAGE
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
             child: Image.network(
@@ -396,13 +459,11 @@ class RecipeCard extends StatelessWidget {
               fit: BoxFit.cover,
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // NOM RECETTE
                 Text(
                   recipe['name'] ?? 'Sans nom',
                   maxLines: 2,
@@ -413,8 +474,6 @@ class RecipeCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-
-                // ICONES INFOS
                 _infoChip(
                   Icons.timer_outlined,
                   "${recipe['preparation_time'] ?? 0} min",
@@ -465,13 +524,19 @@ class _Stat extends StatelessWidget {
   final String value;
   final String label;
 
-  const _Stat({required this.value, required this.label});
+  const _Stat({
+    required this.value,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         Text(label),
       ],
     );
@@ -498,7 +563,10 @@ Widget _infoChip(IconData icon, String label) {
 // COUNT
 class _PostCountWidget extends StatelessWidget {
   final Future<List<dynamic>> postFuture;
-  const _PostCountWidget({required this.postFuture});
+
+  const _PostCountWidget({
+    required this.postFuture,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -506,9 +574,14 @@ class _PostCountWidget extends StatelessWidget {
       future: postFuture,
       builder: (context, snapshot) {
         int count = 0;
-        if (snapshot.hasData) count = snapshot.data!.length;
+        if (snapshot.hasData) {
+          count = snapshot.data!.length;
+        }
 
-        return _Stat(value: count.toString(), label: 'Posts');
+        return _Stat(
+          value: count.toString(),
+          label: 'Posts',
+        );
       },
     );
   }
