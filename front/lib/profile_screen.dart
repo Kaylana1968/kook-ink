@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:front/auth_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // API CONFIG
 class ApiConfig {
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
 
   static Uri recipes() => Uri.parse('$baseUrl/recipe');
   static Uri posts() => Uri.parse('$baseUrl/post');

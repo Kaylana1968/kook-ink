@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
 
       final response = await http.get(
-        Uri.parse('$baseUrl/recipe'),
+        Uri.parse('$baseUrl/post'),
         headers: {"Content-Type": "application/json"},
       );
 
