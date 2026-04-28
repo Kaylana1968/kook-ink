@@ -59,7 +59,8 @@ def delete_recipe(post_id: int, db: Session = Depends(database.get_db)):
         print(f"An error occurred: {e}")
     finally:
         db.close()
-        
+
+# CHANGE A POST        
 @router.put("/post/{post_id}")
 def update_post(
     post_id: int,

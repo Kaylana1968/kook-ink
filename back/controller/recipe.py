@@ -33,9 +33,18 @@ def get_recipes(db: Session = Depends(database.get_db)):
     recipes = db.query(models.Recipe).limit(10).all()
 
     to_return = []
-    for recipe in recipes: 
-        user = db.get(models.User, recipe.user_id)
+
+    for recipe in recipes:
+        steps = db.query(models.Step).filter(
+            models.Step.recipe_id == recipe.id
+        ).order_by(models.Step.number).all()
+
+        ingredients = db.query(models.RecipeIngredient).filter(
+            models.RecipeIngredient.recipe_id == recipe.id
+        ).all()
+
         to_return.append({
+            "id": recipe.id,
             "name": recipe.name,
             "tips": recipe.tips,
             "difficulty": recipe.difficulty,
@@ -44,11 +53,18 @@ def get_recipes(db: Session = Depends(database.get_db)):
             "person": recipe.person,
             "image_link": recipe.image_link,
             "video_link": recipe.video_link,
-            "user": user
+            "steps": [step.content for step in steps],
+            "ingredients": [
+                {
+                    "name": ingredient.ingredient,
+                    "quantity": ingredient.quantity,
+                    "unit": ingredient.unit,
+                }
+                for ingredient in ingredients
+            ],
         })
 
     return {"recipes": to_return}
-
 
 # CREATE A RECIPE
 @router.post("/recipe")
@@ -91,38 +107,89 @@ def upload_recipe(recipe: RecipeCreate, user=Depends(utils.get_user), db: Sessio
 
 # UPDATE A RECIPE
 @router.patch("/recipe/{recipe_id}")
-def update_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
-    recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
+def update_recipe(
+    recipe_id: int,
+    recipe: RecipeCreate,
+    db: Session = Depends(database.get_db)
+):
+    db_recipe = db.query(models.Recipe).filter(
+        models.Recipe.id == recipe_id
+    ).first()
 
-    if not recipe:
+    if not db_recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
 
-    recipe.tips = "coucou"
     try:
+        db_recipe.name = recipe.name
+        db_recipe.tips = recipe.tips
+        db_recipe.difficulty = recipe.difficulty
+        db_recipe.preparation_time = recipe.preparation_time
+        db_recipe.baking_time = recipe.baking_time
+        db_recipe.person = recipe.person
+        db_recipe.image_link = recipe.image_link
+        db_recipe.video_link = recipe.video_link
+
+        db.query(models.Step).filter(
+            models.Step.recipe_id == recipe_id
+        ).delete(synchronize_session=False)
+
+        db.query(models.RecipeIngredient).filter(
+            models.RecipeIngredient.recipe_id == recipe_id
+        ).delete(synchronize_session=False)
+
+        for i, step in enumerate(recipe.steps):
+            db.add(models.Step(
+                content=step,
+                number=i + 1,
+                recipe_id=recipe_id
+            ))
+
+        for ingredient in recipe.ingredients:
+            db.add(models.RecipeIngredient(
+                ingredient=ingredient.name,
+                quantity=ingredient.quantity,
+                unit=ingredient.unit.value,
+                recipe_id=recipe_id,
+            ))
+
         db.commit()
-        db.refresh(recipe)
-        return recipe
+        db.refresh(db_recipe)
+
+        return {"message": "Recette modifiée", "id": db_recipe.id}
+
     except Exception as e:
         db.rollback()
-        print(f"An error occurred: {e}")
-    finally:
-        db.close()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur modification recette : {str(e)}"
+        )
 
 
 # DELETE A RECIPE
-@router.delete("/recipe/{recipe_id}")
+@router.delete("/recipe/{recipe_id}", status_code=204)
 def delete_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
     recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
 
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    db.delete(recipe)
 
     try:
+        db.query(models.RecipeIngredient).filter(
+            models.RecipeIngredient.recipe_id == recipe_id
+        ).delete(synchronize_session=False)
+
+        db.query(models.Step).filter(
+            models.Step.recipe_id == recipe_id
+        ).delete(synchronize_session=False)
+
+        db.delete(recipe)
         db.commit()
-        print(f"Recipe deleted successfully with ID: {recipe.id}")
+        return
+
     except Exception as e:
         db.rollback()
-        print(f"An error occurred: {e}")
-    finally:
-        db.close()
+        print(f"Erreur suppression recette : {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur suppression recette : {str(e)}"
+        )

@@ -3,14 +3,18 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:front/auth_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:front/recipe_screen.dart';
 
 // API CONFIG
 class ApiConfig {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
 
   static Uri recipes() => Uri.parse('$baseUrl/recipe');
+  static Uri recipeById(dynamic id) => Uri.parse('$baseUrl/recipe/$id');
+
   static Uri posts() => Uri.parse('$baseUrl/post');
   static Uri postById(dynamic id) => Uri.parse('$baseUrl/post/$id');
+
   static Uri followCount() => Uri.parse('$baseUrl/follow/count');
 }
 
@@ -56,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['recipes'];
+      return data['recipes'] as List<dynamic>;
     } else {
       throw Exception('Erreur serveur recettes');
     }
@@ -230,7 +234,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisSpacing: 6,
             mainAxisSpacing: 6,
           ),
-          itemBuilder: (context, index) => RecipeCard(recipe: recipes[index]),
+          itemBuilder: (context, index) => RecipeCard(
+            recipe: recipes[index],
+            onRefresh: _refresh,
+          ),
         );
       },
     );
@@ -348,14 +355,7 @@ class PostProfile extends StatelessWidget {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Post supprimé ✅")),
-        );
-      }
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text("Erreur suppression : ${response.statusCode}")),
+          const SnackBar(content: Text("Post supprimé")),
         );
       }
     }
@@ -418,13 +418,6 @@ class PostProfile extends StatelessWidget {
           const SnackBar(content: Text('Post modifié')),
         );
       }
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Erreur modification : ${response.statusCode}')),
-        );
-      }
     }
   }
 
@@ -464,60 +457,202 @@ class PostProfile extends StatelessWidget {
 // RECIPE CLASS
 class RecipeCard extends StatelessWidget {
   final Map<String, dynamic> recipe;
+  final Future<void> Function() onRefresh;
 
-  const RecipeCard({super.key, required this.recipe});
+  const RecipeCard({
+    super.key,
+    required this.recipe,
+    required this.onRefresh,
+  });
+
+  String _getImageUrl() {
+    final rawImageUrl = recipe['image_link']?.toString() ?? '';
+
+    if (rawImageUrl.isEmpty) return '';
+
+    if (rawImageUrl.startsWith('http')) {
+      return rawImageUrl;
+    }
+
+    if (rawImageUrl.startsWith('/')) {
+      return '${ApiConfig.baseUrl}$rawImageUrl';
+    }
+
+    return '${ApiConfig.baseUrl}/$rawImageUrl';
+  }
+
+  Future<void> _deleteRecipe(BuildContext context) async {
+    final recipeId = recipe['id'];
+    if (recipeId == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirmer la suppression"),
+        content: const Text("Voulez-vous vraiment supprimer cette recette ?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Annuler"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Supprimer"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final token = await AuthService().getToken();
+
+    final response = await http.delete(
+      ApiConfig.recipeById(recipeId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      await onRefresh();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Recette supprimée")),
+        );
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Erreur suppression : ${response.statusCode}"),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _editRecipe(BuildContext context) async {
+    final updated = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecipeScreen(recipe: recipe),
+      ),
+    );
+
+    if (updated == true) {
+      await onRefresh();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Recette modifiée")),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _getImageUrl();
+    final hasValidImage = imageUrl.isNotEmpty &&
+        Uri.tryParse(imageUrl) != null &&
+        Uri.parse(imageUrl).hasScheme;
+
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-            child: Image.network(
-              recipe['image_link'],
-              height: 120,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(10)),
+                child: hasValidImage
+                    ? Image.network(
+                        imageUrl,
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 120,
+                            width: double.infinity,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.image_not_supported),
+                          );
+                        },
+                      )
+                    : Container(
+                        height: 120,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.image_not_supported),
+                      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipe['name'] ?? 'Sans nom',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    _infoChip(
+                      Icons.timer_outlined,
+                      "${recipe['preparation_time'] ?? 0} min",
+                    ),
+                    _infoChip(
+                      Icons.local_fire_department_outlined,
+                      "${recipe['baking_time'] ?? 0} min",
+                    ),
+                    if (recipe['difficulty'] != null)
+                      _infoChip(
+                        Icons.trending_up,
+                        "Niv. ${recipe['difficulty']}",
+                      ),
+                    if (recipe['person'] != null)
+                      _infoChip(
+                        Icons.people_outline,
+                        "${recipe['person']} pers.",
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  recipe['name'] ?? 'Sans nom',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  await _editRecipe(context);
+                } else if (value == 'delete') {
+                  await _deleteRecipe(context);
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text('Modifier'),
                 ),
-                const SizedBox(height: 4),
-                _infoChip(
-                  Icons.timer_outlined,
-                  "${recipe['preparation_time'] ?? 0} min",
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Supprimer'),
                 ),
-                _infoChip(
-                  Icons.local_fire_department_outlined,
-                  "${recipe['baking_time'] ?? 0} min",
-                ),
-                if (recipe['difficulty'] != null)
-                  _infoChip(
-                    Icons.trending_up,
-                    "Niv. ${recipe['difficulty']}",
-                  ),
-                if (recipe['person'] != null)
-                  _infoChip(
-                    Icons.people_outline,
-                    "${recipe['person']} pers.",
-                  ),
               ],
             ),
           ),
@@ -527,7 +662,7 @@ class RecipeCard extends StatelessWidget {
   }
 }
 
-// FAVORIS CLASS
+// FAVORIS
 class FavorisList extends StatelessWidget {
   const FavorisList({super.key});
 

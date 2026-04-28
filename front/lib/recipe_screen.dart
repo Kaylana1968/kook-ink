@@ -19,8 +19,12 @@ class IngredientInput {
 }
 
 class RecipeScreen extends StatefulWidget {
-  const RecipeScreen({super.key});
+  final Map<String, dynamic>? recipe;
 
+  const RecipeScreen({
+    super.key,
+    this.recipe,
+  });
   @override
   State<RecipeScreen> createState() => _RecipeScreenState();
 }
@@ -34,6 +38,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
   final personController = TextEditingController();
   final imageLinkController = TextEditingController();
   final videoLinkController = TextEditingController();
+  bool get isEditMode => widget.recipe != null;
   List<IngredientInput> ingredients = [
     IngredientInput(),
   ];
@@ -49,7 +54,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
     try {
       final String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
-     
+
       final steps = stepControllers
           .map((c) => c.text.trim())
           .where((t) => t.isNotEmpty)
@@ -57,37 +62,54 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
       String? token = await authService.getToken();
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/recipe'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          "name": nameController.text,
-          "tips": tipsController.text,
-          "difficulty": int.parse(difficultyController.text),
-          "preparation_time": int.parse(preparationTimeController.text),
-          "baking_time": int.parse(bakingTimeController.text),
-          "person": int.parse(personController.text),
-          "image_link": imageLinkController.text.isEmpty
-              ? null
-              : imageLinkController.text,
-          "video_link": videoLinkController.text.isEmpty
-              ? null
-              : videoLinkController.text,
-          "steps": steps,
-          "ingredients": ingredients.map((i) => i.toJson()).toList(),
-        }),
-      );
+      final body = jsonEncode({
+        "name": nameController.text,
+        "tips": tipsController.text.isEmpty ? null : tipsController.text,
+        "difficulty": int.parse(difficultyController.text),
+        "preparation_time": int.parse(preparationTimeController.text),
+        "baking_time": int.parse(bakingTimeController.text),
+        "person": int.parse(personController.text),
+        "image_link":
+            imageLinkController.text.isEmpty ? null : imageLinkController.text,
+        "video_link":
+            videoLinkController.text.isEmpty ? null : videoLinkController.text,
+        "steps": steps,
+        "ingredients": ingredients.map((i) => i.toJson()).toList(),
+      });
 
-      if (response.statusCode == 200) {
+      final response = isEditMode
+          ? await http.patch(
+              Uri.parse('$baseUrl/recipe/${widget.recipe!['id']}'),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+              body: body,
+            )
+          : await http.post(
+              Uri.parse('$baseUrl/recipe'),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+              body: body,
+            );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Recette créée avec succès")),
+          SnackBar(
+            content: Text(
+              isEditMode
+                  ? "Recette modifiée avec succès"
+                  : "Recette créée avec succès",
+            ),
+          ),
         );
+
+        Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Erreur lors de la création")),
+          SnackBar(content: Text("Erreur : ${response.statusCode}")),
         );
       }
     } catch (e) {
@@ -140,6 +162,45 @@ class _RecipeScreenState extends State<RecipeScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (isEditMode) {
+      final recipe = widget.recipe!;
+
+      nameController.text = recipe['name']?.toString() ?? '';
+      tipsController.text = recipe['tips']?.toString() ?? '';
+      difficultyController.text = recipe['difficulty']?.toString() ?? '';
+      preparationTimeController.text =
+          recipe['preparation_time']?.toString() ?? '';
+      bakingTimeController.text = recipe['baking_time']?.toString() ?? '';
+      personController.text = recipe['person']?.toString() ?? '';
+      imageLinkController.text = recipe['image_link']?.toString() ?? '';
+      videoLinkController.text = recipe['video_link']?.toString() ?? '';
+
+      final steps = recipe['steps'] as List<dynamic>?;
+
+      if (steps != null && steps.isNotEmpty) {
+        stepControllers = steps
+            .map((step) => TextEditingController(text: step.toString()))
+            .toList();
+      }
+
+      final recipeIngredients = recipe['ingredients'] as List<dynamic>?;
+
+      if (recipeIngredients != null && recipeIngredients.isNotEmpty) {
+        ingredients = recipeIngredients.map((item) {
+          final input = IngredientInput();
+          input.name.text = item['name']?.toString() ?? '';
+          input.quantity.text = item['quantity']?.toString() ?? '';
+          input.unit = item['unit']?.toString() ?? 'u';
+          return input;
+        }).toList();
+      }
+    }
   }
 
   @override
@@ -584,8 +645,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 ),
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Créer la recette",
-                        style: TextStyle(color: themeColor)),
+                    : Text(
+                        isEditMode ? "Modifier la recette" : "Créer la recette",
+                        style: const TextStyle(color: themeColor)),
               ),
             ),
           ],
