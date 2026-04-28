@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:front/main.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -111,9 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-//
-// RECIPE CARD
-//
 class RecipeCard extends StatelessWidget {
   final Map<String, dynamic> recipe;
 
@@ -124,38 +122,43 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = recipe["name"] ?? "Recette";
-    final username = recipe["username"] ?? "Utilisateur";
-    final imageUrl = recipe["image_link"] ?? "";
+    final name = recipe["name"]?.toString() ?? "Recette";
+    final username = recipe["username"]?.toString() ?? "Utilisateur";
+    final imageUrl = recipe["image_link"]?.toString() ?? "";
+    final userId = recipe["user_id"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              const CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.orange,
-                child: Icon(Icons.person, size: 18, color: Colors.white),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                username,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+        InkWell(
+          onTap: userId == null
+              ? null
+              : () {
+                  MyHomePage.openUserProfile(userId);
+                },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Colors.orange,
+                  child: Icon(Icons.person, size: 18, color: Colors.white),
                 ),
-              ),
-              const Spacer(),
-              const Icon(Icons.more_horiz),
-            ],
+                const SizedBox(width: 10),
+                Text(
+                  username,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.more_horiz),
+              ],
+            ),
           ),
         ),
-
-        // Image
         if (imageUrl.isNotEmpty)
           Image.network(
             imageUrl,
@@ -176,8 +179,6 @@ class RecipeCard extends StatelessWidget {
             color: Colors.grey[300],
             child: const Center(child: Icon(Icons.image)),
           ),
-
-        // Infos
         Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -203,16 +204,12 @@ class RecipeCard extends StatelessWidget {
             ],
           ),
         ),
-
         const Divider(height: 1, thickness: 0.5),
       ],
     );
   }
 }
 
-//
-// POST CARD
-//
 class RecipePost extends StatelessWidget {
   final Map<String, dynamic> post;
 
@@ -225,35 +222,40 @@ class RecipePost extends StatelessWidget {
   Widget build(BuildContext context) {
     final username = post['username']?.toString() ?? 'Utilisateur';
     final description = post['description']?.toString() ?? '';
+    final userId = post['user_id'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              const CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.orange,
-                child: Icon(Icons.person, size: 18, color: Colors.white),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                username,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+        InkWell(
+          onTap: userId == null
+              ? null
+              : () {
+                  MyHomePage.openUserProfile(userId);
+                },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Colors.orange,
+                  child: Icon(Icons.person, size: 18, color: Colors.white),
                 ),
-              ),
-              const Spacer(),
-              const Icon(Icons.more_horiz),
-            ],
+                const SizedBox(width: 10),
+                Text(
+                  username,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.more_horiz),
+              ],
+            ),
           ),
         ),
-
-        // Description
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
@@ -264,7 +266,6 @@ class RecipePost extends StatelessWidget {
             ),
           ),
         ),
-
         const SizedBox(height: 24),
         const Divider(height: 1, thickness: 0.5),
       ],

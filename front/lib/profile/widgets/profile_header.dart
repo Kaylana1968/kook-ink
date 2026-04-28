@@ -8,7 +8,7 @@ class ProfileHeader extends StatelessWidget {
   final int following;
   final String username;
   final String description;
-  final VoidCallback onCreatePost;
+  final VoidCallback? onCreatePost;
 
   const ProfileHeader({
     super.key,
@@ -25,8 +25,6 @@ class ProfileHeader extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 20),
-
-        // AVATAR + STATS
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -48,8 +46,6 @@ class ProfileHeader extends StatelessWidget {
             ],
           ),
         ),
-
-        // USERNAME + DESCRIPTION
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Align(
@@ -75,21 +71,20 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
         ),
-
-        // BOUTON
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onCreatePost,
-                  child: const Text('Créer un post'),
+        if (onCreatePost != null)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onCreatePost,
+                    child: const Text('Créer un post'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
       ],
     );
   }

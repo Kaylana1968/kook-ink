@@ -61,6 +61,23 @@ def get_my_posts(
         ]
     }
 
+# GET POSTS USER OTHER
+@router.get("/post/user/{user_id}")
+def get_user_posts(user_id: int, db: Session = Depends(database.get_db)):
+    posts = db.query(models.Post).filter(
+        models.Post.user_id == user_id
+    ).order_by(models.Post.created_at.desc()).all()
+
+    return {
+        "posts": [
+            {
+                "id": p.id,
+                "description": p.description,
+                "user_id": p.user_id,
+            } for p in posts
+        ]
+    }
+    
 
 # CREATE A POST
 @router.post("/post")

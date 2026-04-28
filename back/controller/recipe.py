@@ -52,6 +52,17 @@ def get_my_recipes(
 
     return {"recipes": result}
 
+# GET RECIPES USER OTHER
+@router.get("/recipe/user/{user_id}")
+def get_user_recipes(user_id: int, db: Session = Depends(database.get_db)):
+    recipes = db.query(models.Recipe).filter(
+        models.Recipe.user_id == user_id
+    ).order_by(models.Recipe.created_at.desc()).all()
+
+    return {
+        "recipes": recipes
+    }
+
 # GET ALL RECIPES
 @router.get("/recipe")
 def get_recipes(db: Session = Depends(database.get_db)):

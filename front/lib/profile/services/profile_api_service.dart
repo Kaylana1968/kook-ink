@@ -6,20 +6,183 @@ import 'package:front/auth_service.dart';
 class ProfileApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
 
-  // ROUTES
   static Uri recipes() => Uri.parse('$baseUrl/recipe');
   static Uri recipeById(dynamic id) => Uri.parse('$baseUrl/recipe/$id');
+  static Uri myRecipes() => Uri.parse('$baseUrl/recipe/me');
+  static Uri userRecipes(int id) => Uri.parse('$baseUrl/recipe/user/$id');
 
   static Uri posts() => Uri.parse('$baseUrl/post');
-
   static Uri postById(dynamic id) => Uri.parse('$baseUrl/post/$id');
   static Uri myPosts() => Uri.parse('$baseUrl/post/me');
+  static Uri userPosts(int id) => Uri.parse('$baseUrl/post/user/$id');
 
   static Uri myProfile() => Uri.parse('$baseUrl/profile/me');
+  static Uri userProfile(int id) => Uri.parse('$baseUrl/profile/$id');
 
-  static Uri followCount() => Uri.parse('$baseUrl/profile/count');
+  static Uri followCount() => Uri.parse('$baseUrl/follow/count');
+  static Uri userFollowCount(int id) => Uri.parse('$baseUrl/follow/count/$id');
 
   static Uri favorites() => Uri.parse('$baseUrl/favorite');
+
+  static Future<Map<String, dynamic>> fetchMyProfile() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      myProfile(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception("Erreur chargement profil");
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchUserProfile(int userId) async {
+    final response = await http.get(
+      userProfile(userId),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception("Erreur chargement profil utilisateur");
+    }
+  }
+
+  static Future<Map<String, int>> fetchFollowCount() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      followCount(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      return {
+        "followers": data["followers"] ?? 0,
+        "following": data["following"] ?? 0,
+      };
+    } else {
+      throw Exception("Erreur follow count");
+    }
+  }
+
+  static Future<Map<String, int>> fetchUserFollowCount(int userId) async {
+    final response = await http.get(
+      userFollowCount(userId),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      return {
+        "followers": data["followers"] ?? 0,
+        "following": data["following"] ?? 0,
+      };
+    } else {
+      return {
+        "followers": 0,
+        "following": 0,
+      };
+    }
+  }
+
+  static Future<List<dynamic>> fetchMyPosts() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      myPosts(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["posts"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur serveur posts");
+    }
+  }
+
+  static Future<List<dynamic>> fetchUserPosts(int userId) async {
+    final response = await http.get(
+      userPosts(userId),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["posts"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur posts utilisateur");
+    }
+  }
+
+  static Future<List<dynamic>> fetchRecipes() async {
+    final response = await http.get(recipes());
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["recipes"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur serveur recettes");
+    }
+  }
+
+  static Future<List<dynamic>> fetchMyRecipes() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      myRecipes(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["recipes"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur serveur recettes");
+    }
+  }
+
+  static Future<List<dynamic>> fetchUserRecipes(int userId) async {
+    final response = await http.get(
+      userRecipes(userId),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["recipes"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur recettes utilisateur");
+    }
+  }
 
   static Future<List<dynamic>> fetchFavorites() async {
     final token = await AuthService().getToken();
@@ -57,102 +220,6 @@ class ProfileApiService {
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
-  static Future<Map<String, dynamic>> fetchMyProfile() async {
-    final token = await AuthService().getToken();
-
-    final response = await http.get(
-      myProfile(),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
-    } else {
-      throw Exception("Erreur chargement profil");
-    }
-  }
-
-  // FETCH POSTS (USER ONLY)
-  static Future<List<dynamic>> fetchMyPosts() async {
-    final token = await AuthService().getToken();
-
-    final response = await http.get(
-      myPosts(),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['posts'] as List<dynamic>;
-    } else {
-      throw Exception('Erreur serveur posts');
-    }
-  }
-
-  // FETCH RECIPES
-  static Future<List<dynamic>> fetchRecipes() async {
-    final response = await http.get(recipes());
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['recipes'] as List<dynamic>;
-    } else {
-      throw Exception('Erreur serveur recettes');
-    }
-  }
-
-  // FETCH MY RECIPES
-  static Uri myRecipes() => Uri.parse('$baseUrl/recipe/me');
-
-  static Future<List<dynamic>> fetchMyRecipes() async {
-    final token = await AuthService().getToken();
-
-    final response = await http.get(
-      myRecipes(),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['recipes'] as List<dynamic>;
-    } else {
-      throw Exception('Erreur serveur recettes');
-    }
-  }
-
-  // FETCH FOLLOW COUNT
-  static Future<Map<String, int>> fetchFollowCount() async {
-    final token = await AuthService().getToken();
-
-    final response = await http.get(
-      followCount(),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return {
-        "followers": data['followers'],
-        "following": data['following'],
-      };
-    } else {
-      throw Exception("Erreur follow count");
-    }
-  }
-
-  // DELETE POST
   static Future<bool> deletePost(int postId) async {
     final token = await AuthService().getToken();
 
@@ -167,7 +234,6 @@ class ProfileApiService {
     return response.statusCode == 200 || response.statusCode == 204;
   }
 
-  // DELETE RECIPE
   static Future<bool> deleteRecipe(int recipeId) async {
     final token = await AuthService().getToken();
 
