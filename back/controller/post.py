@@ -14,19 +14,41 @@ class PostUpdate(BaseModel):
     
 # GET ALL POST
 @router.get("/post")
-def get_posts(db: Session = Depends(database.get_db)):
-    posts = db.query(models.Post).limit(10).all()
+def get_all_posts(db: Session = Depends(database.get_db)):
+    posts = db.query(models.Post).all()
 
-    to_return = []
-    for post in posts: 
-        user = db.get(models.User, post.user_id)
-        to_return.append({
-            "id": post.id,
-            "description": post.description,
-            "user": user
-        })
+    return {
+        "posts": [
+            {
+                "id": post.id,
+                "description": post.description,
+                "user_id": post.user_id,
+            }
+            for post in posts
+        ]
+    }
 
-    return {"posts": to_return}
+# GET ALL POST USER CONNECTED
+
+@router.get("/post/me")
+def get_my_posts(
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db)
+):
+    posts = db.query(models.Post).filter(
+        models.Post.user_id == int(user["id"])
+    ).all()
+
+    return {
+        "posts": [
+            {
+                "id": post.id,
+                "description": post.description,
+                "user_id": post.user_id,
+            }
+            for post in posts
+        ]
+    }
 
 # CREATE A POST
 @router.post("/post")

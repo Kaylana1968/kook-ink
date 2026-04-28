@@ -14,6 +14,7 @@ class ApiConfig {
 
   static Uri posts() => Uri.parse('$baseUrl/post');
   static Uri postById(dynamic id) => Uri.parse('$baseUrl/post/$id');
+  static Uri myPosts() => Uri.parse('$baseUrl/post/me');
 
   static Uri followCount() => Uri.parse('$baseUrl/follow/count');
 }
@@ -42,9 +43,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<List<dynamic>> fetchPosts() async {
+    final token = await AuthService().getToken();
+
     final response = await http.get(
-      ApiConfig.posts(),
-      headers: {"Content-Type": "application/json"},
+      ApiConfig.myPosts(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
     );
 
     if (response.statusCode == 200) {

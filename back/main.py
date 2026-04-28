@@ -33,6 +33,7 @@ app.include_router(recipe.router)
 app.include_router(login.router)
 app.include_router(post.router)
 app.include_router(follow.router)
+app.include_router(follow.router)
 
 if __name__ == "__main__":
     import uvicorn
