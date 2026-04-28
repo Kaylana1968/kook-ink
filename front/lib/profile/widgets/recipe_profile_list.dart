@@ -57,18 +57,9 @@ class RecipeProfileCard extends StatelessWidget {
 
     if (success) {
       await onRefresh();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Recette supprimée ✅")),
-        );
-      }
+      print("Recette supprimée");
     } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Erreur suppression recette")),
-        );
-      }
+      print("Erreur suppression recette");
     }
   }
 
@@ -82,12 +73,7 @@ class RecipeProfileCard extends StatelessWidget {
 
     if (updated == true) {
       await onRefresh();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Recette modifiée ✅")),
-        );
-      }
+      print("Recette modifié");
     }
   }
 

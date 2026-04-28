@@ -20,6 +20,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int followers = 0;
   int following = 0;
 
+  String username = "";
+  String description = "";
+
   @override
   void initState() {
     super.initState();
@@ -28,8 +31,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _loadData() {
     _postFuture = ProfileApiService.fetchMyPosts();
-    _recipeFuture = ProfileApiService.fetchRecipes();
+    _recipeFuture = ProfileApiService.fetchMyRecipes();
     _loadFollowCount();
+    _loadProfileInfo();
   }
 
   Future<void> _loadFollowCount() async {
@@ -43,20 +47,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
         following = data["following"] ?? 0;
       });
     } catch (e) {
-      print("Erreur follow count : $e");
+      debugPrint("Erreur follow count : $e");
+    }
+  }
+
+  Future<void> _loadProfileInfo() async {
+    try {
+      final data = await ProfileApiService.fetchMyProfile();
+
+      if (!mounted) return;
+
+      setState(() {
+        username = data["username"]?.toString() ?? "";
+        description = data["description"]?.toString() ?? "";
+      });
+    } catch (e) {
+      debugPrint("Erreur profile info : $e");
     }
   }
 
   Future<void> _refresh() async {
     setState(() {
       _postFuture = ProfileApiService.fetchMyPosts();
-      _recipeFuture = ProfileApiService.fetchRecipes();
+      _recipeFuture = ProfileApiService.fetchMyRecipes();
     });
 
     await Future.wait([
       _postFuture,
       _recipeFuture,
       _loadFollowCount(),
+      _loadProfileInfo(),
     ]);
   }
 
@@ -77,41 +97,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             Future<void> sendPostForm() async {
-              final description = descriptionController.text.trim();
+              final postDescription = descriptionController.text.trim();
 
-              if (description.isEmpty) return;
+              if (postDescription.isEmpty) return;
 
               setModalState(() => isLoading = true);
 
               try {
-                final success = await ProfileApiService.createPost(description);
+                final success =
+                    await ProfileApiService.createPost(postDescription);
 
                 if (success) {
                   if (context.mounted) Navigator.pop(context);
+
                   await _refresh();
 
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Post créé avec succès ✅"),
-                      ),
-                    );
-                  }
+                  debugPrint("Post créé avec succès ✅");
                 } else {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Erreur lors de la création du post"),
-                      ),
-                    );
-                  }
+                  debugPrint("Erreur lors de la création du post");
                 }
               } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Erreur : $e")),
-                  );
-                }
+                debugPrint("Erreur création post : $e");
               } finally {
                 setModalState(() => isLoading = false);
               }
@@ -250,6 +256,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 postFuture: _postFuture,
                 followers: followers,
                 following: following,
+                username: username,
+                description: description,
                 onCreatePost: _openCreatePostModal,
               ),
               const TabBar(
