@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'package:front/recipe/recipe_screen.dart';
 import 'services/profile_api_service.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/post_profile_list.dart';
@@ -20,8 +18,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Future<List<dynamic>> _recipeFuture = Future.value([]);
   Future<List<dynamic>> _postFuture = Future.value([]);
+  Future<List<dynamic>> _recipeFuture = Future.value([]);
 
   int followers = 0;
   int following = 0;
@@ -52,9 +50,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfile() async {
     try {
-      final data = isMyProfile
-          ? await ProfileApiService.fetchMyProfile()
-          : await ProfileApiService.fetchUserProfile(widget.userId!);
+      Map<String, dynamic> data;
+
+      if (isMyProfile) {
+        data = await ProfileApiService.fetchMyProfile();
+      } else {
+        data = await ProfileApiService.fetchUserProfile(widget.userId!);
+      }
 
       if (!mounted) return;
 
@@ -69,9 +71,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadFollowCount() async {
     try {
-      final data = isMyProfile
-          ? await ProfileApiService.fetchFollowCount()
-          : await ProfileApiService.fetchUserFollowCount(widget.userId!);
+      Map<String, int> data;
+
+      if (isMyProfile) {
+        data = await ProfileApiService.fetchFollowCount();
+      } else {
+        data = await ProfileApiService.fetchUserFollowCount(widget.userId!);
+      }
 
       if (!mounted) return;
 
@@ -95,16 +101,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     });
 
-    await Future.wait([
-      _postFuture,
-      _recipeFuture,
-      _loadProfile(),
-      _loadFollowCount(),
-    ]);
+    await _postFuture;
+    await _recipeFuture;
+    await _loadProfile();
+    await _loadFollowCount();
   }
 
   void _openCreatePostModal() {
-    final TextEditingController descriptionController = TextEditingController();
+    final controller = TextEditingController();
     bool isLoading = false;
 
     showModalBottomSheet(
@@ -118,29 +122,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            Future<void> sendPostForm() async {
-              final postDescription = descriptionController.text.trim();
+            Future<void> createPost() async {
+              final description = controller.text.trim();
 
-              if (postDescription.isEmpty) return;
+              if (description.isEmpty) return;
 
-              setModalState(() => isLoading = true);
+              setModalState(() {
+                isLoading = true;
+              });
 
-              try {
-                final success =
-                    await ProfileApiService.createPost(postDescription);
+              final success = await ProfileApiService.createPost(description);
 
-                if (success) {
-                  if (context.mounted) Navigator.pop(context);
-                  await _refresh();
-                  debugPrint("Post créé avec succès");
-                } else {
-                  debugPrint("Erreur lors de la création du post");
-                }
-              } catch (e) {
-                debugPrint("Erreur création post : $e");
-              } finally {
-                setModalState(() => isLoading = false);
+              if (success) {
+                if (context.mounted) Navigator.pop(context);
+                await _refresh();
+                debugPrint("Post créé");
+              } else {
+                debugPrint("Erreur création post");
               }
+
+              setModalState(() {
+                isLoading = false;
+              });
             }
 
             return Padding(
@@ -162,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   TextField(
-                    controller: descriptionController,
+                    controller: controller,
                     maxLines: 4,
                     decoration: InputDecoration(
                       hintText: "Écris une description...",
@@ -175,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: isLoading ? null : sendPostForm,
+                      onPressed: isLoading ? null : createPost,
                       child: isLoading
                           ? const CircularProgressIndicator()
                           : const Text("Publier"),
@@ -194,17 +197,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return FutureBuilder<List<dynamic>>(
       future: _postFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.hasError) {
+          return const Center(child: Text("Erreur chargement posts"));
+        }
+
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (snapshot.hasError) {
-          return const Center(
-            child: Text("Erreur lors du chargement des posts"),
-          );
-        }
-
-        final posts = snapshot.data ?? [];
+        final posts = snapshot.data!;
 
         if (posts.isEmpty) {
           return const Center(child: Text("Aucun post"));
@@ -227,17 +228,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return FutureBuilder<List<dynamic>>(
       future: _recipeFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.hasError) {
+          return const Center(child: Text("Erreur chargement recettes"));
+        }
+
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (snapshot.hasError) {
-          return const Center(
-            child: Text("Erreur lors du chargement des recettes"),
-          );
-        }
-
-        final recipes = snapshot.data ?? [];
+        final recipes = snapshot.data!;
 
         if (recipes.isEmpty) {
           return const Center(child: Text("Aucune recette"));
@@ -274,6 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               ProfileHeader(
                 postFuture: _postFuture,
+                recipeFuture: _recipeFuture,
                 followers: followers,
                 following: following,
                 username: username,

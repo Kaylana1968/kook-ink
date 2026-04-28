@@ -6,7 +6,7 @@ import 'package:front/auth_service.dart';
 class ProfileApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
 
-  //ROUTES RECETTES
+  //--ROUTES RECETTES--//
   // Toutes les recettes
   static Uri recipes() => Uri.parse('$baseUrl/recipe');
   // Recette par ID
@@ -16,7 +16,7 @@ class ProfileApiService {
   // Recettes d’un utilisateur spécifique
   static Uri userRecipes(int id) => Uri.parse('$baseUrl/recipe/user/$id');
 
-  // ROUTES POSTS
+  //--ROUTES POSTS--//
   // Tous les posts
   static Uri posts() => Uri.parse('$baseUrl/post');
   // Post par ID
@@ -26,20 +26,20 @@ class ProfileApiService {
   // Posts d’un utilisateur spécifique
   static Uri userPosts(int id) => Uri.parse('$baseUrl/post/user/$id');
 
-  // ROUTES PROFIL
+  //--ROUTES PROFIL--//
   // Profil utilisateur connecté
   static Uri myProfile() => Uri.parse('$baseUrl/profile/me');
 
   // Profil d'un utilisateur
   static Uri userProfile(int id) => Uri.parse('$baseUrl/profile/$id');
 
-  // ROUTES FOLLOW
+  //--ROUTES FOLLOW--//
   // Nombre de followers de l'utilisateur connecté
   static Uri followCount() => Uri.parse('$baseUrl/follow/count');
   // Nombre de followers d’un utilisateur
   static Uri userFollowCount(int id) => Uri.parse('$baseUrl/follow/count/$id');
 
-// ROUTES FAVORIS
+  //--ROUTES FAVORIS--//
   // Favoris utilisateur connecté
   static Uri favorites() => Uri.parse('$baseUrl/favorite');
   // Favoris d'un utilisateur
@@ -218,6 +218,24 @@ class ProfileApiService {
     );
 
     return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  //MODIFIER UN POST
+  static Future<bool> updatePost(int postId, String description) async {
+    final token = await AuthService().getToken();
+
+    final response = await http.put(
+      postById(postId),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'description': description,
+      }),
+    );
+
+    return response.statusCode == 200;
   }
 
   //SUPPRIMER UN POST

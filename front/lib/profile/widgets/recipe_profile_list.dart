@@ -13,77 +13,35 @@ class RecipeProfileCard extends StatelessWidget {
     required this.onRefresh,
   });
 
-  String _getImageUrl() {
-    final rawImageUrl = recipe['image_link']?.toString() ?? '';
+  Future<void> _deleteRecipe() async {
+    final id = recipe['id'];
+    if (id == null) return;
 
-    if (rawImageUrl.isEmpty) return '';
-
-    if (rawImageUrl.startsWith('http')) {
-      return rawImageUrl;
-    }
-
-    if (rawImageUrl.startsWith('/')) {
-      return '${ProfileApiService.baseUrl}$rawImageUrl';
-    }
-
-    return '${ProfileApiService.baseUrl}/$rawImageUrl';
-  }
-
-  Future<void> _deleteRecipe(BuildContext context) async {
-    final recipeId = recipe['id'];
-    if (recipeId == null) return;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Confirmer la suppression"),
-        content: const Text("Voulez-vous vraiment supprimer cette recette ?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Annuler"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Supprimer"),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    final success = await ProfileApiService.deleteRecipe(recipeId);
+    final success = await ProfileApiService.deleteRecipe(id);
 
     if (success) {
       await onRefresh();
-      print("Recette supprimée");
-    } else {
-      print("Erreur suppression recette");
+      debugPrint("Recette supprimée");
     }
   }
 
   Future<void> _editRecipe(BuildContext context) async {
-    final updated = await Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => RecipeScreen(recipe: recipe),
       ),
     );
 
-    if (updated == true) {
+    if (result == true) {
       await onRefresh();
-      print("Recette modifié");
+      debugPrint("Recette modifiée");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = _getImageUrl();
-
-    final hasValidImage = imageUrl.isNotEmpty &&
-        Uri.tryParse(imageUrl) != null &&
-        Uri.parse(imageUrl).hasScheme;
+    final imageUrl = recipe["image_link"] ?? "";
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -94,31 +52,21 @@ class RecipeProfileCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(10)),
-                child: hasValidImage
-                    ? Image.network(
-                        imageUrl,
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 120,
-                            width: double.infinity,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image_not_supported),
-                          );
-                        },
-                      )
-                    : Container(
-                        height: 120,
-                        width: double.infinity,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.image_not_supported),
-                      ),
-              ),
+              // IMAGE (sinon rien)
+              if (imageUrl.isNotEmpty)
+                ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(10)),
+                  child: Image.network(
+                    imageUrl,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox(),
+                  ),
+                ),
+
+              // INFOS
               Padding(
                 padding: const EdgeInsets.all(6),
                 child: Column(
@@ -150,13 +98,17 @@ class RecipeProfileCard extends StatelessWidget {
                     if (recipe['person'] != null)
                       infoChip(
                         Icons.people_outline,
-                        "${recipe['person']} pers.",
+                        recipe['person'] > 1
+                            ? "${recipe['person']} personnes"
+                            : "${recipe['person']} personne",
                       ),
                   ],
                 ),
               ),
             ],
           ),
+
+          // MENU
           Positioned(
             top: 4,
             right: 4,
@@ -165,8 +117,10 @@ class RecipeProfileCard extends StatelessWidget {
               onSelected: (value) async {
                 if (value == 'edit') {
                   await _editRecipe(context);
-                } else if (value == 'delete') {
-                  await _deleteRecipe(context);
+                }
+
+                if (value == 'delete') {
+                  await _deleteRecipe();
                 }
               },
               itemBuilder: (context) => const [
