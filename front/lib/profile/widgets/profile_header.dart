@@ -4,6 +4,7 @@ import 'stat_widget.dart';
 
 class ProfileHeader extends StatelessWidget {
   final Future<List<dynamic>> postFuture;
+  final Future<List<dynamic>> recipeFuture;
   final int followers;
   final int following;
   final String username;
@@ -13,6 +14,7 @@ class ProfileHeader extends StatelessWidget {
   const ProfileHeader({
     super.key,
     required this.postFuture,
+    required this.recipeFuture,
     required this.followers,
     required this.following,
     required this.username,
@@ -25,6 +27,8 @@ class ProfileHeader extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 20),
+
+        // Avatar + follow
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -34,7 +38,8 @@ class ProfileHeader extends StatelessWidget {
                 radius: 40,
                 child: Icon(Icons.person, size: 40),
               ),
-              PostCountWidget(postFuture: postFuture),
+              PostCountWidget(
+                  postFuture: postFuture, recipeFuture: recipeFuture),
               StatWidget(
                 value: followers.toString(),
                 label: 'Followers',
@@ -46,43 +51,42 @@ class ProfileHeader extends StatelessWidget {
             ],
           ),
         ),
+
+        // Username + description
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  username.isEmpty ? "Utilisateur" : username,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                username.isEmpty ? "Utilisateur" : username,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-                if (description.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
+              ),
+              if (description.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
                     description,
                     style: const TextStyle(fontSize: 13),
                   ),
-                ],
-              ],
-            ),
+                ),
+            ],
           ),
         ),
+
+        // bouton créer post unique sur le profil connecté
         if (onCreatePost != null)
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onCreatePost,
-                    child: const Text('Créer un post'),
-                  ),
-                ),
-              ],
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: onCreatePost,
+                child: const Text('Créer un post'),
+              ),
             ),
           ),
       ],

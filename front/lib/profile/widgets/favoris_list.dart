@@ -4,34 +4,34 @@ import '../services/profile_api_service.dart';
 class FavorisList extends StatelessWidget {
   final int? userId;
 
-  const FavorisList({
-    super.key,
-    this.userId,
-  });
+  const FavorisList({super.key, this.userId});
 
   @override
   Widget build(BuildContext context) {
-    final future = userId == null
-        ? ProfileApiService.fetchFavorites()
-        : ProfileApiService.fetchUserFavorites(userId!);
+    Future<List<dynamic>> future;
+
+    if (userId == null) {
+      future = ProfileApiService.fetchFavorites();
+    } else {
+      future = ProfileApiService.fetchUserFavorites(userId!);
+    }
 
     return FutureBuilder<List<dynamic>>(
       future: future,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
         if (snapshot.hasError) {
           return const Center(
             child: Text("Erreur lors du chargement des favoris"),
           );
         }
 
+        // données
         final favorites = snapshot.data ?? [];
 
         if (favorites.isEmpty) {
-          return const Center(child: Text("Aucun favori"));
+          return const Center(
+            child: Text("Aucun favori"),
+          );
         }
 
         return ListView.builder(
@@ -41,18 +41,20 @@ class FavorisList extends StatelessWidget {
             final type = favorite["type"];
             final item = favorite["item"];
 
+            // POST
             if (type == "post") {
               return ListTile(
                 leading: const Icon(Icons.article_outlined),
                 title: Text(item["description"] ?? "Post sans description"),
-                subtitle: Text(item["username"] ?? "Post"),
+                subtitle: Text(item["username"] ?? "Utilisateur"),
               );
             }
 
+            // RECETTE
             if (type == "recipe") {
               return ListTile(
                 leading: const Icon(Icons.restaurant_outlined),
-                title: Text(item["name"] ?? "Recette sans nom"),
+                title: Text(item["name"] ?? "Recette"),
                 subtitle: Text(
                   "${item["username"] ?? "Utilisateur"} • "
                   "${item["preparation_time"] ?? 0} min • "
@@ -60,8 +62,7 @@ class FavorisList extends StatelessWidget {
                 ),
               );
             }
-
-            return const SizedBox.shrink();
+            return const SizedBox();
           },
         );
       },
