@@ -1,5 +1,8 @@
-from test.test_main import client
-from common import utils, models
+from test.test_main import client, get_db as override_get_db
+from common import utils, models, database
+from main import app
+
+app.dependency_overrides[database.get_db] = override_get_db
 
 fake_user = models.User(
     id=1, username="test", email="test@gmail.com", password=utils.hash_password("test")
