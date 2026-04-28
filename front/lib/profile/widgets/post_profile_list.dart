@@ -42,18 +42,9 @@ class PostProfileCard extends StatelessWidget {
 
     if (success) {
       await onRefresh();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Post supprimé ✅")),
-        );
-      }
+      print("Post supprimé");
     } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Erreur suppression post")),
-        );
-      }
+      print("Erreur suppresion post");
     }
   }
 
@@ -108,20 +99,9 @@ class PostProfileCard extends StatelessWidget {
 
     if (response.statusCode == 200) {
       await onRefresh();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post modifié')),
-        );
-      }
+      print("Post modifié");
     } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur modification : ${response.statusCode}'),
-          ),
-        );
-      }
+      print("Erreur modification");
     }
   }
 

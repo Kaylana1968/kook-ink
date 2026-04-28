@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from common import database, models, utils
+from pydantic import BaseModel
 
 router = APIRouter(tags=["Post"])
-
-from pydantic import BaseModel
 
 
 class PostCreate(BaseModel):
@@ -15,29 +14,40 @@ class PostUpdate(BaseModel):
     description: str
 
 
-# GET ALL POST
+# GET ALL POSTS
 @router.get("/post")
 def get_all_posts(db: Session = Depends(database.get_db)):
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).order_by(
+        models.Post.created_at.desc()
+    ).all()
 
-    return {
-        "posts": [
-            {
-                "id": post.id,
-                "description": post.description,
-                "user_id": post.user_id,
-            }
-            for post in posts
-        ]
-    }
+    result = []
+
+    for post in posts:
+        user = db.query(models.User).filter(
+            models.User.id == post.user_id
+        ).first()
+
+        result.append({
+            "id": post.id,
+            "description": post.description,
+            "user_id": post.user_id,
+            "username": user.username if user else "Utilisateur",
+            "created_at": post.created_at.isoformat() if post.created_at else None,
+        })
+
+    return {"posts": result}
 
 
-# GET ALL POST USER CONNECTED
-
-
+# GET POSTS USER CONNECTED
 @router.get("/post/me")
-def get_my_posts(user=Depends(utils.get_user), db: Session = Depends(database.get_db)):
-    posts = db.query(models.Post).filter(models.Post.user_id == int(user["id"])).all()
+def get_my_posts(
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db)
+):
+    posts = db.query(models.Post).filter(
+        models.Post.user_id == int(user["id"])
+    ).order_by(models.Post.created_at.desc()).all()
 
     return {
         "posts": [
@@ -45,6 +55,7 @@ def get_my_posts(user=Depends(utils.get_user), db: Session = Depends(database.ge
                 "id": post.id,
                 "description": post.description,
                 "user_id": post.user_id,
+                "created_at": post.created_at.isoformat() if post.created_at else None,
             }
             for post in posts
         ]
@@ -73,7 +84,13 @@ def upload_post(
 # DELETE A POST
 @router.delete("/post/{post_id}")
 def delete_post(
+<<<<<<< HEAD
     post_id: int, user=Depends(utils.get_user), db: Session = Depends(database.get_db)
+=======
+    post_id: int,
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db),
+>>>>>>> origin/dev-profile-favoris
 ):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
 
@@ -81,17 +98,19 @@ def delete_post(
         raise HTTPException(status_code=404, detail="Post not found")
 
     if post.user_id != int(user["id"]):
+<<<<<<< HEAD
         raise HTTPException(status_code=403, detail="Not allowed to edit this recipe")
+=======
+        raise HTTPException(status_code=403, detail="Not allowed to delete this post")
+>>>>>>> origin/dev-profile-favoris
 
     try:
         db.delete(post)
         db.commit()
-        print(f"Post deleted successfully with ID: {post.id}")
+        return {"message": "Post supprimé"}
     except Exception as e:
         db.rollback()
-        print(f"An error occurred: {e}")
-    finally:
-        db.close()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # CHANGE A POST
@@ -121,5 +140,6 @@ def update_post(
             "id": post.id,
             "description": post.description,
             "user_id": post.user_id,
+            "created_at": post.created_at.isoformat() if post.created_at else None,
         },
     }

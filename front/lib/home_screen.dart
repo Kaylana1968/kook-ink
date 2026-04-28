@@ -11,27 +11,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<List<dynamic>> _postFuture;
+  late Future<List<dynamic>> _feedFuture;
 
   @override
   void initState() {
     super.initState();
-    _postFuture = fetchPosts();
+    _feedFuture = fetchFeed();
   }
 
-  Future<List<dynamic>> fetchPosts() async {
+  Future<List<dynamic>> fetchFeed() async {
     try {
       final String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
 
       final response = await http.get(
-        Uri.parse('$baseUrl/post'),
+        Uri.parse('$baseUrl/feed'),
         headers: {"Content-Type": "application/json"},
       );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-
-        return data['posts'] as List<dynamic>;
+        return data['feed'] as List<dynamic>;
       } else {
         throw Exception('Erreur serveur: ${response.statusCode}');
       }
@@ -42,18 +41,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _refresh() async {
     setState(() {
-      _postFuture = fetchPosts();
+      _feedFuture = fetchFeed();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<dynamic>>(
-      future: _postFuture,
+      future: _feedFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-              child: CircularProgressIndicator(color: Colors.orange));
+            child: CircularProgressIndicator(color: Colors.orange),
+          );
         }
 
         if (snapshot.hasError) {
@@ -64,14 +64,26 @@ class _HomeScreenState extends State<HomeScreen> {
           return _buildEmptyState();
         }
 
-        final posts = snapshot.data!;
+        final feed = snapshot.data!;
 
         return RefreshIndicator(
           onRefresh: _refresh,
           color: Colors.orange,
           child: ListView.builder(
-            itemCount: posts.length,
-            itemBuilder: (context, index) => RecipePost(post: posts[index]),
+            itemCount: feed.length,
+            itemBuilder: (context, index) {
+              final feedItem = feed[index];
+
+              if (feedItem["type"] == "post") {
+                return RecipePost(post: feedItem["item"]);
+              }
+
+              if (feedItem["type"] == "recipe") {
+                return RecipeCard(recipe: feedItem["item"]);
+              }
+
+              return const SizedBox.shrink();
+            },
           ),
         );
       },
@@ -94,55 +106,165 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildEmptyState() {
     return const Center(
-      child: Text("Aucune recette à afficher pour le moment."),
+      child: Text("Aucun contenu à afficher pour le moment."),
     );
   }
 }
 
-// POST COMPONENT
-class RecipePost extends StatelessWidget {
-  final Map<String, dynamic> post;
-  const RecipePost({super.key, required this.post});
+//
+// RECIPE CARD
+//
+class RecipeCard extends StatelessWidget {
+  final Map<String, dynamic> recipe;
+
+  const RecipeCard({
+    super.key,
+    required this.recipe,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final name = recipe["name"] ?? "Recette";
+    final username = recipe["username"] ?? "Utilisateur";
+    final imageUrl = recipe["image_link"] ?? "";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header (User Info)
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        // Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.orange,
-                child:
-                    Icon(Icons.restaurant_menu, size: 18, color: Colors.white),
+                child: Icon(Icons.person, size: 18, color: Colors.white),
               ),
-              SizedBox(width: 10),
-              Spacer(),
-              Icon(Icons.more_horiz),
+              const SizedBox(width: 10),
+              Text(
+                username,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const Spacer(),
+              const Icon(Icons.more_horiz),
             ],
           ),
         ),
 
-        // 4. Content Area
+        // Image
+        if (imageUrl.isNotEmpty)
+          Image.network(
+            imageUrl,
+            width: double.infinity,
+            height: 200,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) {
+              return Container(
+                height: 200,
+                color: Colors.grey[300],
+                child: const Center(child: Icon(Icons.image_not_supported)),
+              );
+            },
+          )
+        else
+          Container(
+            height: 200,
+            color: Colors.grey[300],
+            child: const Center(child: Icon(Icons.image)),
+          ),
+
+        // Infos
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Recipe Name
               Text(
-                post['description'],
-                style:
-                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
+              Text(
+                "${recipe["preparation_time"] ?? 0} min • "
+                "${recipe["person"] ?? 0} pers • "
+                "Niv ${recipe["difficulty"] ?? 0}",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
         ),
+
+        const Divider(height: 1, thickness: 0.5),
+      ],
+    );
+  }
+}
+
+//
+// POST CARD
+//
+class RecipePost extends StatelessWidget {
+  final Map<String, dynamic> post;
+
+  const RecipePost({
+    super.key,
+    required this.post,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final username = post['username']?.toString() ?? 'Utilisateur';
+    final description = post['description']?.toString() ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.orange,
+                child: Icon(Icons.person, size: 18, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                username,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const Spacer(),
+              const Icon(Icons.more_horiz),
+            ],
+          ),
+        ),
+
+        // Description
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            description,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+            ),
+          ),
+        ),
+
         const SizedBox(height: 24),
         const Divider(height: 1, thickness: 0.5),
       ],

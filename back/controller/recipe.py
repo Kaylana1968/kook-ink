@@ -13,7 +13,6 @@ class IngredientCreate(BaseModel):
     quantity: float
     unit: models.UnitEnum
 
-
 class RecipeCreate(BaseModel):
     name: str
     tips: Optional[str] = None
@@ -26,6 +25,32 @@ class RecipeCreate(BaseModel):
     steps: List[str]
     ingredients: List[IngredientCreate]
 
+# GET ALL RECIPE ME
+@router.get("/recipe/me")
+def get_my_recipes(
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db)
+):
+    user_id = int(user["id"])
+
+    recipes = db.query(models.Recipe).filter(
+    models.Recipe.user_id == user_id
+).order_by(models.Recipe.created_at.desc()).all()
+
+    result = []
+
+    for recipe in recipes:
+        result.append({
+            "id": recipe.id,
+            "name": recipe.name,
+            "difficulty": recipe.difficulty,
+            "preparation_time": recipe.preparation_time,
+            "baking_time": recipe.baking_time,
+            "person": recipe.person,
+            "image_link": recipe.image_link,
+        })
+
+    return {"recipes": result}
 
 # GET ALL RECIPES
 @router.get("/recipe")

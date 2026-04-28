@@ -11,10 +11,34 @@ class ProfileApiService {
   static Uri recipeById(dynamic id) => Uri.parse('$baseUrl/recipe/$id');
 
   static Uri posts() => Uri.parse('$baseUrl/post');
+
   static Uri postById(dynamic id) => Uri.parse('$baseUrl/post/$id');
   static Uri myPosts() => Uri.parse('$baseUrl/post/me');
 
-  static Uri followCount() => Uri.parse('$baseUrl/follow/count');
+  static Uri myProfile() => Uri.parse('$baseUrl/profile/me');
+
+  static Uri followCount() => Uri.parse('$baseUrl/profile/count');
+
+  static Uri favorites() => Uri.parse('$baseUrl/favorite');
+
+  static Future<List<dynamic>> fetchFavorites() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      favorites(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["favorites"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur favoris");
+    }
+  }
 
   static Future<bool> createPost(String description) async {
     final token = await AuthService().getToken();
@@ -31,6 +55,24 @@ class ProfileApiService {
     );
 
     return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  static Future<Map<String, dynamic>> fetchMyProfile() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      myProfile(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception("Erreur chargement profil");
+    }
   }
 
   // FETCH POSTS (USER ONLY)
@@ -56,6 +98,28 @@ class ProfileApiService {
   // FETCH RECIPES
   static Future<List<dynamic>> fetchRecipes() async {
     final response = await http.get(recipes());
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['recipes'] as List<dynamic>;
+    } else {
+      throw Exception('Erreur serveur recettes');
+    }
+  }
+
+  // FETCH MY RECIPES
+  static Uri myRecipes() => Uri.parse('$baseUrl/recipe/me');
+
+  static Future<List<dynamic>> fetchMyRecipes() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      myRecipes(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
