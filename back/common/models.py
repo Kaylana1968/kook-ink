@@ -89,7 +89,7 @@ class Recipe(Base):
     name = Column(Text, nullable=False)
     tips = Column(Text)
     difficulty = Column(Integer)
-    image_link = Column(String, nullable=False)
+    image_link = Column(String)
     video_link = Column(String)
     preparation_time = Column(Integer)
     baking_time = Column(Integer)
