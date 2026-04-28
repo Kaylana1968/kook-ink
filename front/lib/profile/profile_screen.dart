@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:front/recipe/recipe_screen.dart';
 import 'services/profile_api_service.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/post_profile_list.dart';
@@ -294,7 +295,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     _postsTab(),
                     _recipesTab(),
-                    const FavorisList(),
+                    FavorisList(userId: widget.userId),
                   ],
                 ),
               ),

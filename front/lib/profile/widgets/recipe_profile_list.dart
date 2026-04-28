@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/recipe_screen.dart';
+import 'package:front/recipe/recipe_screen.dart';
 import '../services/profile_api_service.dart';
 import 'info_chip.dart';
 

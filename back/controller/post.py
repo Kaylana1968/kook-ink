@@ -39,7 +39,7 @@ def get_all_posts(db: Session = Depends(database.get_db)):
     return {"posts": result}
 
 
-# GET POSTS USER CONNECTED
+# GET POSTS USER ME
 @router.get("/post/me")
 def get_my_posts(
     user=Depends(utils.get_user),
