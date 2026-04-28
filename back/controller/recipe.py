@@ -118,14 +118,20 @@ def upload_recipe(
 
 
 # UPDATE A RECIPE
-@router.patch("/recipe/{recipe_id}")
+@router.put("/recipe/{recipe_id}")
 def update_recipe(
-    recipe_id: int, recipe: RecipeCreate, db: Session = Depends(database.get_db)
+    recipe_id: int,
+    recipe: RecipeCreate,
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db),
 ):
     db_recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
 
     if not db_recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
+
+    if db_recipe.user_id != int(user["id"]):
+        raise HTTPException(status_code=403, detail="Not allowed to edit this recipe")
 
     try:
         db_recipe.name = recipe.name
@@ -172,11 +178,16 @@ def update_recipe(
 
 # DELETE A RECIPE
 @router.delete("/recipe/{recipe_id}", status_code=204)
-def delete_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
+def delete_recipe(
+    recipe_id: int, user=Depends(utils.get_user), db: Session = Depends(database.get_db)
+):
     recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
 
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
+
+    if recipe.user_id != int(user["id"]):
+        raise HTTPException(status_code=403, detail="Not allowed to edit this recipe")
 
     try:
         db.query(models.RecipeIngredient).filter(

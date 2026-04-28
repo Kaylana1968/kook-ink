@@ -31,16 +31,13 @@ def get_all_posts(db: Session = Depends(database.get_db)):
         ]
     }
 
+
 # GET ALL POST USER CONNECTED
 
+
 @router.get("/post/me")
-def get_my_posts(
-    user=Depends(utils.get_user),
-    db: Session = Depends(database.get_db)
-):
-    posts = db.query(models.Post).filter(
-        models.Post.user_id == int(user["id"])
-    ).all()
+def get_my_posts(user=Depends(utils.get_user), db: Session = Depends(database.get_db)):
+    posts = db.query(models.Post).filter(models.Post.user_id == int(user["id"])).all()
 
     return {
         "posts": [
@@ -75,14 +72,19 @@ def upload_post(
 
 # DELETE A POST
 @router.delete("/post/{post_id}")
-def delete_post(post_id: int, db: Session = Depends(database.get_db)):
+def delete_post(
+    post_id: int, user=Depends(utils.get_user), db: Session = Depends(database.get_db)
+):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
 
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    db.delete(post)
+
+    if post.user_id != int(user["id"]):
+        raise HTTPException(status_code=403, detail="Not allowed to edit this recipe")
 
     try:
+        db.delete(post)
         db.commit()
         print(f"Post deleted successfully with ID: {post.id}")
     except Exception as e:
