@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: MyHomePage(),
+      home: const MyHomePage(),
     );
   }
 }
@@ -34,27 +34,57 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
+  static final ValueNotifier<int?> profileUserId = ValueNotifier<int?>(null);
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
+
+  static void openUserProfile(int userId) {
+    profileUserId.value = userId;
+  }
+
+  static void openMyProfile() {
+    profileUserId.value = null;
+  }
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   Widget _currentPage = const HomeScreen();
   bool _isLoggedIn = false;
-  bool _isLoading = true; // Flag to handle the initial check
+  bool _isLoading = true;
+
+  bool _isProfilePage = false;
 
   @override
   void initState() {
     super.initState();
     _checkAuth();
+
+    MyHomePage.profileUserId.addListener(_openProfileFromNotifier);
+  }
+
+  @override
+  void dispose() {
+    MyHomePage.profileUserId.removeListener(_openProfileFromNotifier);
+    super.dispose();
+  }
+
+  void _openProfileFromNotifier() {
+    final userId = MyHomePage.profileUserId.value;
+
+    setState(() {
+      _currentPage = ProfileScreen(userId: userId);
+      _isProfilePage = true;
+    });
   }
 
   Future<void> _checkAuth() async {
     final token = await AuthService().getToken();
+
     if (mounted) {
       setState(() {
         _isLoggedIn = token != null && token.isNotEmpty;
-        _isLoading = false; // Check is done
+        _isLoading = false;
       });
     }
   }
@@ -62,34 +92,55 @@ class _MyHomePageState extends State<MyHomePage> {
   void _onLogin() {
     setState(() {
       _isLoggedIn = true;
+      MyHomePage.openMyProfile();
       _currentPage = const ProfileScreen();
+      _isProfilePage = true;
+    });
+  }
+
+  void _selectPage(Widget selectedPage) {
+    if (selectedPage is ProfileScreen && !_isLoggedIn) {
+      setState(() {
+        _currentPage = LoginForm(onLogin: _onLogin);
+        _isProfilePage = false;
+      });
+      return;
+    }
+
+    if (selectedPage is ProfileScreen) {
+      MyHomePage.openMyProfile();
+
+      setState(() {
+        _currentPage = const ProfileScreen();
+        _isProfilePage = true;
+      });
+      return;
+    }
+
+    setState(() {
+      _currentPage = selectedPage;
+      _isProfilePage = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Handle the loading state simply at the top
     if (_isLoading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: Colors.orange)),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.orange),
+        ),
       );
     }
 
-    // Return a clean Scaffold without FutureBuilder nesting
     return Scaffold(
       body: Column(
         children: [
-          Header(onItemSelected: (p) => setState(() => _currentPage = p)),
+          Header(onItemSelected: _selectPage),
           Expanded(child: _currentPage),
           Footer(
-            currentPage: _currentPage,
-            onItemSelected: (selectedPage) {
-              if (selectedPage is ProfileScreen && !_isLoggedIn) {
-                setState(() => _currentPage = LoginForm(onLogin: _onLogin));
-              } else {
-                setState(() => _currentPage = selectedPage);
-              }
-            },
+            currentPage: _isProfilePage ? const ProfileScreen() : _currentPage,
+            onItemSelected: _selectPage,
           ),
         ],
       ),

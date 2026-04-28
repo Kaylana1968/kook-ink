@@ -7,7 +7,12 @@ import 'widgets/recipe_profile_list.dart';
 import 'widgets/favoris_list.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final int? userId;
+
+  const ProfileScreen({
+    super.key,
+    this.userId,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -23,6 +28,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String username = "";
   String description = "";
 
+  bool get isMyProfile => widget.userId == null;
+
   @override
   void initState() {
     super.initState();
@@ -30,15 +37,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _loadData() {
-    _postFuture = ProfileApiService.fetchMyPosts();
-    _recipeFuture = ProfileApiService.fetchMyRecipes();
+    if (isMyProfile) {
+      _postFuture = ProfileApiService.fetchMyPosts();
+      _recipeFuture = ProfileApiService.fetchMyRecipes();
+    } else {
+      _postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
+      _recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
+    }
+
+    _loadProfile();
     _loadFollowCount();
-    _loadProfileInfo();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final data = isMyProfile
+          ? await ProfileApiService.fetchMyProfile()
+          : await ProfileApiService.fetchUserProfile(widget.userId!);
+
+      if (!mounted) return;
+
+      setState(() {
+        username = data["username"]?.toString() ?? "";
+        description = data["description"]?.toString() ?? "";
+      });
+    } catch (e) {
+      debugPrint("Erreur profil : $e");
+    }
   }
 
   Future<void> _loadFollowCount() async {
     try {
-      final data = await ProfileApiService.fetchFollowCount();
+      final data = isMyProfile
+          ? await ProfileApiService.fetchFollowCount()
+          : await ProfileApiService.fetchUserFollowCount(widget.userId!);
 
       if (!mounted) return;
 
@@ -51,38 +83,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _loadProfileInfo() async {
-    try {
-      final data = await ProfileApiService.fetchMyProfile();
-
-      if (!mounted) return;
-
-      setState(() {
-        username = data["username"]?.toString() ?? "";
-        description = data["description"]?.toString() ?? "";
-      });
-    } catch (e) {
-      debugPrint("Erreur profile info : $e");
-    }
-  }
-
   Future<void> _refresh() async {
     setState(() {
-      _postFuture = ProfileApiService.fetchMyPosts();
-      _recipeFuture = ProfileApiService.fetchMyRecipes();
+      if (isMyProfile) {
+        _postFuture = ProfileApiService.fetchMyPosts();
+        _recipeFuture = ProfileApiService.fetchMyRecipes();
+      } else {
+        _postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
+        _recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
+      }
     });
 
     await Future.wait([
       _postFuture,
       _recipeFuture,
+      _loadProfile(),
       _loadFollowCount(),
-      _loadProfileInfo(),
     ]);
   }
 
   void _openCreatePostModal() {
     final TextEditingController descriptionController = TextEditingController();
-
     bool isLoading = false;
 
     showModalBottomSheet(
@@ -109,10 +130,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 if (success) {
                   if (context.mounted) Navigator.pop(context);
-
                   await _refresh();
-
-                  debugPrint("Post créé avec succès ✅");
+                  debugPrint("Post créé avec succès");
                 } else {
                   debugPrint("Erreur lors de la création du post");
                 }
@@ -258,7 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 following: following,
                 username: username,
                 description: description,
-                onCreatePost: _openCreatePostModal,
+                onCreatePost: isMyProfile ? _openCreatePostModal : null,
               ),
               const TabBar(
                 labelColor: Colors.black,

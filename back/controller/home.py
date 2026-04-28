@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from common import database, models, utils
+from common import database, models
 
 router = APIRouter()
 
@@ -20,6 +20,7 @@ def get_feed(db: Session = Depends(database.get_db)):
             "item": {
                 "id": post.id,
                 "description": post.description,
+                "user_id": post.user_id,
                 "username": user.username if user else "Utilisateur",
             }
         })
@@ -33,6 +34,7 @@ def get_feed(db: Session = Depends(database.get_db)):
             "item": {
                 "id": recipe.id,
                 "name": recipe.name,
+                "user_id": recipe.user_id,
                 "image_link": recipe.image_link,
                 "preparation_time": recipe.preparation_time,
                 "baking_time": recipe.baking_time,
