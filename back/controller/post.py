@@ -30,7 +30,7 @@ def get_posts(db: Session = Depends(database.get_db)):
 
 # CREATE A POST
 @router.post("/post")
-def upload_recipe(
+def upload_post(
     post: PostCreate,
     user=Depends(utils.get_user),
     db: Session = Depends(database.get_db),
@@ -49,7 +49,7 @@ def upload_recipe(
 
 # DELETE A POST
 @router.delete("/post/{post_id}")
-def delete_recipe(post_id: int, db: Session = Depends(database.get_db)):
+def delete_post(post_id: int, db: Session = Depends(database.get_db)):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
 
     if not post:

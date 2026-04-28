@@ -7,7 +7,7 @@ router = APIRouter(tags=["Follow"])
 
 # GET FOLLOWERS / FOLLOWING COUNT
 @router.get("/follow/count")
-def get_follow_counts(
+def get_follow_count(
     user=Depends(utils.get_user), db: Session = Depends(database.get_db)
 ):
     user_id = int(user["id"])
