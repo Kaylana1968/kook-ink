@@ -5,11 +5,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class LoginForm extends StatefulWidget {
-  final Function() onLogin;
-  const LoginForm({
-    super.key,
-    required this.onLogin,
-  });
+  const LoginForm({super.key});
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -43,9 +39,7 @@ class _LoginFormState extends State<LoginForm> {
         if (response.statusCode == 200) {
           final Map<String, dynamic> data = jsonDecode(response.body);
 
-          await authService.saveToken(data["token"]);
-
-          widget.onLogin();
+          await AuthService.saveToken(data["token"]);
         } else {
           final data = jsonDecode(response.body);
           setState(() {
@@ -54,6 +48,8 @@ class _LoginFormState extends State<LoginForm> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Erreur : $e")),
       );

@@ -6,15 +6,14 @@ class Footer extends StatelessWidget {
   const Footer({super.key});
 
   Future<bool> checkLoginStatus() async {
-    AuthService authService = AuthService();
-    String? token = await authService.getToken(); // Assume this method exists
+    String? token = await AuthService.getToken(); // Assume this method exists
     return token != null && token.isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
     Color getIconColor(String route) {
-      return ModalRoute.of(context)!.settings.name == route
+      return GoRouterState.of(context).uri.toString() == route
           ? const Color.fromARGB(251, 248, 165, 87)
           : const Color.fromARGB(255, 70, 70, 70);
     }
@@ -57,11 +56,32 @@ class Footer extends StatelessWidget {
                 size: 30, color: getIconColor("/forum")),
             onPressed: () => context.go("/forum"),
           ),
-          IconButton(
-            icon: Icon(Icons.person_outline,
-                size: 30, color: getIconColor("/profile")),
-            onPressed: () => context.go("/profile"),
-          ),
+          FutureBuilder(
+              future: checkLoginStatus(),
+              builder: (context, snapshot) {
+                final loginButton = IconButton(
+                  icon: Icon(Icons.person_outline,
+                      size: 30, color: getIconColor("/login")),
+                  onPressed: () => context.go("/login"),
+                );
+
+                if (snapshot.connectionState == ConnectionState.waiting ||
+                    snapshot.hasError) {
+                  return loginButton;
+                }
+
+                final isLoggedIn = snapshot.data ?? false;
+
+                if (!isLoggedIn) {
+                  return loginButton;
+                }
+
+                return IconButton(
+                  icon: Icon(Icons.person_outline,
+                      size: 30, color: getIconColor("/profile")),
+                  onPressed: () => context.go("/profile"),
+                );
+              }),
         ],
       ),
     );

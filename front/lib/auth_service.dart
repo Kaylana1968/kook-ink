@@ -1,17 +1,17 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
-  final _storage = const FlutterSecureStorage();
+  static const _storage = FlutterSecureStorage();
 
-  Future<void> saveToken(String token) async {
+  static Future<void> saveToken(String token) async {
     await _storage.write(key: 'jwt_token', value: token);
   }
 
-  Future<String?> getToken() async {
+  static Future<String?> getToken() async {
     return await _storage.read(key: 'jwt_token');
   }
 
-  Future<void> logout() async {
+  static Future<void> logout() async {
     await _storage.delete(key: 'jwt_token');
   }
 }

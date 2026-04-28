@@ -22,7 +22,7 @@ class RecipeApiService {
   }
 
   static Future<http.Response> createRecipe(Map<String, dynamic> body) async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     return http.post(
       recipes(),
@@ -38,7 +38,7 @@ class RecipeApiService {
     int recipeId,
     Map<String, dynamic> body,
   ) async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     return http.put(
       recipeById(recipeId),

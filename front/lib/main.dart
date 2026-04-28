@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/auth_service.dart';
 import 'package:front/forum_screen.dart';
 import 'package:front/layout.dart';
 import 'package:front/message_screen.dart';
@@ -35,10 +36,10 @@ class MyApp extends StatelessWidget {
                 path: '/',
                 builder: (context, state) => const HomeScreen(),
               ),
-              // GoRoute(
-              //   path: '/login',
-              //   builder: (context, state) => const LoginForm(),
-              // ),
+              GoRoute(
+                path: '/login',
+                builder: (context, state) => const LoginForm(),
+              ),
               GoRoute(
                 path: '/profile',
                 builder: (context, state) {
@@ -150,7 +151,7 @@ class MyApp extends StatelessWidget {
 //   }
 
 //   Future<void> _checkAuth() async {
-//     final token = await AuthService().getToken();
+//     final token = await AuthService.getToken();
 
 //     if (mounted) {
 //       setState(() {

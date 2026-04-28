@@ -47,7 +47,7 @@ class ProfileApiService {
 
   // RECUPERE LE PROFIL DE L'UTILISATEUR CONNECTE
   static Future<Map<String, dynamic>> fetchMyProfile() async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.get(
       myProfile(),
@@ -82,7 +82,7 @@ class ProfileApiService {
 
   // RECUPERE LES followers/following DE L'UTILISATEUR CONNECTE
   static Future<Map<String, int>> fetchFollowCount() async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.get(
       followCount(),
@@ -130,7 +130,7 @@ class ProfileApiService {
 
   //FAVORIS UTILISATEUR CONNECTE
   static Future<List<dynamic>> fetchFavorites() async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.get(
       favorites(),
@@ -167,7 +167,7 @@ class ProfileApiService {
 
   // POST DE L'UTILISATEUR CONNECTE
   static Future<List<dynamic>> fetchMyPosts() async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.get(
       myPosts(),
@@ -204,7 +204,7 @@ class ProfileApiService {
 
   //CREER UN POST
   static Future<bool> createPost(String description) async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.post(
       posts(),
@@ -222,7 +222,7 @@ class ProfileApiService {
 
   //MODIFIER UN POST
   static Future<bool> updatePost(int postId, String description) async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.put(
       postById(postId),
@@ -240,7 +240,7 @@ class ProfileApiService {
 
   //SUPPRIMER UN POST
   static Future<bool> deletePost(int postId) async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.delete(
       postById(postId),
@@ -284,7 +284,7 @@ class ProfileApiService {
 
   // RECETTE DE L'UTILISATEUR CONNECTE
   static Future<List<dynamic>> fetchMyRecipes() async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.get(
       myRecipes(),
@@ -304,7 +304,7 @@ class ProfileApiService {
 
   // SUPPRIMER UNE RECETTE
   static Future<bool> deleteRecipe(int recipeId) async {
-    final token = await AuthService().getToken();
+    final token = await AuthService.getToken();
 
     final response = await http.delete(
       recipeById(recipeId),
