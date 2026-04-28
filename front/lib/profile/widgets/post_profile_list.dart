@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
 
 class PostProfileCard extends StatelessWidget {
@@ -45,13 +46,11 @@ class PostProfileCard extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => context.pop(),
               child: const Text('Annuler'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, controller.text.trim());
-              },
+              onPressed: () => context.pop(controller.text.trim()),
               child: const Text('Enregistrer'),
             ),
           ],

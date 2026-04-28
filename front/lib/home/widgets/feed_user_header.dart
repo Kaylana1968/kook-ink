@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/main.dart';
+import 'package:go_router/go_router.dart';
 
 class FeedUserHeader extends StatelessWidget {
   final String username;
@@ -14,11 +14,7 @@ class FeedUserHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: userId == null
-          ? null
-          : () {
-              MyHomePage.openUserProfile(userId);
-            },
+      onTap: userId == null ? null : () => context.go("/profile/$userId"),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(

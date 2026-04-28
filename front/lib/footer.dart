@@ -1,27 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:front/auth_service.dart';
-import 'package:front/forum_screen.dart';
-import 'package:front/home/home_screen.dart';
-import 'package:front/mini_screen.dart';
-import 'package:front/profile/profile_screen.dart';
-import 'package:front/search_screen.dart';
-import 'package:front/recipe/recipe_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class Footer extends StatelessWidget {
-  final Function(Widget) onItemSelected;
-  final Widget currentPage;
-
-  const Footer({
-    super.key,
-    required this.currentPage,
-    required this.onItemSelected,
-  });
-
-  Color getIconColor(Widget page) {
-    return currentPage.runtimeType == page.runtimeType
-        ? const Color.fromARGB(251, 248, 165, 87)
-        : const Color.fromARGB(255, 70, 70, 70);
-  }
+  const Footer({super.key});
 
   Future<bool> checkLoginStatus() async {
     AuthService authService = AuthService();
@@ -31,6 +13,12 @@ class Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color getIconColor(String route) {
+      return ModalRoute.of(context)!.settings.name == route
+          ? const Color.fromARGB(251, 248, 165, 87)
+          : const Color.fromARGB(255, 70, 70, 70);
+    }
+
     return Container(
       height: 60,
       decoration: const BoxDecoration(
@@ -46,34 +34,33 @@ class Footer extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           IconButton(
-            icon: Icon(Icons.home_outlined,
-                size: 30, color: getIconColor(const HomeScreen())),
-            onPressed: () => onItemSelected(const HomeScreen()),
+            icon: Icon(Icons.home_outlined, size: 30, color: getIconColor("/")),
+            onPressed: () => context.go("/"),
           ),
           IconButton(
             icon: Icon(Icons.search_outlined,
-                size: 30, color: getIconColor(const SearchScreen())),
-            onPressed: () => onItemSelected(const SearchScreen()),
+                size: 30, color: getIconColor("/search")),
+            onPressed: () => context.go("/search"),
           ),
           IconButton(
             icon: Icon(Icons.add_outlined,
-                size: 30, color: getIconColor(const RecipeScreen())),
-            onPressed: () => onItemSelected(const RecipeScreen()),
+                size: 30, color: getIconColor("/recipe")),
+            onPressed: () => context.go("/recipe"),
           ),
           IconButton(
             icon: Icon(Icons.web_stories_outlined,
-                size: 30, color: getIconColor(const MiniScreen())),
-            onPressed: () => onItemSelected(const MiniScreen()),
+                size: 30, color: getIconColor("/minis")),
+            onPressed: () => context.go("/minis"),
           ),
           IconButton(
             icon: Icon(Icons.forum_outlined,
-                size: 30, color: getIconColor(const ForumScreen())),
-            onPressed: () => onItemSelected(const ForumScreen()),
+                size: 30, color: getIconColor("/forum")),
+            onPressed: () => context.go("/forum"),
           ),
           IconButton(
             icon: Icon(Icons.person_outline,
-                size: 30, color: getIconColor(const ProfileScreen())),
-            onPressed: () => onItemSelected(const ProfileScreen()),
+                size: 30, color: getIconColor("/profile")),
+            onPressed: () => context.go("/profile"),
           ),
         ],
       ),

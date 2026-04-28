@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:front/message_screen.dart';
-import 'package:front/notification_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class Header extends StatelessWidget {
-  final Function(Widget) onItemSelected;
-
-  const Header({super.key, required this.onItemSelected});
+  const Header({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,12 +41,12 @@ class Header extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.notifications_none,
                     size: 30, color: Color.fromARGB(255, 70, 70, 70)),
-                onPressed: () => onItemSelected(const NotificationScreen()),
+                onPressed: () => context.go("/notifications"),
               ),
               IconButton(
                 icon: const Icon(Icons.mode_comment_outlined,
                     size: 25, color: Color.fromARGB(255, 70, 70, 70)),
-                onPressed: () => onItemSelected(const MessageScreen()),
+                onPressed: () => context.go("/messages"),
               ),
             ],
           ),

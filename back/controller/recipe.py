@@ -13,6 +13,7 @@ class IngredientCreate(BaseModel):
     quantity: float
     unit: models.UnitEnum
 
+
 class RecipeCreate(BaseModel):
     name: str
     tips: Optional[str] = None
@@ -25,43 +26,51 @@ class RecipeCreate(BaseModel):
     steps: List[str]
     ingredients: List[IngredientCreate]
 
+
 # GET ALL RECIPE ME
 @router.get("/recipe/me")
 def get_my_recipes(
-    user=Depends(utils.get_user),
-    db: Session = Depends(database.get_db)
+    user=Depends(utils.get_user), db: Session = Depends(database.get_db)
 ):
     user_id = int(user["id"])
 
-    recipes = db.query(models.Recipe).filter(
-    models.Recipe.user_id == user_id
-).order_by(models.Recipe.created_at.desc()).all()
+    recipes = (
+        db.query(models.Recipe)
+        .filter(models.Recipe.user_id == user_id)
+        .order_by(models.Recipe.created_at.desc())
+        .all()
+    )
 
     result = []
 
     for recipe in recipes:
-        result.append({
-            "id": recipe.id,
-            "name": recipe.name,
-            "difficulty": recipe.difficulty,
-            "preparation_time": recipe.preparation_time,
-            "baking_time": recipe.baking_time,
-            "person": recipe.person,
-            "image_link": recipe.image_link,
-        })
+        result.append(
+            {
+                "id": recipe.id,
+                "name": recipe.name,
+                "difficulty": recipe.difficulty,
+                "preparation_time": recipe.preparation_time,
+                "baking_time": recipe.baking_time,
+                "person": recipe.person,
+                "image_link": recipe.image_link,
+            }
+        )
 
     return {"recipes": result}
+
 
 # GET RECIPES USER OTHER
 @router.get("/recipe/user/{user_id}")
 def get_user_recipes(user_id: int, db: Session = Depends(database.get_db)):
-    recipes = db.query(models.Recipe).filter(
-        models.Recipe.user_id == user_id
-    ).order_by(models.Recipe.created_at.desc()).all()
+    recipes = (
+        db.query(models.Recipe)
+        .filter(models.Recipe.user_id == user_id)
+        .order_by(models.Recipe.created_at.desc())
+        .all()
+    )
 
-    return {
-        "recipes": recipes
-    }
+    return {"recipes": recipes}
+
 
 # GET ALL RECIPES
 @router.get("/recipe")
@@ -108,6 +117,48 @@ def get_recipes(db: Session = Depends(database.get_db)):
         )
 
     return {"recipes": to_return}
+
+
+# GET A RECIPE BY ID
+@router.get("/recipe/{recipe_id}")
+def get_recipes(recipe_id: int, db: Session = Depends(database.get_db)):
+    recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
+
+    steps = (
+        db.query(models.Step)
+        .filter(models.Step.recipe_id == recipe.id)
+        .order_by(models.Step.number)
+        .all()
+    )
+
+    ingredients = (
+        db.query(models.RecipeIngredient)
+        .filter(models.RecipeIngredient.recipe_id == recipe.id)
+        .all()
+    )
+
+    to_return = {
+        "id": recipe.id,
+        "name": recipe.name,
+        "tips": recipe.tips,
+        "difficulty": recipe.difficulty,
+        "preparation_time": recipe.preparation_time,
+        "baking_time": recipe.baking_time,
+        "person": recipe.person,
+        "image_link": recipe.image_link,
+        "video_link": recipe.video_link,
+        "steps": [step.content for step in steps],
+        "ingredients": [
+            {
+                "name": ingredient.ingredient,
+                "quantity": ingredient.quantity,
+                "unit": ingredient.unit,
+            }
+            for ingredient in ingredients
+        ],
+    }
+
+    return {"recipe": to_return}
 
 
 # CREATE A RECIPE

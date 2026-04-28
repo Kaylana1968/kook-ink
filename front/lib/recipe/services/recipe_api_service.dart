@@ -7,7 +7,19 @@ class RecipeApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
 
   static Uri recipes() => Uri.parse('$baseUrl/recipe');
-  static Uri recipeById(dynamic id) => Uri.parse('$baseUrl/recipe/$id');
+  static Uri recipeById(int id) => Uri.parse('$baseUrl/recipe/$id');
+
+  static Future<Map<String, dynamic>> getRecipe(int recipeId) async {
+    final response = await http.get(recipeById(recipeId));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      return data["recipe"] as Map<String, dynamic>;
+    } else {
+      throw Exception("Erreur chargement recette");
+    }
+  }
 
   static Future<http.Response> createRecipe(Map<String, dynamic> body) async {
     final token = await AuthService().getToken();
@@ -23,7 +35,7 @@ class RecipeApiService {
   }
 
   static Future<http.Response> updateRecipe(
-    dynamic recipeId,
+    int recipeId,
     Map<String, dynamic> body,
   ) async {
     final token = await AuthService().getToken();

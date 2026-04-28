@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'models/ingredient_input.dart';
 import 'services/recipe_api_service.dart';
@@ -8,11 +9,11 @@ import 'widgets/recipe_steps_section.dart';
 import 'widgets/recipe_ingredients_section.dart';
 
 class RecipeScreen extends StatefulWidget {
-  final Map<String, dynamic>? recipe;
+  final int? recipeId;
 
   const RecipeScreen({
     super.key,
-    this.recipe,
+    this.recipeId,
   });
 
   @override
@@ -33,48 +34,72 @@ class _RecipeScreenState extends State<RecipeScreen> {
   List<TextEditingController> stepControllers = [TextEditingController()];
 
   bool isLoading = false;
-
-  bool get isEditMode => widget.recipe != null;
+  bool isFetching = false;
 
   @override
   void initState() {
     super.initState();
-    _fillFormIfEditing();
+    if (widget.recipeId != null) {
+      _fillFormIfEditing();
+    }
   }
 
-  void _fillFormIfEditing() {
-    if (!isEditMode) return;
-
-    final recipe = widget.recipe!;
-
-    nameController.text = recipe['name']?.toString() ?? '';
-    tipsController.text = recipe['tips']?.toString() ?? '';
-    difficultyController.text = recipe['difficulty']?.toString() ?? '';
-    preparationTimeController.text =
-        recipe['preparation_time']?.toString() ?? '';
-    bakingTimeController.text = recipe['baking_time']?.toString() ?? '';
-    personController.text = recipe['person']?.toString() ?? '';
-    imageLinkController.text = recipe['image_link']?.toString() ?? '';
-    videoLinkController.text = recipe['video_link']?.toString() ?? '';
-
-    final steps = recipe['steps'] as List<dynamic>?;
-
-    if (steps != null && steps.isNotEmpty) {
-      stepControllers = steps
-          .map((step) => TextEditingController(text: step.toString()))
-          .toList();
+  @override
+  void dispose() {
+    // CRITICAL: Always dispose controllers to prevent memory leaks
+    nameController.dispose();
+    tipsController.dispose();
+    difficultyController.dispose();
+    preparationTimeController.dispose();
+    bakingTimeController.dispose();
+    personController.dispose();
+    imageLinkController.dispose();
+    videoLinkController.dispose();
+    for (var controller in stepControllers) {
+      controller.dispose();
     }
+    super.dispose();
+  }
 
-    final recipeIngredients = recipe['ingredients'] as List<dynamic>?;
+void _fillFormIfEditing() async {
+    setState(() => isFetching = true);
+    try {
+      final recipe = await RecipeApiService.getRecipe(widget.recipeId!);
+      
+      if (!mounted) return;
 
-    if (recipeIngredients != null && recipeIngredients.isNotEmpty) {
-      ingredients = recipeIngredients.map((item) {
-        final input = IngredientInput();
-        input.name.text = item['name']?.toString() ?? '';
-        input.quantity.text = item['quantity']?.toString() ?? '';
-        input.unit = item['unit']?.toString() ?? 'u';
-        return input;
-      }).toList();
+      setState(() {
+        nameController.text = recipe['name']?.toString() ?? '';
+        tipsController.text = recipe['tips']?.toString() ?? '';
+        difficultyController.text = recipe['difficulty']?.toString() ?? '';
+        preparationTimeController.text = recipe['preparation_time']?.toString() ?? '';
+        bakingTimeController.text = recipe['baking_time']?.toString() ?? '';
+        personController.text = recipe['person']?.toString() ?? '';
+        imageLinkController.text = recipe['image_link']?.toString() ?? '';
+        videoLinkController.text = recipe['video_link']?.toString() ?? '';
+
+        final steps = recipe['steps'] as List<dynamic>?;
+        if (steps != null && steps.isNotEmpty) {
+          stepControllers = steps
+              .map((step) => TextEditingController(text: step.toString()))
+              .toList();
+        }
+
+        final recipeIngredients = recipe['ingredients'] as List<dynamic>?;
+        if (recipeIngredients != null && recipeIngredients.isNotEmpty) {
+          ingredients = recipeIngredients.map((item) {
+            final input = IngredientInput();
+            input.name.text = item['name']?.toString() ?? '';
+            input.quantity.text = item['quantity']?.toString() ?? '';
+            input.unit = item['unit']?.toString() ?? 'u';
+            return input;
+          }).toList();
+        }
+      });
+    } catch (e) {
+      debugPrint("Error fetching recipe: $e");
+    } finally {
+      if (mounted) setState(() => isFetching = false);
     }
   }
 
@@ -107,13 +132,15 @@ class _RecipeScreenState extends State<RecipeScreen> {
     try {
       final body = _buildBody();
 
-      final response = isEditMode
-          ? await RecipeApiService.updateRecipe(widget.recipe!['id'], body)
-          : await RecipeApiService.createRecipe(body);
+      int? recipeId = widget.recipeId;
+
+      final response = recipeId == null
+          ? await RecipeApiService.createRecipe(body)
+          : await RecipeApiService.updateRecipe(recipeId, body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (!mounted) return;
-        Navigator.pop(context, true);
+        context.go("/profile");
       } else {
         debugPrint("Erreur recette : ${response.statusCode}");
         debugPrint(response.body);
@@ -157,6 +184,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (isFetching) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Colors.orange)),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 254, 254, 254),
       body: SingleChildScrollView(
@@ -216,9 +249,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   backgroundColor: const Color.fromARGB(255, 248, 247, 246),
                 ),
                 child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const CircularProgressIndicator(color: Colors.orange)
                     : Text(
-                        isEditMode ? "Modifier la recette" : "Créer la recette",
+                        widget.recipeId == null
+                            ? "Créer la recette"
+                            : "Modifier la recette",
                         style: const TextStyle(color: themeColor),
                       ),
               ),

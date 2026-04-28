@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/recipe/recipe_screen.dart';
+import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
 import 'info_chip.dart';
 
@@ -22,20 +22,6 @@ class RecipeProfileCard extends StatelessWidget {
     if (success) {
       await onRefresh();
       debugPrint("Recette supprimée");
-    }
-  }
-
-  Future<void> _editRecipe(BuildContext context) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RecipeScreen(recipe: recipe),
-      ),
-    );
-
-    if (result == true) {
-      await onRefresh();
-      debugPrint("Recette modifiée");
     }
   }
 
@@ -116,7 +102,7 @@ class RecipeProfileCard extends StatelessWidget {
               icon: const Icon(Icons.more_vert, color: Colors.white),
               onSelected: (value) async {
                 if (value == 'edit') {
-                  await _editRecipe(context);
+                  context.go('/recipe/${recipe["id"]}');
                 }
 
                 if (value == 'delete') {

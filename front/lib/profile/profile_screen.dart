@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'services/profile_api_service.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/post_profile_list.dart';
@@ -134,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               final success = await ProfileApiService.createPost(description);
 
               if (success) {
-                if (context.mounted) Navigator.pop(context);
+                if (context.mounted) context.go('/profile');
                 await _refresh();
                 debugPrint("Post créé");
               } else {
