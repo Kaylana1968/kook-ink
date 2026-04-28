@@ -4,7 +4,7 @@ import 'header.dart';
 import 'footer.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
-import 'profile_screen.dart';
+import 'profile/profile_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
