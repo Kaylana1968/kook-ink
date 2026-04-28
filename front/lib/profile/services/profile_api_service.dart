@@ -11,12 +11,34 @@ class ProfileApiService {
   static Uri recipeById(dynamic id) => Uri.parse('$baseUrl/recipe/$id');
 
   static Uri posts() => Uri.parse('$baseUrl/post');
+
   static Uri postById(dynamic id) => Uri.parse('$baseUrl/post/$id');
   static Uri myPosts() => Uri.parse('$baseUrl/post/me');
 
   static Uri myProfile() => Uri.parse('$baseUrl/profile/me');
 
   static Uri followCount() => Uri.parse('$baseUrl/profile/count');
+
+  static Uri favorites() => Uri.parse('$baseUrl/favorite');
+
+  static Future<List<dynamic>> fetchFavorites() async {
+    final token = await AuthService().getToken();
+
+    final response = await http.get(
+      favorites(),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["favorites"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur favoris");
+    }
+  }
 
   static Future<bool> createPost(String description) async {
     final token = await AuthService().getToken();

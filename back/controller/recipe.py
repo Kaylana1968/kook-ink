@@ -34,8 +34,8 @@ def get_my_recipes(
     user_id = int(user["id"])
 
     recipes = db.query(models.Recipe).filter(
-        models.Recipe.user_id == user_id
-    ).all()
+    models.Recipe.user_id == user_id
+).order_by(models.Recipe.created_at.desc()).all()
 
     result = []
 

@@ -102,47 +102,60 @@ class _HomeScreenState extends State<HomeScreen> {
 // POST COMPONENT
 class RecipePost extends StatelessWidget {
   final Map<String, dynamic> post;
-  const RecipePost({super.key, required this.post});
+
+  const RecipePost({
+    super.key,
+    required this.post,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final username = post['username']?.toString() ?? 'Utilisateur';
+    final description = post['description']?.toString() ?? '';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header (User Info)
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        // Header user
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.orange,
-                child:
-                    Icon(Icons.restaurant_menu, size: 18, color: Colors.white),
+                child: Icon(
+                  Icons.person,
+                  size: 18,
+                  color: Colors.white,
+                ),
               ),
-              SizedBox(width: 10),
-              Spacer(),
-              Icon(Icons.more_horiz),
+              const SizedBox(width: 10),
+              Text(
+                username,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const Spacer(),
+              const Icon(Icons.more_horiz),
             ],
           ),
         ),
 
-        // 4. Content Area
+        // Description post
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Recipe Name
-              Text(
-                post['description'],
-                style:
-                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-              ),
-              const SizedBox(height: 4),
-            ],
+          child: Text(
+            description,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+            ),
           ),
         ),
+
         const SizedBox(height: 24),
         const Divider(height: 1, thickness: 0.5),
       ],
