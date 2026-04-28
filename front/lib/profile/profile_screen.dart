@@ -294,7 +294,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     _postsTab(),
                     _recipesTab(),
-                    const FavorisList(),
+                    FavorisList(userId: widget.userId),
                   ],
                 ),
               ),

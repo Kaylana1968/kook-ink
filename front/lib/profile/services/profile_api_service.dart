@@ -23,6 +23,23 @@ class ProfileApiService {
   static Uri userFollowCount(int id) => Uri.parse('$baseUrl/follow/count/$id');
 
   static Uri favorites() => Uri.parse('$baseUrl/favorite');
+  static Uri userFavorites(int id) => Uri.parse('$baseUrl/favorite/user/$id');
+
+  static Future<List<dynamic>> fetchUserFavorites(int userId) async {
+    final response = await http.get(
+      userFavorites(userId),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["favorites"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur favoris utilisateur");
+    }
+  }
 
   static Future<Map<String, dynamic>> fetchMyProfile() async {
     final token = await AuthService().getToken();

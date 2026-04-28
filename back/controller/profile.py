@@ -64,7 +64,7 @@ def get_my_profile(
         "description": db_user.description,
     }
     
-# INFO USER other
+# INFO USER OTHER
 @router.get("/profile/{user_id}")
 def get_user_profile(user_id: int, db: Session = Depends(database.get_db)):
     

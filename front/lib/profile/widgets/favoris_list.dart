@@ -2,12 +2,21 @@ import 'package:flutter/material.dart';
 import '../services/profile_api_service.dart';
 
 class FavorisList extends StatelessWidget {
-  const FavorisList({super.key});
+  final int? userId;
+
+  const FavorisList({
+    super.key,
+    this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final future = userId == null
+        ? ProfileApiService.fetchFavorites()
+        : ProfileApiService.fetchUserFavorites(userId!);
+
     return FutureBuilder<List<dynamic>>(
-      future: ProfileApiService.fetchFavorites(),
+      future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -36,7 +45,7 @@ class FavorisList extends StatelessWidget {
               return ListTile(
                 leading: const Icon(Icons.article_outlined),
                 title: Text(item["description"] ?? "Post sans description"),
-                subtitle: const Text("Post"),
+                subtitle: Text(item["username"] ?? "Post"),
               );
             }
 
@@ -45,7 +54,9 @@ class FavorisList extends StatelessWidget {
                 leading: const Icon(Icons.restaurant_outlined),
                 title: Text(item["name"] ?? "Recette sans nom"),
                 subtitle: Text(
-                  "${item["preparation_time"] ?? 0} min • ${item["person"] ?? 0} pers.",
+                  "${item["username"] ?? "Utilisateur"} • "
+                  "${item["preparation_time"] ?? 0} min • "
+                  "${item["person"] ?? 0} pers.",
                 ),
               );
             }
