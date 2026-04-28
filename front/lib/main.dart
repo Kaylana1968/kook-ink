@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:front/auth_service.dart';
 import 'header.dart';
 import 'footer.dart';
-import 'home_screen.dart';
+import 'home/home_screen.dart';
 import 'login_screen.dart';
 import 'profile/profile_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
