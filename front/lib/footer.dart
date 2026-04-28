@@ -5,7 +5,7 @@ import 'package:front/home/home_screen.dart';
 import 'package:front/mini_screen.dart';
 import 'package:front/profile/profile_screen.dart';
 import 'package:front/search_screen.dart';
-import 'package:front/recipe_screen.dart';
+import 'package:front/recipe/recipe_screen.dart';
 
 class Footer extends StatelessWidget {
   final Function(Widget) onItemSelected;
