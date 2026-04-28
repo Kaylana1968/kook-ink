@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from main import app
-from common.database import Base
+from common import database, models, utils
 
 client = TestClient(app)
 
@@ -17,12 +17,19 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create the tables using the same Base as the real database
-Base.metadata.create_all(bind=engine)
+database.Base.metadata.create_all(bind=engine)
 
 
-def get_db():
+def override_get_db():
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+app.dependency_overrides[database.get_db] = override_get_db
+
+fake_user = models.User(
+    id=1, username="test", email="test@gmail.com", password=utils.hash_password("test")
+)
