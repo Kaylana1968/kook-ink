@@ -3,7 +3,7 @@ import 'package:front/auth_service.dart';
 import 'package:front/forum_screen.dart';
 import 'package:front/home_screen.dart';
 import 'package:front/mini_screen.dart';
-import 'package:front/profile_screen.dart';
+import 'package:front/profile/profile_screen.dart';
 import 'package:front/search_screen.dart';
 import 'package:front/recipe_screen.dart';
 
