@@ -10,11 +10,13 @@ import 'package:front/recipe_screen.dart';
 class Footer extends StatelessWidget {
   final Function(Widget) onItemSelected;
   final Widget currentPage;
+  final VoidCallback onLogout;
 
   const Footer({
     super.key,
     required this.currentPage,
     required this.onItemSelected,
+    required this.onLogout,
   });
 
   Color getIconColor(Widget page) {
@@ -72,8 +74,11 @@ class Footer extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.person_outline,
-                size: 30, color: getIconColor(const ProfileScreen())),
-            onPressed: () => onItemSelected(const ProfileScreen()),
+                size: 30, 
+                color: currentPage is ProfileScreen 
+                    ? const Color.fromARGB(251, 248, 165, 87) 
+                    : const Color.fromARGB(255, 70, 70, 70)),
+            onPressed: () => onItemSelected(ProfileScreen(onLogout: onLogout)),
           ),
         ],
       ),

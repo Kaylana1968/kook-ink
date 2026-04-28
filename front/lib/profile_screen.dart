@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:front/auth_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:front/recipe_screen.dart';
+import 'package:front/login_screen.dart';
 
 // API CONFIG
 class ApiConfig {
@@ -20,7 +21,8 @@ class ApiConfig {
 
 // PROFILE SCREEN
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback onLogout;
+  const ProfileScreen({super.key, required this.onLogout});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -29,6 +31,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Future<List<dynamic>> _recipeFuture = Future.value([]);
   Future<List<dynamic>> _postFuture = Future.value([]);
+  final AuthService authService = AuthService();
 
   int followers = 0;
   int following = 0;
@@ -99,6 +102,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await _postFuture;
     await _recipeFuture;
     await fetchFollowCount();
+  }
+
+  Future<void> _logout() async {
+    await AuthService().logout();
+    
+    widget.onLogout(); 
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Déconnexion réussie")),
+      );
+    }
   }
 
   void _openCreatePostModal() {
@@ -249,10 +264,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       length: 3,
       child: Scaffold(
         backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text("Kook Ink test user", style: TextStyle(color: Colors.black)),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.redAccent),
+              onPressed: _logout,
+            ),
+          ],
+        ),
         body: SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(

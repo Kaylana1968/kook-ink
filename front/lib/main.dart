@@ -62,7 +62,14 @@ class _MyHomePageState extends State<MyHomePage> {
   void _onLogin() {
     setState(() {
       _isLoggedIn = true;
-      _currentPage = const ProfileScreen();
+      _currentPage = ProfileScreen(onLogout: _onLogout);
+    });
+  }
+
+  void _onLogout() {
+    setState(() {
+      _isLoggedIn = false;
+      _currentPage = LoginForm(onLogin: _onLogin);
     });
   }
 
@@ -83,9 +90,15 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(child: _currentPage),
           Footer(
             currentPage: _currentPage,
+            onLogout: _onLogout,
             onItemSelected: (selectedPage) {
-              if (selectedPage is ProfileScreen && !_isLoggedIn) {
-                setState(() => _currentPage = LoginForm(onLogin: _onLogin));
+              if (selectedPage is ProfileScreen) {
+                if (!_isLoggedIn) {
+                  setState(() => _currentPage = LoginForm(onLogin: _onLogin));
+                } else {
+                  // ON PASSE LA FONCTION DE LOGOUT AU PROFILE SCREEN
+                  setState(() => _currentPage = ProfileScreen(onLogout: _onLogout));
+                }
               } else {
                 setState(() => _currentPage = selectedPage);
               }
