@@ -84,13 +84,9 @@ def upload_post(
 # DELETE A POST
 @router.delete("/post/{post_id}")
 def delete_post(
-<<<<<<< HEAD
-    post_id: int, user=Depends(utils.get_user), db: Session = Depends(database.get_db)
-=======
     post_id: int,
     user=Depends(utils.get_user),
     db: Session = Depends(database.get_db),
->>>>>>> origin/dev-profile-favoris
 ):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
 
@@ -98,11 +94,7 @@ def delete_post(
         raise HTTPException(status_code=404, detail="Post not found")
 
     if post.user_id != int(user["id"]):
-<<<<<<< HEAD
-        raise HTTPException(status_code=403, detail="Not allowed to edit this recipe")
-=======
         raise HTTPException(status_code=403, detail="Not allowed to delete this post")
->>>>>>> origin/dev-profile-favoris
 
     try:
         db.delete(post)
