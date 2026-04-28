@@ -32,6 +32,7 @@ class User(Base):
     username = Column(String, unique=True)
     email = Column(String, unique=True)
     password = Column(String)
+    description = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 

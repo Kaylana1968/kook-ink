@@ -24,13 +24,15 @@ def on_startup():
 @app.get("/users")
 def read_user(db: Session = Depends(database.get_db)):
     user = db.query(models.User).first()
+
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
+
     return user
 
 
-app.include_router(recipe.router)
 app.include_router(login.router)
+app.include_router(recipe.router)
 app.include_router(post.router)
 app.include_router(follow.router)
 

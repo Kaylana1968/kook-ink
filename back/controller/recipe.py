@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 from common import database, models, utils
 
-router = APIRouter()
+router = APIRouter(tags=["Recipe"])
 
 from pydantic import BaseModel
 from typing import List, Optional
@@ -35,40 +35,52 @@ def get_recipes(db: Session = Depends(database.get_db)):
     to_return = []
 
     for recipe in recipes:
-        steps = db.query(models.Step).filter(
-            models.Step.recipe_id == recipe.id
-        ).order_by(models.Step.number).all()
+        steps = (
+            db.query(models.Step)
+            .filter(models.Step.recipe_id == recipe.id)
+            .order_by(models.Step.number)
+            .all()
+        )
 
-        ingredients = db.query(models.RecipeIngredient).filter(
-            models.RecipeIngredient.recipe_id == recipe.id
-        ).all()
+        ingredients = (
+            db.query(models.RecipeIngredient)
+            .filter(models.RecipeIngredient.recipe_id == recipe.id)
+            .all()
+        )
 
-        to_return.append({
-            "id": recipe.id,
-            "name": recipe.name,
-            "tips": recipe.tips,
-            "difficulty": recipe.difficulty,
-            "preparation_time": recipe.preparation_time,
-            "baking_time": recipe.baking_time,
-            "person": recipe.person,
-            "image_link": recipe.image_link,
-            "video_link": recipe.video_link,
-            "steps": [step.content for step in steps],
-            "ingredients": [
-                {
-                    "name": ingredient.ingredient,
-                    "quantity": ingredient.quantity,
-                    "unit": ingredient.unit,
-                }
-                for ingredient in ingredients
-            ],
-        })
+        to_return.append(
+            {
+                "id": recipe.id,
+                "name": recipe.name,
+                "tips": recipe.tips,
+                "difficulty": recipe.difficulty,
+                "preparation_time": recipe.preparation_time,
+                "baking_time": recipe.baking_time,
+                "person": recipe.person,
+                "image_link": recipe.image_link,
+                "video_link": recipe.video_link,
+                "steps": [step.content for step in steps],
+                "ingredients": [
+                    {
+                        "name": ingredient.ingredient,
+                        "quantity": ingredient.quantity,
+                        "unit": ingredient.unit,
+                    }
+                    for ingredient in ingredients
+                ],
+            }
+        )
 
     return {"recipes": to_return}
 
+
 # CREATE A RECIPE
 @router.post("/recipe")
-def upload_recipe(recipe: RecipeCreate, user=Depends(utils.get_user), db: Session = Depends(database.get_db)):
+def upload_recipe(
+    recipe: RecipeCreate,
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db),
+):
     db_recipe = models.Recipe(
         name=recipe.name,
         tips=recipe.tips,
@@ -108,13 +120,9 @@ def upload_recipe(recipe: RecipeCreate, user=Depends(utils.get_user), db: Sessio
 # UPDATE A RECIPE
 @router.patch("/recipe/{recipe_id}")
 def update_recipe(
-    recipe_id: int,
-    recipe: RecipeCreate,
-    db: Session = Depends(database.get_db)
+    recipe_id: int, recipe: RecipeCreate, db: Session = Depends(database.get_db)
 ):
-    db_recipe = db.query(models.Recipe).filter(
-        models.Recipe.id == recipe_id
-    ).first()
+    db_recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
 
     if not db_recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
@@ -129,28 +137,26 @@ def update_recipe(
         db_recipe.image_link = recipe.image_link
         db_recipe.video_link = recipe.video_link
 
-        db.query(models.Step).filter(
-            models.Step.recipe_id == recipe_id
-        ).delete(synchronize_session=False)
+        db.query(models.Step).filter(models.Step.recipe_id == recipe_id).delete(
+            synchronize_session=False
+        )
 
         db.query(models.RecipeIngredient).filter(
             models.RecipeIngredient.recipe_id == recipe_id
         ).delete(synchronize_session=False)
 
         for i, step in enumerate(recipe.steps):
-            db.add(models.Step(
-                content=step,
-                number=i + 1,
-                recipe_id=recipe_id
-            ))
+            db.add(models.Step(content=step, number=i + 1, recipe_id=recipe_id))
 
         for ingredient in recipe.ingredients:
-            db.add(models.RecipeIngredient(
-                ingredient=ingredient.name,
-                quantity=ingredient.quantity,
-                unit=ingredient.unit.value,
-                recipe_id=recipe_id,
-            ))
+            db.add(
+                models.RecipeIngredient(
+                    ingredient=ingredient.name,
+                    quantity=ingredient.quantity,
+                    unit=ingredient.unit.value,
+                    recipe_id=recipe_id,
+                )
+            )
 
         db.commit()
         db.refresh(db_recipe)
@@ -160,8 +166,7 @@ def update_recipe(
     except Exception as e:
         db.rollback()
         raise HTTPException(
-            status_code=500,
-            detail=f"Erreur modification recette : {str(e)}"
+            status_code=500, detail=f"Erreur modification recette : {str(e)}"
         )
 
 
@@ -178,9 +183,9 @@ def delete_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
             models.RecipeIngredient.recipe_id == recipe_id
         ).delete(synchronize_session=False)
 
-        db.query(models.Step).filter(
-            models.Step.recipe_id == recipe_id
-        ).delete(synchronize_session=False)
+        db.query(models.Step).filter(models.Step.recipe_id == recipe_id).delete(
+            synchronize_session=False
+        )
 
         db.delete(recipe)
         db.commit()
@@ -190,6 +195,5 @@ def delete_recipe(recipe_id: int, db: Session = Depends(database.get_db)):
         db.rollback()
         print(f"Erreur suppression recette : {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Erreur suppression recette : {str(e)}"
+            status_code=500, detail=f"Erreur suppression recette : {str(e)}"
         )

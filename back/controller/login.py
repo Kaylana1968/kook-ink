@@ -3,9 +3,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from common import database, models, utils
 
-router = APIRouter()
+router = APIRouter(tags=["Login"])
 
 from pydantic import BaseModel
+
 
 class LoginBody(BaseModel):
     email: str
@@ -13,13 +14,9 @@ class LoginBody(BaseModel):
 
 
 @router.post("/create-test-user")
-def create_test_user(
-    db: Session = Depends(database.get_db)
-):
+def create_test_user(db: Session = Depends(database.get_db)):
     user = models.User(
-        username="test",
-        email="test@gmail.com",
-        password=utils.hash_password("test")
+        username="test", email="test@gmail.com", password=utils.hash_password("test")
     )
 
     db.add(user)
@@ -28,22 +25,16 @@ def create_test_user(
     return {"message": "Utilisateur créé"}
 
 
-# LOGIN 
+# LOGIN
 @router.post("/login")
-def login(
-    body: LoginBody,
-    db: Session = Depends(database.get_db)
-):
+def login(body: LoginBody, db: Session = Depends(database.get_db)):
     query = select(models.User).where(models.User.email == body.email)
     user = db.execute(query).scalars().first()
 
-    if (user == None):
+    if user == None:
         raise HTTPException(status_code=404, detail="User not found")
 
     if not utils.verify_password(body.password, user.password):
         raise HTTPException(status_code=404, detail="Invalid credentials")
 
-    return {
-        "message": "Utilisateur connecté",
-        "token": utils.generate_token(user)
-    }
+    return {"message": "Utilisateur connecté", "token": utils.generate_token(user)}
