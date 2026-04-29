@@ -46,7 +46,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
   @override
   void dispose() {
-    // CRITICAL: Always dispose controllers to prevent memory leaks
     nameController.dispose();
     tipsController.dispose();
     difficultyController.dispose();
@@ -61,18 +60,20 @@ class _RecipeScreenState extends State<RecipeScreen> {
     super.dispose();
   }
 
-void _fillFormIfEditing() async {
+  void _fillFormIfEditing() async {
     setState(() => isFetching = true);
+
     try {
       final recipe = await RecipeApiService.getRecipe(widget.recipeId!);
-      
+
       if (!mounted) return;
 
       setState(() {
         nameController.text = recipe['name']?.toString() ?? '';
         tipsController.text = recipe['tips']?.toString() ?? '';
         difficultyController.text = recipe['difficulty']?.toString() ?? '';
-        preparationTimeController.text = recipe['preparation_time']?.toString() ?? '';
+        preparationTimeController.text =
+            recipe['preparation_time']?.toString() ?? '';
         bakingTimeController.text = recipe['baking_time']?.toString() ?? '';
         personController.text = recipe['person']?.toString() ?? '';
         imageLinkController.text = recipe['image_link']?.toString() ?? '';
@@ -126,7 +127,62 @@ void _fillFormIfEditing() async {
     };
   }
 
+  String? _validateForm() {
+    if (nameController.text.trim().isEmpty) return "Le nom est requis";
+
+    // Check numbers are valid numbers
+    if (difficultyController.text.isEmpty ||
+        int.tryParse(difficultyController.text) == null) {
+      return "La difficulté est invalide";
+    }
+    if (preparationTimeController.text.isEmpty ||
+        int.tryParse(preparationTimeController.text) == null) {
+      return "Le temps de préparation est invalid";
+    }
+    if (bakingTimeController.text.isEmpty ||
+        int.tryParse(bakingTimeController.text) == null) {
+      return "Le temps de cuisson est invalid";
+    }
+    if (personController.text.isEmpty ||
+        int.tryParse(personController.text) == null) {
+      return "Le nombre de personnes est invalid";
+    }
+
+    // Check there is no empty step
+    if (stepControllers.any((c) => c.text.trim().isEmpty)) {
+      return "Supprimez les étapes vides";
+    }
+    // Check there is at least one step
+    if (stepControllers.isEmpty) return "Ajoutez au moins une étape";
+
+    // Check there is no empty ingredient name
+    if (ingredients.any((ingredient) => ingredient.name.text.trim().isEmpty)) {
+      return "Nommez tous les ingrédients";
+    }
+    // Check there is no empty or invalid ingredient quantity
+    if (ingredients.any((ingredient) =>
+        ingredient.quantity.text.trim().isEmpty ||
+        int.tryParse(ingredient.quantity.text) == null)) {
+      return "La quantité d'un ingrédient est invalide";
+    }
+    // Check there is at least one ingredient
+    if (ingredients.isEmpty) {
+      return "Ajoutez au moins un ingrédient";
+    }
+
+    return null;
+  }
+
   Future<void> sendRecipeForm() async {
+    final errorMessage = _validateForm();
+
+    if (errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     setState(() => isLoading = true);
 
     try {
@@ -197,7 +253,7 @@ void _fillFormIfEditing() async {
         child: Column(
           children: [
             RecipeTextField(
-              label: "Ajouter une image *",
+              label: "Ajouter une image",
               controller: imageLinkController,
               hint: "URL de l’image",
             ),
