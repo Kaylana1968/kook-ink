@@ -3,7 +3,7 @@
 ### Get into /back
 
 ```sh
-./venv/Scripts/activate
+./.venv/Scripts/activate
 ```
 
 ### Install dependencies
