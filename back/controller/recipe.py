@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, field_validator
+from typing import List, Optional
 from common import database, models, utils
 
 router = APIRouter(tags=["Recipe"])
-
-from pydantic import BaseModel
-from typing import List, Optional
 
 
 class IngredientCreate(BaseModel):
@@ -25,6 +24,30 @@ class RecipeCreate(BaseModel):
     video_link: Optional[str] = None
     steps: List[str]
     ingredients: List[IngredientCreate]
+
+    @field_validator("steps", "ingredients")
+    @classmethod
+    def lists_must_not_be_empty(cls, v: list):
+        if len(v) == 0:
+            raise ValueError("This list must contain at least one item")
+
+        return v
+
+    @field_validator("steps")
+    @classmethod
+    def check_steps_content(cls, v: List[str]):
+        if any(not step.strip() for step in v):
+            raise ValueError("All steps must contain text")
+
+        return v
+
+    @field_validator("ingredients")
+    @classmethod
+    def check_ingredients_content(cls, v: List[IngredientCreate]):
+        if any(not ingredient.name.strip() for ingredient in v):
+            raise ValueError("All ingredients must contain have a name")
+
+        return v
 
 
 # GET ALL RECIPE ME
