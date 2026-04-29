@@ -5,10 +5,9 @@ import 'package:front/auth_service.dart';
 
 class ForumService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
-  final AuthService _authService = AuthService();
 
   Future<Map<String, String>> get _headers async {
-    final token = await _authService.getToken();
+    final token = await AuthService.getToken();
     return {
       "Content-Type": "application/json",
       if (token != null) "Authorization": "Bearer $token",

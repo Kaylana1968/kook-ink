@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:front/auth_service.dart';
 import 'package:front/forum_screen.dart';
 import 'package:front/layout.dart';
 import 'package:front/message_screen.dart';
