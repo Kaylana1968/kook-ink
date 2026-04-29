@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:front/post_question_screen.dart';
 import 'package:front/forum/forum_service.dart';
 import 'package:front/forum/question_card.dart';
+import 'package:go_router/go_router.dart';
 
 class ForumScreen extends StatefulWidget {
   const ForumScreen({super.key});
@@ -48,10 +48,7 @@ class _ForumScreenState extends State<ForumScreen> {
                       style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
                   ElevatedButton(
                     onPressed: () async {
-                      await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const PostQuestionScreen()));
+                      await context.push('/forum/post');
                       _refreshPosts();
                     },
                     style: ElevatedButton.styleFrom(
