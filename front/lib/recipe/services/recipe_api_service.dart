@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:front/recipe/models/api_exception.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:front/auth_service.dart';
@@ -21,32 +22,48 @@ class RecipeApiService {
     }
   }
 
-  static Future<http.Response> createRecipe(Map<String, dynamic> body) async {
-    final token = await AuthService.getToken();
+  static Future<void> createRecipe(
+    Map<String, dynamic> body, {
+    http.Client? client,
+    String? token
+  }) async {
+    final authToken = token ?? await AuthService.getToken();
+    final c = client ?? http.Client();
 
-    return http.post(
+    final response = await c.post(
       recipes(),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $authToken',
       },
       body: jsonEncode(body),
     );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw ApiException(response.statusCode, response.body);
+    }
   }
 
-  static Future<http.Response> updateRecipe(
+  static Future<void> updateRecipe(
     int recipeId,
-    Map<String, dynamic> body,
-  ) async {
-    final token = await AuthService.getToken();
+    Map<String, dynamic> body, {
+    http.Client? client,
+    String? token
+  }) async {
+    final authToken = token ?? await AuthService.getToken();
+    final c = client ?? http.Client();
 
-    return http.put(
+    final response = await c.put(
       recipeById(recipeId),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $authToken',
       },
       body: jsonEncode(body),
     );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw ApiException(response.statusCode, response.body);
+    }
   }
 }

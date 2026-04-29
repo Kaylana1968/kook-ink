@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/recipe/models/api_exception.dart';
 import 'package:go_router/go_router.dart';
 
 import 'models/ingredient_input.dart';
@@ -46,7 +47,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
   @override
   void dispose() {
-    // CRITICAL: Always dispose controllers to prevent memory leaks
     nameController.dispose();
     tipsController.dispose();
     difficultyController.dispose();
@@ -61,18 +61,20 @@ class _RecipeScreenState extends State<RecipeScreen> {
     super.dispose();
   }
 
-void _fillFormIfEditing() async {
+  void _fillFormIfEditing() async {
     setState(() => isFetching = true);
+
     try {
       final recipe = await RecipeApiService.getRecipe(widget.recipeId!);
-      
+
       if (!mounted) return;
 
       setState(() {
         nameController.text = recipe['name']?.toString() ?? '';
         tipsController.text = recipe['tips']?.toString() ?? '';
         difficultyController.text = recipe['difficulty']?.toString() ?? '';
-        preparationTimeController.text = recipe['preparation_time']?.toString() ?? '';
+        preparationTimeController.text =
+            recipe['preparation_time']?.toString() ?? '';
         bakingTimeController.text = recipe['baking_time']?.toString() ?? '';
         personController.text = recipe['person']?.toString() ?? '';
         imageLinkController.text = recipe['image_link']?.toString() ?? '';
@@ -126,27 +128,92 @@ void _fillFormIfEditing() async {
     };
   }
 
-  Future<void> sendRecipeForm() async {
-    setState(() => isLoading = true);
+  String? _validateForm() {
+    if (nameController.text.trim().isEmpty) return "Le nom est requis";
 
+    // Check numbers are valid numbers
+    if (difficultyController.text.isEmpty ||
+        int.tryParse(difficultyController.text) == null) {
+      return "La difficulté est invalide";
+    }
+    if (preparationTimeController.text.isEmpty ||
+        int.tryParse(preparationTimeController.text) == null) {
+      return "Le temps de préparation est invalid";
+    }
+    if (bakingTimeController.text.isEmpty ||
+        int.tryParse(bakingTimeController.text) == null) {
+      return "Le temps de cuisson est invalid";
+    }
+    if (personController.text.isEmpty ||
+        int.tryParse(personController.text) == null) {
+      return "Le nombre de personnes est invalid";
+    }
+
+    // Check there is no empty step
+    if (stepControllers.any((c) => c.text.trim().isEmpty)) {
+      return "Supprimez les étapes vides";
+    }
+    // Check there is at least one step
+    if (stepControllers.isEmpty) return "Ajoutez au moins une étape";
+
+    // Check there is no empty ingredient name
+    if (ingredients.any((ingredient) => ingredient.name.text.trim().isEmpty)) {
+      return "Nommez tous les ingrédients";
+    }
+    // Check there is no empty or invalid ingredient quantity
+    if (ingredients.any((ingredient) =>
+        ingredient.quantity.text.trim().isEmpty ||
+        int.tryParse(ingredient.quantity.text) == null)) {
+      return "La quantité d'un ingrédient est invalide";
+    }
+    // Check there is at least one ingredient
+    if (ingredients.isEmpty) {
+      return "Ajoutez au moins un ingrédient";
+    }
+
+    return null;
+  }
+
+  Future<void> sendRecipeForm() async {
+    final errorMessage = _validateForm();
+    if (errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
     try {
       final body = _buildBody();
+      final int? recipeId = widget.recipeId;
 
-      int? recipeId = widget.recipeId;
-
-      final response = recipeId == null
-          ? await RecipeApiService.createRecipe(body)
-          : await RecipeApiService.updateRecipe(recipeId, body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!mounted) return;
-        context.go("/profile");
+      if (recipeId == null) {
+        await RecipeApiService.createRecipe(body);
       } else {
-        debugPrint("Erreur recette : ${response.statusCode}");
-        debugPrint(response.body);
+        await RecipeApiService.updateRecipe(recipeId, body);
       }
+
+      if (!mounted) return;
+      context.go("/profile");
+    } on ApiException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur ${e.statusCode} : ${e.message}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } catch (e) {
-      debugPrint("Erreur recette : $e");
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Une erreur réseau est survenue.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -197,7 +264,7 @@ void _fillFormIfEditing() async {
         child: Column(
           children: [
             RecipeTextField(
-              label: "Ajouter une image *",
+              label: "Ajouter une image",
               controller: imageLinkController,
               hint: "URL de l’image",
             ),
