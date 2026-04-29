@@ -6,11 +6,13 @@ import 'info_chip.dart';
 class RecipeProfileCard extends StatelessWidget {
   final Map<String, dynamic> recipe;
   final Future<void> Function() onRefresh;
+  final bool isMyRecipe;
 
   const RecipeProfileCard({
     super.key,
     required this.recipe,
     required this.onRefresh,
+    required this.isMyRecipe,
   });
 
   Future<void> _deleteRecipe() async {
@@ -95,32 +97,34 @@ class RecipeProfileCard extends StatelessWidget {
           ),
 
           // MENU
-          Positioned(
-            top: 4,
-            right: 4,
-            child: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onSelected: (value) async {
-                if (value == 'edit') {
-                  context.go('/recipe/${recipe["id"]}');
-                }
+          isMyRecipe
+              ? Positioned(
+                  top: 4,
+                  right: 4,
+                  child: PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.white),
+                    onSelected: (value) async {
+                      if (value == 'edit') {
+                        context.go('/recipe/${recipe["id"]}');
+                      }
 
-                if (value == 'delete') {
-                  await _deleteRecipe();
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: Text('Modifier'),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text('Supprimer'),
-                ),
-              ],
-            ),
-          ),
+                      if (value == 'delete') {
+                        await _deleteRecipe();
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text('Modifier'),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Supprimer'),
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox(),
         ],
       ),
     );

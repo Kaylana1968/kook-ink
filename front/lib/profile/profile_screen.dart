@@ -229,9 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           itemCount: posts.length,
           itemBuilder: (context, index) {
             return PostProfileCard(
-              post: posts[index],
-              onRefresh: _refresh,
-            );
+                post: posts[index], onRefresh: _refresh, isMyPost: isMyProfile);
           },
         );
       },
@@ -270,6 +268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return RecipeProfileCard(
               recipe: recipes[index],
               onRefresh: _refresh,
+              isMyRecipe: isMyProfile,
             );
           },
         );

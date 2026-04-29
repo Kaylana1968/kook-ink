@@ -46,7 +46,7 @@ class ProfileHeader extends StatelessWidget {
               ),
               StatWidget(
                 value: following.toString(),
-                label: 'Following',
+                label: 'Suivi(e)s',
               ),
             ],
           ),

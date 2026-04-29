@@ -43,6 +43,7 @@ class FavorisList extends StatelessWidget {
             // POST
             if (type == "post") {
               return ListTile(
+                leading: const Icon(Icons.person),
                 title: Text(item["description"] ?? "Post sans description"),
                 subtitle: Text(item["username"] ?? "Utilisateur"),
               );
@@ -51,6 +52,7 @@ class FavorisList extends StatelessWidget {
             // RECIPE
             if (type == "recipe") {
               return ListTile(
+                leading: const Icon(Icons.restaurant_outlined),
                 title: Text(item["name"] ?? "Recette"),
                 subtitle: Text(
                   "${item["username"] ?? "Utilisateur"} • "

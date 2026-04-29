@@ -284,7 +284,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
               hint: "Ex: Rajouter du sel",
             ),
             RecipeTextField(
-              label: "Difficulté (1-5) *",
+              label: "Difficulté",
               controller: difficultyController,
               type: TextInputType.number,
               hint: "Ex: 2",

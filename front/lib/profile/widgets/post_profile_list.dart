@@ -5,11 +5,13 @@ import '../services/profile_api_service.dart';
 class PostProfileCard extends StatelessWidget {
   final Map<String, dynamic> post;
   final Future<void> Function() onRefresh;
+  final bool isMyPost;
 
   const PostProfileCard({
     super.key,
     required this.post,
     required this.onRefresh,
+    required this.isMyPost,
   });
 
   Future<void> _deletePost() async {
@@ -82,27 +84,29 @@ class PostProfileCard extends StatelessWidget {
             child: Icon(Icons.person),
           ),
           title: Text(post['description'] ?? ''),
-          trailing: PopupMenuButton<String>(
-            onSelected: (value) async {
-              if (value == 'edit') {
-                await _editPost(context);
-              }
+          trailing: isMyPost
+              ? PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      await _editPost(context);
+                    }
 
-              if (value == 'delete') {
-                await _deletePost();
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: 'edit',
-                child: Text('Modifier'),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Text('Supprimer'),
-              ),
-            ],
-          ),
+                    if (value == 'delete') {
+                      await _deletePost();
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text('Modifier'),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Supprimer'),
+                    ),
+                  ],
+                )
+              : null,
         ),
         const Divider(),
       ],
