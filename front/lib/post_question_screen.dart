@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front/forum/forum_service.dart';
+import 'package:go_router/go_router.dart';
 
 class PostQuestionScreen extends StatefulWidget {
   const PostQuestionScreen({super.key});
@@ -38,7 +39,7 @@ class _PostQuestionScreenState extends State<PostQuestionScreen> {
 
     try {
       await _forumService.createPost(title: title, description: desc);
-      if (mounted) Navigator.pop(context); // retour au forum avec refresh
+      if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -59,7 +60,7 @@ class _PostQuestionScreenState extends State<PostQuestionScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black, size: 30),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Padding(

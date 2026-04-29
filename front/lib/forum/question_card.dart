@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/forum_detail_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class QuestionCard extends StatelessWidget {
   final int id;
@@ -20,17 +20,7 @@ class QuestionCard extends StatelessWidget {
     final bool isRespondu = false;
 
     return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ForumDetailScreen(
-              postId: id,
-              title: titre,
-            ),
-          ),
-        );
-      },
+      onTap: () => context.go('/forum/$id', extra: titre),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: const BoxDecoration(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front/forum/forum_service.dart';
+import 'package:go_router/go_router.dart';
 
 const Color orangeKook = Colors.orange;
 
@@ -63,7 +64,7 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black, size: 30),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.go('/forum'),
         ),
         title: const Text("Question",
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
