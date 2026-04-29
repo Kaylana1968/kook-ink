@@ -27,7 +27,7 @@ class PostCountWidget extends StatelessWidget {
 
         return StatWidget(
           value: count.toString(),
-          label: 'Publications', // mieux que "Posts"
+          label: 'Publications',
         );
       },
     );

@@ -28,7 +28,7 @@ class ProfileHeader extends StatelessWidget {
       children: [
         const SizedBox(height: 20),
 
-        // Avatar + follow
+        // AVATAR + FOLLOW
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -52,7 +52,7 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        // Username + description
+        // USERNAME + DESCRIPTION
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
@@ -77,7 +77,7 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        // bouton créer post unique sur le profil connecté
+        // BUTTON VISIBLE ON MY PROFILE
         if (onCreatePost != null)
           Padding(
             padding: const EdgeInsets.all(16),

@@ -6,46 +6,31 @@ import 'package:front/auth_service.dart';
 class ProfileApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
 
-  //--ROUTES RECETTES--//
-  // Toutes les recettes
+  //--ROUTES RECIPE--//
   static Uri recipes() => Uri.parse('$baseUrl/recipe');
-  // Recette par ID
   static Uri recipeById(dynamic id) => Uri.parse('$baseUrl/recipe/$id');
-  // Recettes de l'utilisateur connecté
   static Uri myRecipes() => Uri.parse('$baseUrl/recipe/me');
-  // Recettes d’un utilisateur spécifique
   static Uri userRecipes(int id) => Uri.parse('$baseUrl/recipe/user/$id');
 
   //--ROUTES POSTS--//
-  // Tous les posts
   static Uri posts() => Uri.parse('$baseUrl/post');
-  // Post par ID
   static Uri postById(dynamic id) => Uri.parse('$baseUrl/post/$id');
-  // Posts de l'utilisateur connecté
   static Uri myPosts() => Uri.parse('$baseUrl/post/me');
-  // Posts d’un utilisateur spécifique
   static Uri userPosts(int id) => Uri.parse('$baseUrl/post/user/$id');
 
-  //--ROUTES PROFIL--//
-  // Profil utilisateur connecté
+  //--ROUTES PROFILE--//
   static Uri myProfile() => Uri.parse('$baseUrl/profile/me');
-
-  // Profil d'un utilisateur
   static Uri userProfile(int id) => Uri.parse('$baseUrl/profile/$id');
 
   //--ROUTES FOLLOW--//
-  // Nombre de followers de l'utilisateur connecté
   static Uri followCount() => Uri.parse('$baseUrl/follow/count');
-  // Nombre de followers d’un utilisateur
   static Uri userFollowCount(int id) => Uri.parse('$baseUrl/follow/count/$id');
 
-  //--ROUTES FAVORIS--//
-  // Favoris utilisateur connecté
+  //--ROUTES FAVOURITE--//
   static Uri favorites() => Uri.parse('$baseUrl/favorite');
-  // Favoris d'un utilisateur
   static Uri userFavorites(int id) => Uri.parse('$baseUrl/favorite/user/$id');
 
-  // RECUPERE LE PROFIL DE L'UTILISATEUR CONNECTE
+  // GET THE PROFILE OF THE LOGGED-IN USER
   static Future<Map<String, dynamic>> fetchMyProfile() async {
     final token = await AuthService.getToken();
 
@@ -64,7 +49,7 @@ class ProfileApiService {
     }
   }
 
-  // RECUPERE LE PROFIL D'UN UTILISATEUR
+  // GET A USER'S PROFILE
   static Future<Map<String, dynamic>> fetchUserProfile(int userId) async {
     final response = await http.get(
       userProfile(userId),
@@ -80,7 +65,7 @@ class ProfileApiService {
     }
   }
 
-  // RECUPERE LES followers/following DE L'UTILISATEUR CONNECTE
+  // GET THE FOLLOWERS/FOLLOWINGS OF THE LOGGED-IN USER
   static Future<Map<String, int>> fetchFollowCount() async {
     final token = await AuthService.getToken();
 
@@ -104,7 +89,7 @@ class ProfileApiService {
     }
   }
 
-  // RECUPERE LES FOLLOWERS D'UN UTILISATEUR
+  // GET A USER'S FOLLOWERS/FOLLOWING
   static Future<Map<String, int>> fetchUserFollowCount(int userId) async {
     final response = await http.get(
       userFollowCount(userId),
@@ -128,7 +113,7 @@ class ProfileApiService {
     }
   }
 
-  //FAVORIS UTILISATEUR CONNECTE
+  //FAVOURITES OF THE LOGGED-IN USER
   static Future<List<dynamic>> fetchFavorites() async {
     final token = await AuthService.getToken();
 
@@ -148,7 +133,7 @@ class ProfileApiService {
     }
   }
 
-  //FAVORIS D'UN UTILISATEUR
+  //A USER'S FAVOURITES
   static Future<List<dynamic>> fetchUserFavorites(int userId) async {
     final response = await http.get(
       userFavorites(userId),
@@ -165,7 +150,7 @@ class ProfileApiService {
     }
   }
 
-  // POST DE L'UTILISATEUR CONNECTE
+  // POST BY THE LOGGED-IN USER
   static Future<List<dynamic>> fetchMyPosts() async {
     final token = await AuthService.getToken();
 
@@ -185,7 +170,7 @@ class ProfileApiService {
     }
   }
 
-  // POST D'UN UTILISATEUR
+  // USER POST
   static Future<List<dynamic>> fetchUserPosts(int userId) async {
     final response = await http.get(
       userPosts(userId),
@@ -202,7 +187,7 @@ class ProfileApiService {
     }
   }
 
-  //CREER UN POST
+  // CREATE A POST
   static Future<bool> createPost(String description) async {
     final token = await AuthService.getToken();
 
@@ -220,7 +205,7 @@ class ProfileApiService {
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
-  //MODIFIER UN POST
+  // EDIT A POST
   static Future<bool> updatePost(int postId, String description) async {
     final token = await AuthService.getToken();
 
@@ -238,7 +223,7 @@ class ProfileApiService {
     return response.statusCode == 200;
   }
 
-  //SUPPRIMER UN POST
+  // DELETE A POST
   static Future<bool> deletePost(int postId) async {
     final token = await AuthService.getToken();
 
@@ -253,7 +238,19 @@ class ProfileApiService {
     return response.statusCode == 200 || response.statusCode == 204;
   }
 
-  // RECETTE D'UN UTILISATEUR
+  // ALL RECIPES
+  static Future<List<dynamic>> fetchRecipes() async {
+    final response = await http.get(recipes());
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["recipes"] as List<dynamic>;
+    } else {
+      throw Exception("Erreur serveur recettes");
+    }
+  }
+
+  // A USER'S RECIPE
   static Future<List<dynamic>> fetchUserRecipes(int userId) async {
     final response = await http.get(
       userRecipes(userId),
@@ -270,19 +267,7 @@ class ProfileApiService {
     }
   }
 
-  // TOUTES LES RECETTES
-  static Future<List<dynamic>> fetchRecipes() async {
-    final response = await http.get(recipes());
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data["recipes"] as List<dynamic>;
-    } else {
-      throw Exception("Erreur serveur recettes");
-    }
-  }
-
-  // RECETTE DE L'UTILISATEUR CONNECTE
+  // RECIPE BY THE LOGGED-IN USER
   static Future<List<dynamic>> fetchMyRecipes() async {
     final token = await AuthService.getToken();
 
@@ -302,7 +287,7 @@ class ProfileApiService {
     }
   }
 
-  // SUPPRIMER UNE RECETTE
+  // DELETE A RECIPE
   static Future<bool> deleteRecipe(int recipeId) async {
     final token = await AuthService.getToken();
 

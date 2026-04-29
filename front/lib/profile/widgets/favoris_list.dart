@@ -25,7 +25,6 @@ class FavorisList extends StatelessWidget {
           );
         }
 
-        // données
         final favorites = snapshot.data ?? [];
 
         if (favorites.isEmpty) {
@@ -44,16 +43,14 @@ class FavorisList extends StatelessWidget {
             // POST
             if (type == "post") {
               return ListTile(
-                leading: const Icon(Icons.article_outlined),
                 title: Text(item["description"] ?? "Post sans description"),
                 subtitle: Text(item["username"] ?? "Utilisateur"),
               );
             }
 
-            // RECETTE
+            // RECIPE
             if (type == "recipe") {
               return ListTile(
-                leading: const Icon(Icons.restaurant_outlined),
                 title: Text(item["name"] ?? "Recette"),
                 subtitle: Text(
                   "${item["username"] ?? "Utilisateur"} • "

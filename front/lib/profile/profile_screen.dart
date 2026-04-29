@@ -19,28 +19,37 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  //  LOAD POST AND RECIPE
   Future<List<dynamic>> _postFuture = Future.value([]);
   Future<List<dynamic>> _recipeFuture = Future.value([]);
 
+  // NUMBER OF FOLLOWERS
   int followers = 0;
   int following = 0;
 
+  // INFO PROFILE
   String username = "";
   String description = "";
 
+  // IT'S MY PROFILE ?
   bool get isMyProfile => widget.userId == null;
 
   @override
   void initState() {
     super.initState();
+
+    //LOAD DATA PAGE
     _loadData();
   }
 
+  //  LOAD POST, RECIPES, PROFILE
   void _loadData() {
     if (isMyProfile) {
+      // MY PROFILE DATA
       _postFuture = ProfileApiService.fetchMyPosts();
       _recipeFuture = ProfileApiService.fetchMyRecipes();
     } else {
+      // PROFILE DATA OTHER
       _postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
       _recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
     }
@@ -49,6 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadFollowCount();
   }
 
+  // LOAD PROFILE
   Future<void> _loadProfile() async {
     try {
       Map<String, dynamic> data;
@@ -70,6 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // LOAD FOLLOW
   Future<void> _loadFollowCount() async {
     try {
       Map<String, int> data;
@@ -91,6 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // LOAD DATA
   Future<void> _refresh() async {
     setState(() {
       if (isMyProfile) {
@@ -108,6 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await _loadFollowCount();
   }
 
+  // MODAL CREATE POST
   void _openCreatePostModal() {
     final controller = TextEditingController();
     bool isLoading = false;
@@ -148,11 +161,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
 
             return Padding(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 left: 16,
                 right: 16,
                 top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -194,6 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // POST TAB
   Widget _postsTab() {
     return FutureBuilder<List<dynamic>>(
       future: _postFuture,
@@ -225,6 +238,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // RECIPE TAB
   Widget _recipesTab() {
     return FutureBuilder<List<dynamic>>(
       future: _recipeFuture,

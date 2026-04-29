@@ -4,7 +4,7 @@ from common import database, models, utils
 
 router = APIRouter()
 
-# FAVOURITES PROFIL ME
+# MY FAVOURITES PROFIL
 @router.get("/favorite")
 def get_favorites(
     user=Depends(utils.get_user),

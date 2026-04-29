@@ -38,7 +38,7 @@ class RecipeProfileCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // IMAGE (sinon rien)
+              // IMAGE ?? NULL
               if (imageUrl.isNotEmpty)
                 ClipRRect(
                   borderRadius:
