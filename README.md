@@ -1,6 +1,6 @@
 # BACKEND
 
-### Get into venv
+### Get into /back
 
 ```sh
 ./venv/Scripts/activate
@@ -19,6 +19,8 @@ fastapi dev main.py
 ```
 
 # FRONTEND
+
+### Get into /front
 
 ### Install dependencies
 
