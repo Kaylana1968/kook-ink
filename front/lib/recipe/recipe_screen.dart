@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/recipe/models/api_exception.dart';
 import 'package:go_router/go_router.dart';
 
 import 'models/ingredient_input.dart';
@@ -175,7 +176,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
   Future<void> sendRecipeForm() async {
     final errorMessage = _validateForm();
-
     if (errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
@@ -184,25 +184,36 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
 
     setState(() => isLoading = true);
-
     try {
       final body = _buildBody();
+      final int? recipeId = widget.recipeId;
 
-      int? recipeId = widget.recipeId;
-
-      final response = recipeId == null
-          ? await RecipeApiService.createRecipe(body)
-          : await RecipeApiService.updateRecipe(recipeId, body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!mounted) return;
-        context.go("/profile");
+      if (recipeId == null) {
+        await RecipeApiService.createRecipe(body);
       } else {
-        debugPrint("Erreur recette : ${response.statusCode}");
-        debugPrint(response.body);
+        await RecipeApiService.updateRecipe(recipeId, body);
       }
+
+      if (!mounted) return;
+      context.go("/profile");
+    } on ApiException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur ${e.statusCode} : ${e.message}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } catch (e) {
-      debugPrint("Erreur recette : $e");
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Une erreur réseau est survenue.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
