@@ -69,7 +69,7 @@ class PostProfileCard extends StatelessWidget {
 
     if (success) {
       await onRefresh();
-      debugPrint("Post modifié");
+      debugPrint(" modifié");
     } else {
       debugPrint("Erreur modification post");
     }

@@ -4,7 +4,6 @@ from common import database, models, utils
 
 router = APIRouter()
 
-
 # MY FAVOURITES PROFIL
 @router.get("/favorite")
 def get_favorites(
@@ -15,27 +14,24 @@ def get_favorites(
 
     post_likes = db.query(models.PostLike).filter(
         models.PostLike.user_id == user_id
-    ).order_by(models.PostLike.created_at.desc()).all()
+    ).all()
 
     recipe_likes = db.query(models.RecipeLike).filter(
         models.RecipeLike.user_id == user_id
-    ).order_by(models.RecipeLike.created_at.desc()).all()
+    ).all()
 
     result = []
 
     for like in post_likes:
-        post = db.query(models.Post).filter(
-            models.Post.id == like.post_id
-        ).first()
+        post = db.query(models.Post).filter(models.Post.id == like.post_id).first()
 
         if post:
             user = db.query(models.User).filter(
                 models.User.id == post.user_id
             ).first()
-
             result.append({
                 "type": "post",
-                "created_at": like.created_at.isoformat() if like.created_at else None,
+                "created_at": post.created_at.isoformat() if post.created_at else None,
                 "item": {
                     "id": post.id,
                     "description": post.description,
@@ -45,18 +41,15 @@ def get_favorites(
             })
 
     for like in recipe_likes:
-        recipe = db.query(models.Recipe).filter(
-            models.Recipe.id == like.recipe_id
-        ).first()
+        recipe = db.query(models.Recipe).filter(models.Recipe.id == like.recipe_id).first()
 
         if recipe:
             user = db.query(models.User).filter(
                 models.User.id == recipe.user_id
             ).first()
-
             result.append({
                 "type": "recipe",
-                "created_at": like.created_at.isoformat() if like.created_at else None,
+                "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
                 "item": {
                     "id": recipe.id,
                     "name": recipe.name,
@@ -69,8 +62,12 @@ def get_favorites(
                 }
             })
 
-    return {"favorites": result}
+    result.sort(
+        key=lambda x: x["created_at"] or "",
+        reverse=True
+    )
 
+    return {"favorites": result}
 
 # FAVOURITES PROFIL
 @router.get("/favorite/user/{user_id}")
@@ -80,11 +77,11 @@ def get_user_favorites(
 ):
     post_likes = db.query(models.PostLike).filter(
         models.PostLike.user_id == user_id
-    ).order_by(models.PostLike.created_at.desc()).all()
+    ).all()
 
     recipe_likes = db.query(models.RecipeLike).filter(
         models.RecipeLike.user_id == user_id
-    ).order_by(models.RecipeLike.created_at.desc()).all()
+    ).all()
 
     result = []
 
@@ -100,7 +97,7 @@ def get_user_favorites(
 
             result.append({
                 "type": "post",
-                "created_at": like.created_at.isoformat() if like.created_at else None,
+                "created_at": post.created_at.isoformat() if post.created_at else None,
                 "item": {
                     "id": post.id,
                     "description": post.description,
@@ -121,7 +118,7 @@ def get_user_favorites(
 
             result.append({
                 "type": "recipe",
-                "created_at": like.created_at.isoformat() if like.created_at else None,
+                "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
                 "item": {
                     "id": recipe.id,
                     "name": recipe.name,
@@ -134,5 +131,10 @@ def get_user_favorites(
                     "image_link": recipe.image_link,
                 }
             })
+
+    result.sort(
+        key=lambda x: x["created_at"] or "",
+        reverse=True
+    )
 
     return {"favorites": result}
