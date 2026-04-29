@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:front/post_question_screen.dart';
-import 'package:front/forum_detail_screen.dart';
 import 'package:front/forum/forum_service.dart';
 import 'package:front/forum/question_card.dart';
 
@@ -29,7 +28,7 @@ class _ForumScreenState extends State<ForumScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const orangeKook = Color(0xFFFF8A00);
+    const orangeKook = Colors.orange;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -45,55 +44,55 @@ class _ForumScreenState extends State<ForumScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Forum', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                  const Text('Forum',
+                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
                   ElevatedButton(
                     onPressed: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (context) => const PostQuestionScreen()));
+                      await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const PostQuestionScreen()));
                       _refreshPosts();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: orangeKook,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text('Poser une question', style: TextStyle(color: Colors.white)),
+                    child: const Text('Poser une question',
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              
               TextField(
                 decoration: InputDecoration(
                   hintText: 'Rechercher',
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: orangeKook)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: orangeKook)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: orangeKook)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: orangeKook)),
                 ),
               ),
               const SizedBox(height: 16),
-              
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: orangeKook,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                child: const Text('Filtres', style: TextStyle(color: Colors.white)),
-              ),
               const SizedBox(height: 20),
-
               FutureBuilder<List<dynamic>>(
                 future: _postsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: orangeKook));
+                    return const Center(
+                        child: CircularProgressIndicator(color: orangeKook));
                   } else if (snapshot.hasError) {
                     return Center(child: Text("Erreur : ${snapshot.error}"));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text("Aucune question pour le moment."));
+                    return const Center(
+                        child: Text("Aucune question pour le moment."));
                   }
 
                   final posts = snapshot.data!;
-
                   return ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -102,8 +101,7 @@ class _ForumScreenState extends State<ForumScreen> {
                       final post = posts[index];
                       return QuestionCard(
                         id: post['id'],
-                        nbReponses: post['responses_count'] ?? 0, 
-                        nbVues: post['views'] ?? 0,
+                        nbReponses: post['responses_count'] ?? 0,
                         titre: post['title'] ?? "Sans titre",
                         contenu: post['description'] ?? "",
                       );

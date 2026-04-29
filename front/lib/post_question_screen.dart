@@ -1,12 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:front/forum/forum_service.dart';
 
-class PostQuestionScreen extends StatelessWidget {
+class PostQuestionScreen extends StatefulWidget {
   const PostQuestionScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const orangeKook = Color(0xFFFF8A00);
+  State<PostQuestionScreen> createState() => _PostQuestionScreenState();
+}
 
+class _PostQuestionScreenState extends State<PostQuestionScreen> {
+  static const orangeKook = Colors.orange;
+
+  final ForumService _forumService = ForumService();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final title = _titleController.text.trim();
+    final desc = _descController.text.trim();
+
+    if (title.isEmpty || desc.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez remplir le titre et le texte.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _forumService.createPost(title: title, description: desc);
+      if (mounted) Navigator.pop(context); // retour au forum avec refresh
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -20,41 +65,40 @@ class PostQuestionScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Poser une question', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const Center(
+              child: Text(
+                'Poser une question',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+            ),
             const SizedBox(height: 30),
-            _buildField("Titre", "Titre", orangeKook),
+            _buildField("Titre", "Titre de votre question", _titleController),
             const SizedBox(height: 20),
-            _buildField("Text", "Text", orangeKook, maxLines: 8),
-            const SizedBox(height: 20),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Filtres", style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                _filterChip(orangeKook),
-                _filterChip(orangeKook),
-                _filterChip(orangeKook),
-              ],
-            ),
-            Row(
-              children: [
-                _filterChip(orangeKook),
-                IconButton(onPressed: () {}, icon: const Icon(Icons.add, color: Colors.grey)),
-              ],
-            ),
+            _buildField("Texte", "Décrivez votre question...", _descController, maxLines: 8),
             const Spacer(),
-            SizedBox(
-              width: 120,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: orangeKook,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            Center(
+              child: SizedBox(
+                width: 120,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: orangeKook,
+                    disabledBackgroundColor: orangeKook.withOpacity(0.5),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text('Envoyer',
+                          style: TextStyle(color: Colors.white)),
                 ),
-                child: const Text('Envoyer', style: TextStyle(color: Colors.white)),
               ),
             ),
             const SizedBox(height: 20),
@@ -64,35 +108,36 @@ class PostQuestionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildField(String label, String hint, Color color, {int maxLines = 1}) {
+  Widget _buildField(
+    String label,
+    String hint,
+    TextEditingController controller, {
+    int maxLines = 1,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
         TextField(
+          controller: controller,
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: Colors.grey, fontSize: 12),
             contentPadding: const EdgeInsets.all(12),
-            enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: color), borderRadius: BorderRadius.circular(8)),
-            border: OutlineInputBorder(borderSide: BorderSide(color: color), borderRadius: BorderRadius.circular(8)),
+            enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: orangeKook),
+                borderRadius: BorderRadius.circular(8)),
+            focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: orangeKook, width: 2),
+                borderRadius: BorderRadius.circular(8)),
+            border: OutlineInputBorder(
+                borderSide: const BorderSide(color: orangeKook),
+                borderRadius: BorderRadius.circular(8)),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _filterChip(Color color) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      height: 30,
-      width: 70,
-      decoration: BoxDecoration(
-        border: Border.all(color: color),
-        borderRadius: BorderRadius.circular(15),
-      ),
     );
   }
 }

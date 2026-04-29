@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import '../forum_detail_screen.dart'; // Ajuste le chemin selon ton projet
+import 'package:front/forum_detail_screen.dart';
 
 class QuestionCard extends StatelessWidget {
   final int id;
   final int nbReponses;
-  final int nbVues;
   final String titre;
   final String contenu;
 
@@ -12,14 +11,13 @@ class QuestionCard extends StatelessWidget {
     super.key,
     required this.id,
     required this.nbReponses,
-    required this.nbVues,
     required this.titre,
     required this.contenu,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isRespondu = nbReponses > 0;
+    final bool isRespondu = false;
 
     return InkWell(
       onTap: () {
@@ -42,7 +40,7 @@ class QuestionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '$nbReponses réponse${nbReponses > 1 ? 's' : ''}  •  $nbVues vue${nbVues > 1 ? 's' : ''}',
+              '$nbReponses réponse${nbReponses > 1 ? 's' : ''}',
               style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
             const SizedBox(height: 8),
@@ -69,7 +67,10 @@ class QuestionCard extends StatelessWidget {
                     SizedBox(width: 4),
                     Text(
                       'Répondu',
-                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                      style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
                     ),
                   ],
                 ),
