@@ -10,6 +10,7 @@ router = APIRouter(tags=["Forum"])
 class CreatePostSchema(BaseModel):
     title: str
     description: str
+    username: str
 
 class CreateResponseSchema(BaseModel):
     content: str
@@ -38,7 +39,7 @@ def get_all_posts(db: Session = Depends(database.get_db)):
             "id": post.ForumPost.id,
             "title": post.ForumPost.title,
             "description": post.ForumPost.description,
-            "author": post.username,
+            "username": post.username,
             "responses_count": post.responses_count,
             "created_at": post.ForumPost.created_at,
         }
@@ -65,20 +66,27 @@ def create_post(
 
 @router.get("/forum/posts/{post_id}")
 def get_post_detail(post_id: int, db: Session = Depends(database.get_db)):
-    post = db.query(models.ForumPost).filter(models.ForumPost.id == post_id).first()
+    post = (
+        db.query(models.ForumPost, models.User.username.label("username"))
+        .join(models.User, models.ForumPost.user_id == models.User.id)
+        .filter(models.ForumPost.id == post_id)
+        .first()
+    )
+
     if not post:
         raise HTTPException(status_code=404, detail="Post introuvable")
 
     rows = (
         db.query(
             models.ForumPostResponse,
-            models.User.username,
+            models.User.username.label("username"),
             func.count(models.ForumPostResponseUpvote.user_id).label("upvotes"),
         )
         .join(models.User, models.ForumPostResponse.user_id == models.User.id)
         .outerjoin(
             models.ForumPostResponseUpvote,
-            models.ForumPostResponse.id == models.ForumPostResponseUpvote.forum_post_response_id,
+            models.ForumPostResponse.id
+            == models.ForumPostResponseUpvote.forum_post_response_id,
         )
         .filter(models.ForumPostResponse.forum_post_id == post_id)
         .group_by(models.ForumPostResponse.id, models.User.username)
@@ -87,12 +95,13 @@ def get_post_detail(post_id: int, db: Session = Depends(database.get_db)):
     )
 
     return {
-        "title": post.title,
-        "description": post.description,
+        "title": post.ForumPost.title,
+        "description": post.ForumPost.description,
+        "username": post.username,
         "responses": [
             {
                 "id": r.ForumPostResponse.id,
-                "author": r.username,
+                "username": r.username or "Utilisateur",
                 "content": r.ForumPostResponse.content,
                 "upvotes": r.upvotes,
             }

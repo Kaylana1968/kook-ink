@@ -20,10 +20,19 @@ class ForumService {
     throw Exception('Erreur lors du chargement des posts');
   }
 
-  Future<Map<String, dynamic>> getPostDetail(int id) async {
-    final response = await http.get(Uri.parse('$baseUrl/forum/posts/$id'));
-    if (response.statusCode == 200) return jsonDecode(response.body);
-    throw Exception('Erreur lors du chargement du détail');
+  Future<Map<String, dynamic>> getPostDetail(int postId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/forum/posts/$postId'),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+
+    throw Exception("Erreur chargement détail forum");
   }
 
   Future<void> createPost({

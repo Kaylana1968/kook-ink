@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/forum/forum_service.dart';
+import 'package:front/forum/services/forum_service.dart';
 import 'package:go_router/go_router.dart';
 
 const Color orangeKook = Colors.orange;
@@ -8,7 +8,8 @@ class ForumDetailScreen extends StatefulWidget {
   final int postId;
   final String title;
 
-  const ForumDetailScreen({super.key, required this.postId, required this.title});
+  const ForumDetailScreen(
+      {super.key, required this.postId, required this.title});
 
   @override
   State<ForumDetailScreen> createState() => _ForumDetailScreenState();
@@ -82,6 +83,7 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
 
           final data = snapshot.data!;
           final responses = data['responses'] as List;
+          final username = data['username']?.toString() ?? "Utilisateur";
 
           return Column(
             children: [
@@ -90,6 +92,14 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      username,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     Text(data['title'],
                         style: const TextStyle(
                             fontSize: 22, fontWeight: FontWeight.bold)),
@@ -107,9 +117,10 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
                   itemCount: responses.length,
                   itemBuilder: (context, index) {
                     final resp = responses[index];
+                    debugPrint(resp.toString());
                     return _ResponseTile(
                       id: resp['id'],
-                      author: resp['author'],
+                      username: resp['username'],
                       content: resp['content'],
                       upvotes: resp['upvotes'] ?? 0,
                       onUpvote: () => _handleUpvote(resp['id']),
@@ -152,8 +163,7 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
                     borderSide: const BorderSide(color: orangeKook)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
-                    borderSide:
-                        const BorderSide(color: orangeKook, width: 2)),
+                    borderSide: const BorderSide(color: orangeKook, width: 2)),
               ),
             ),
           ),
@@ -173,14 +183,14 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
 
 class _ResponseTile extends StatelessWidget {
   final int id;
-  final String author;
+  final String username;
   final String content;
   final int upvotes;
   final VoidCallback onUpvote;
 
   const _ResponseTile({
     required this.id,
-    required this.author,
+    required this.username,
     required this.content,
     required this.upvotes,
     required this.onUpvote,
@@ -203,13 +213,13 @@ class _ResponseTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(author,
+                Text(username,
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 4),
                 Text(content,
-                    style: const TextStyle(
-                        fontSize: 14, color: Colors.black54)),
+                    style:
+                        const TextStyle(fontSize: 14, color: Colors.black54)),
                 Row(
                   children: [
                     GestureDetector(

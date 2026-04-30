@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/forum/forum_service.dart';
+import 'package:front/forum/services/forum_service.dart';
 import 'package:go_router/go_router.dart';
 
 class PostQuestionScreen extends StatefulWidget {
@@ -77,7 +77,8 @@ class _PostQuestionScreenState extends State<PostQuestionScreen> {
             const SizedBox(height: 30),
             _buildField("Titre", "Titre de votre question", _titleController),
             const SizedBox(height: 20),
-            _buildField("Texte", "Décrivez votre question...", _descController, maxLines: 8),
+            _buildField("Texte", "Décrivez votre question...", _descController,
+                maxLines: 8),
             const Spacer(),
             Center(
               child: SizedBox(
