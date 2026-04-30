@@ -44,6 +44,97 @@ def get_user_follow_count(
         "followers": followers,
         "following": following,
     }
+    
+    # STATUS FOLLOW USER
+@router.get("/follow/{user_id}/status")
+def get_follow_status(
+    user_id: int,
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db),
+):
+    current_user_id = int(user["id"])
+
+    is_following = (
+        db.query(models.Follow)
+        .filter(
+            models.Follow.following_user_id == current_user_id,
+            models.Follow.followed_user_id == user_id,
+        )
+        .first()
+        is not None
+    )
+
+    return {"is_following": is_following}
+
+
+# FOLLOW USER
+@router.post("/follow/{user_id}")
+def follow_user(
+    user_id: int,
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db),
+):
+    current_user_id = int(user["id"])
+
+    if current_user_id == user_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Tu ne peux pas te suivre toi-même",
+        )
+
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    existing_follow = (
+        db.query(models.Follow)
+        .filter(
+            models.Follow.following_user_id == current_user_id,
+            models.Follow.followed_user_id == user_id,
+        )
+        .first()
+    )
+
+    if existing_follow:
+        return {"message": "Déjà suivi"}
+
+    follow = models.Follow(
+        following_user_id=current_user_id,
+        followed_user_id=user_id,
+    )
+
+    db.add(follow)
+    db.commit()
+
+    return {"message": "Utilisateur suivi"}
+
+
+# UNFOLLOW USER
+@router.delete("/follow/{user_id}")
+def unfollow_user(
+    user_id: int,
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db),
+):
+    current_user_id = int(user["id"])
+
+    follow = (
+        db.query(models.Follow)
+        .filter(
+            models.Follow.following_user_id == current_user_id,
+            models.Follow.followed_user_id == user_id,
+        )
+        .first()
+    )
+
+    if not follow:
+        return {"message": "Déjà non suivi"}
+
+    db.delete(follow)
+    db.commit()
+
+    return {"message": "Utilisateur plus suivi"}
 
 # INFO USER
 @router.get("/profile/me")

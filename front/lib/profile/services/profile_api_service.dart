@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:front/authentification/auth_service.dart';
@@ -25,6 +26,8 @@ class ProfileApiService {
   //--ROUTES FOLLOW--//
   static Uri followCount() => Uri.parse('$baseUrl/follow/count');
   static Uri userFollowCount(int id) => Uri.parse('$baseUrl/follow/count/$id');
+  static Uri followStatus(int id) => Uri.parse('$baseUrl/follow/$id/status');
+  static Uri followUserUri(int id) => Uri.parse('$baseUrl/follow/$id');
 
   //--ROUTES FAVOURITE--//
   static Uri favorites() => Uri.parse('$baseUrl/favorite');
@@ -111,6 +114,65 @@ class ProfileApiService {
         "following": 0,
       };
     }
+  }
+
+// GET FOLLOW STATUS
+  static Future<bool> getFollowStatus(int userId) async {
+    final token = await AuthService.getToken();
+
+    final response = await http.get(
+      followStatus(userId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    debugPrint("FOLLOW STATUS: ${response.statusCode}");
+    debugPrint("FOLLOW STATUS BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["is_following"] == true;
+    }
+
+    return false;
+  }
+
+// FOLLOW USER
+  static Future<bool> followUser(int userId) async {
+    final token = await AuthService.getToken();
+
+    final response = await http.post(
+      followUserUri(userId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    debugPrint("FOLLOW USER: ${response.statusCode}");
+    debugPrint("FOLLOW USER BODY: ${response.body}");
+
+    return response.statusCode == 200;
+  }
+
+// UNFOLLOW USER
+  static Future<bool> unfollowUser(int userId) async {
+    final token = await AuthService.getToken();
+
+    final response = await http.delete(
+      followUserUri(userId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    debugPrint("UNFOLLOW USER: ${response.statusCode}");
+    debugPrint("UNFOLLOW USER BODY: ${response.body}");
+
+    return response.statusCode == 200;
   }
 
   //FAVOURITES OF THE LOGGED-IN USER

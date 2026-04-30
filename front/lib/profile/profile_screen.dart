@@ -301,9 +301,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 recipeFuture: _recipeFuture,
                 followers: followers,
                 following: following,
+                userId: widget.userId ?? 0,
+                isMyProfile: isMyProfile,
                 username: username,
                 description: description,
                 onCreatePost: isMyProfile ? _openCreatePostModal : null,
+                onRefresh: _refresh,
               ),
               const TabBar(
                 labelColor: Colors.black,
