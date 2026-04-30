@@ -25,34 +25,51 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 20),
 
-        // AVATAR + FOLLOW
+        // 🔝 AVATAR + STATS
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // 👤 AVATAR (à gauche)
               const CircleAvatar(
                 radius: 40,
                 child: Icon(Icons.person, size: 40),
               ),
-              PostCountWidget(
-                  postFuture: postFuture, recipeFuture: recipeFuture),
-              StatWidget(
-                value: followers.toString(),
-                label: 'Followers',
-              ),
-              StatWidget(
-                value: following.toString(),
-                label: 'Suivi(e)s',
+
+              const SizedBox(width: 20),
+
+              // 📊 STATS (centrées par rapport à l'avatar)
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    PostCountWidget(
+                      postFuture: postFuture,
+                      recipeFuture: recipeFuture,
+                    ),
+                    StatWidget(
+                      value: followers.toString(),
+                      label: 'Followers',
+                    ),
+                    StatWidget(
+                      value: following.toString(),
+                      label: 'Suivi(e)s',
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
 
-        // USERNAME + DESCRIPTION
+        const SizedBox(height: 12),
+
+        // 👤 USERNAME + DESCRIPTION (aligné à gauche)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
@@ -77,7 +94,7 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        // BUTTON VISIBLE ON MY PROFILE
+        // 🔘 BUTTON
         if (onCreatePost != null)
           Padding(
             padding: const EdgeInsets.all(16),

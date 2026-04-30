@@ -79,50 +79,87 @@ class _FeedRecipeCardState extends State<FeedRecipeCard> {
     final imageUrl = recipe["image_link"]?.toString() ?? "";
     final userId = recipe["user_id"]?.toString();
 
+    final preparationTime = recipe["preparation_time"] ?? 0;
+    final person = recipe["person"] ?? 0;
+    final difficulty = recipe["difficulty"] ?? 0;
+
     final isMine = userId == currentUserId;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 👤 USER HEADER
         FeedUserHeader(username: username, userId: userId),
 
+        // 🖼 IMAGE
         if (imageUrl.isNotEmpty)
           Image.network(
             imageUrl,
             width: double.infinity,
             height: 200,
             fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) {
+              return Container(
+                height: 200,
+                color: Colors.grey[300],
+                child: const Center(child: Icon(Icons.image_not_supported)),
+              );
+            },
           )
         else
           Container(
             height: 200,
             color: Colors.grey[300],
+            child: const Center(child: Icon(Icons.image)),
           ),
 
+        // 📄 INFOS
         Padding(
           padding: const EdgeInsets.all(12),
-          child: Text(
-            name,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // NOM
+              Text(
+                name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              // DETAILS
+              Text(
+                "$preparationTime min • "
+                "$person pers • "
+                "Niv $difficulty",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
         ),
 
-        // ❤️ seulement si ce n'est pas moi
+        // ❤️ LIKE (uniquement si pas à toi)
         if (!isMine)
-          Row(
-            children: [
-              IconButton(
-                onPressed: _toggleLike,
-                icon: Icon(
-                  liked ? Icons.favorite : Icons.favorite_border,
-                  color: liked ? Colors.red : Colors.grey,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: _toggleLike,
+                  icon: Icon(
+                    liked ? Icons.favorite : Icons.favorite_border,
+                    color: liked ? Colors.red : Colors.grey,
+                  ),
                 ),
-              ),
-              Text(likes.toString()),
-            ],
+                Text(likes.toString()),
+              ],
+            ),
           ),
 
         const Divider(height: 1, thickness: 0.5),
