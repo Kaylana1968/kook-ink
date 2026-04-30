@@ -189,20 +189,26 @@ class ProfileApiService {
 
   // CREATE A POST
   static Future<bool> createPost(String description) async {
-    final token = await AuthService.getToken();
+    try {
+      final token = await AuthService.getToken();
 
-    final response = await http.post(
-      posts(),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode({
-        "description": description,
-      }),
-    );
+      final response = await http
+          .post(
+            posts(),
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer $token",
+            },
+            body: jsonEncode({
+              "description": description,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
 
-    return response.statusCode == 200 || response.statusCode == 201;
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
   }
 
   // EDIT A POST

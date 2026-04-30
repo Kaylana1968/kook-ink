@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'services/profile_api_service.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/post_profile_list.dart';
@@ -122,6 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // MODAL CREATE POST
   void _openCreatePostModal() {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final controller = TextEditingController();
     bool isLoading = false;
 
@@ -147,17 +149,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               final success = await ProfileApiService.createPost(description);
 
-              if (success) {
-                if (context.mounted) context.go('/profile');
-                await _refresh();
-                debugPrint("Post créé");
-              } else {
-                debugPrint("Erreur création post");
-              }
-
               setModalState(() {
                 isLoading = false;
               });
+
+              if (success) {
+                await _refresh();
+                if (context.mounted) {
+                  context.pop();
+                }
+                Fluttertoast.showToast(
+                  msg: "Post créé",
+                );
+              } else {
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(
+                    content: Text("Erreur lors de la création du post"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
 
             return Padding(
