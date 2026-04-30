@@ -75,115 +75,121 @@ class _RecipeProfileCardState extends State<RecipeProfileCard> {
   Widget build(BuildContext context) {
     final imageUrl = widget.recipe["image_link"] ?? "";
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (imageUrl.isNotEmpty)
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(10)),
-                  child: Image.network(
-                    imageUrl,
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox(),
+    return InkWell(
+      onTap: () {
+        context.go('/recipe-detail/${widget.recipe["id"]}');
+      },
+      borderRadius: BorderRadius.circular(10),
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (imageUrl.isNotEmpty)
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(10)),
+                    child: Image.network(
+                      imageUrl,
+                      height: 120,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox(),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.recipe['name'] ?? 'Sans nom',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      infoChip(
+                        Icons.timer_outlined,
+                        "${widget.recipe['preparation_time'] ?? 0} min",
+                      ),
+                      infoChip(
+                        Icons.local_fire_department_outlined,
+                        "${widget.recipe['baking_time'] ?? 0} min",
+                      ),
+                      if (widget.recipe['difficulty'] != null)
+                        infoChip(
+                          Icons.trending_up,
+                          "Niv. ${widget.recipe['difficulty']}",
+                        ),
+                      if (widget.recipe['person'] != null)
+                        infoChip(
+                          Icons.people_outline,
+                          widget.recipe['person'] > 1
+                              ? "${widget.recipe['person']} personnes"
+                              : "${widget.recipe['person']} personne",
+                        ),
+                      if (!widget.isMyRecipe)
+                        Row(
+                          children: [
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: _toggleLike,
+                              icon: Icon(
+                                liked ? Icons.favorite : Icons.favorite_border,
+                                color: liked ? Colors.red : Colors.grey,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              likes.toString(),
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.all(6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.recipe['name'] ?? 'Sans nom',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+              ],
+            ),
+            if (widget.isMyRecipe)
+              Positioned(
+                top: 4,
+                right: 4,
+                child: PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      context.go('/recipe/${widget.recipe["id"]}');
+                    }
+
+                    if (value == 'delete') {
+                      await _deleteRecipe();
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text('Modifier'),
                     ),
-                    const SizedBox(height: 4),
-                    infoChip(
-                      Icons.timer_outlined,
-                      "${widget.recipe['preparation_time'] ?? 0} min",
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Supprimer'),
                     ),
-                    infoChip(
-                      Icons.local_fire_department_outlined,
-                      "${widget.recipe['baking_time'] ?? 0} min",
-                    ),
-                    if (widget.recipe['difficulty'] != null)
-                      infoChip(
-                        Icons.trending_up,
-                        "Niv. ${widget.recipe['difficulty']}",
-                      ),
-                    if (widget.recipe['person'] != null)
-                      infoChip(
-                        Icons.people_outline,
-                        widget.recipe['person'] > 1
-                            ? "${widget.recipe['person']} personnes"
-                            : "${widget.recipe['person']} personne",
-                      ),
-                    if (!widget.isMyRecipe)
-                      Row(
-                        children: [
-                          IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: _toggleLike,
-                            icon: Icon(
-                              liked ? Icons.favorite : Icons.favorite_border,
-                              color: liked ? Colors.red : Colors.grey,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            likes.toString(),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
                   ],
                 ),
               ),
-            ],
-          ),
-          if (widget.isMyRecipe)
-            Positioned(
-              top: 4,
-              right: 4,
-              child: PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: Colors.white),
-                onSelected: (value) async {
-                  if (value == 'edit') {
-                    context.go('/recipe/${widget.recipe["id"]}');
-                  }
-
-                  if (value == 'delete') {
-                    await _deleteRecipe();
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: Text('Modifier'),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Supprimer'),
-                  ),
-                ],
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

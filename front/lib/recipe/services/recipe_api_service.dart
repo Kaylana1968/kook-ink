@@ -59,4 +59,20 @@ class RecipeApiService {
       throw ApiException(response.statusCode, response.body);
     }
   }
+
+  static Future<Map<String, dynamic>> fetchRecipeById(int recipeId) async {
+    final response = await http.get(
+      recipeById(recipeId),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["recipe"] as Map<String, dynamic>;
+    }
+
+    throw Exception("Erreur chargement recette");
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
 
 class FavorisList extends StatelessWidget {
@@ -40,7 +41,6 @@ class FavorisList extends StatelessWidget {
             final type = favorite["type"];
             final item = favorite["item"];
 
-            // POST
             if (type == "post") {
               return ListTile(
                 leading: const CircleAvatar(
@@ -52,11 +52,13 @@ class FavorisList extends StatelessWidget {
               );
             }
 
-            // RECIPE
             if (type == "recipe") {
               final imageUrl = item["image_link"]?.toString() ?? "";
 
               return ListTile(
+                onTap: () {
+                  context.go('/recipe-detail/${item["id"]}');
+                },
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: imageUrl.isNotEmpty
@@ -85,11 +87,14 @@ class FavorisList extends StatelessWidget {
                   item["name"] ?? "Recette",
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text("${item["preparation_time"] ?? 0} min • "
-                    "${item["person"] ?? 0} pers.\n"
-                    "${item["username"] ?? "Utilisateur"}"),
+                subtitle: Text(
+                  "${item["preparation_time"] ?? 0} min • "
+                  "${item["person"] ?? 0} pers.\n"
+                  "${item["username"] ?? "Utilisateur"}",
+                ),
               );
             }
+
             return const SizedBox();
           },
         );

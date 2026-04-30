@@ -5,6 +5,7 @@ import 'package:front/message_prive/message_screen.dart';
 import 'package:front/mini/mini_screen.dart';
 import 'package:front/notification/notification_screen.dart';
 import 'package:front/recipe/recipe_screen.dart';
+import 'package:front/recipe/recipe_detail_screen.dart';
 import 'package:front/search/search_screen.dart';
 import 'package:front/forum/forum_detail_screen.dart';
 import 'package:front/forum/post_question_screen.dart';
@@ -69,6 +70,14 @@ class MyApp extends StatelessWidget {
                   final id = state.pathParameters['recipeId'];
 
                   return RecipeScreen(recipeId: int.parse(id!));
+                },
+              ),
+              GoRoute(
+                path: '/recipe-detail/:id',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+
+                  return RecipeDetailScreen(recipeId: id);
                 },
               ),
               GoRoute(

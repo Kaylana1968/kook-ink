@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:front/authentification/auth_service.dart';
 import 'feed_user_header.dart';
 import '../services/home_api_service.dart';
@@ -85,85 +86,87 @@ class _FeedRecipeCardState extends State<FeedRecipeCard> {
 
     final isMine = userId == currentUserId;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 👤 USER HEADER
-        FeedUserHeader(username: username, userId: userId),
+    return InkWell(
+      onTap: () {
+        context.go('/recipe-detail/${recipe["id"]}');
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FeedUserHeader(username: username, userId: userId),
 
-        // 🖼 IMAGE
-        if (imageUrl.isNotEmpty)
-          Image.network(
-            imageUrl,
-            width: double.infinity,
-            height: 200,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) {
-              return Container(
-                height: 200,
-                color: Colors.grey[300],
-                child: const Center(child: Icon(Icons.image_not_supported)),
-              );
-            },
-          )
-        else
-          Container(
-            height: 200,
-            color: Colors.grey[300],
-            child: const Center(child: Icon(Icons.image)),
-          ),
+          // IMAGE
+          if (imageUrl.isNotEmpty)
+            Image.network(
+              imageUrl,
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Icon(Icons.image_not_supported),
+                  ),
+                );
+              },
+            )
+          else
+            Container(
+              height: 200,
+              color: Colors.grey[300],
+              child: const Center(child: Icon(Icons.image)),
+            ),
 
-        // 📄 INFOS
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // NOM
-              Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              // DETAILS
-              Text(
-                "$preparationTime min • "
-                "$person pers • "
-                "Niv $difficulty",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // ❤️ LIKE (uniquement si pas à toi)
-        if (!isMine)
+          // INFOS
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  onPressed: _toggleLike,
-                  icon: Icon(
-                    liked ? Icons.favorite : Icons.favorite_border,
-                    color: liked ? Colors.red : Colors.grey,
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
-                Text(likes.toString()),
+                const SizedBox(height: 6),
+                Text(
+                  "$preparationTime min • "
+                  "$person pers • "
+                  "Niv $difficulty",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 13,
+                  ),
+                ),
               ],
             ),
           ),
 
-        const Divider(height: 1, thickness: 0.5),
-      ],
+          if (!isMine)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: _toggleLike,
+                    child: Icon(
+                      liked ? Icons.favorite : Icons.favorite_border,
+                      color: liked ? Colors.red : Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(likes.toString()),
+                ],
+              ),
+            ),
+
+          const Divider(height: 1, thickness: 0.5),
+        ],
+      ),
     );
   }
 }
