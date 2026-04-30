@@ -5,20 +5,31 @@ import 'package:front/authentification/auth_service.dart';
 
 class HomeApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://127.0.0.1:8000";
-
-  // FEED
   static Uri feed() => Uri.parse('$baseUrl/feed');
 
+  // FEED
   static Future<List<dynamic>> fetchFeed() async {
+    final token = await AuthService.getToken();
+
+    if (token == null) {
+      throw Exception("Utilisateur non connecté");
+    }
+
     final response = await http.get(
       feed(),
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data['feed'] as List<dynamic>;
     }
+
+    print("FEED STATUS: ${response.statusCode}");
+    print("FEED BODY: ${response.body}");
 
     throw Exception('Erreur serveur: ${response.statusCode}');
   }
