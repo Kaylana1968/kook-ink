@@ -271,7 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           itemCount: recipes.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            childAspectRatio: 0.65,
+            childAspectRatio: 0.7,
             crossAxisSpacing: 6,
             mainAxisSpacing: 6,
           ),
