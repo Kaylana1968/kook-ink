@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:front/footer.dart';
-import 'package:front/header.dart';
+import 'package:front/component/footer.dart';
+import 'package:front/component/header.dart';
 
 class Layout extends StatelessWidget {
   final Widget child;

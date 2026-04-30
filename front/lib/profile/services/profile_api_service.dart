@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:front/auth_service.dart';
+import 'package:front/authentification/auth_service.dart';
 
 class ProfileApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";

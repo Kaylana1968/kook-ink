@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/auth_service.dart';
+import 'package:front/authentification/auth_service.dart';
 import 'package:go_router/go_router.dart';
 
 class Footer extends StatelessWidget {

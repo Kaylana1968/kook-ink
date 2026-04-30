@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:front/forum_screen.dart';
-import 'package:front/layout.dart';
-import 'package:front/message_screen.dart';
-import 'package:front/mini_screen.dart';
-import 'package:front/notification_screen.dart';
+import 'package:front/forum/forum_screen.dart';
+import 'package:front/component/layout.dart';
+import 'package:front/message_prive/message_screen.dart';
+import 'package:front/mini/mini_screen.dart';
+import 'package:front/notification/notification_screen.dart';
 import 'package:front/recipe/recipe_screen.dart';
-import 'package:front/search_screen.dart';
-import 'package:front/forum_detail_screen.dart';
-import 'package:front/post_question_screen.dart';
+import 'package:front/search/search_screen.dart';
+import 'package:front/forum/forum_detail_screen.dart';
+import 'package:front/forum/post_question_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'home/home_screen.dart';
-import 'login_screen.dart';
+import 'authentification/login_screen.dart';
 import 'profile/profile_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
