@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
+import '../../home/services/home_api_service.dart';
 import 'info_chip.dart';
 
-class RecipeProfileCard extends StatelessWidget {
+class RecipeProfileCard extends StatefulWidget {
   final Map<String, dynamic> recipe;
   final Future<void> Function() onRefresh;
   final bool isMyRecipe;
@@ -15,21 +16,64 @@ class RecipeProfileCard extends StatelessWidget {
     required this.isMyRecipe,
   });
 
+  @override
+  State<RecipeProfileCard> createState() => _RecipeProfileCardState();
+}
+
+class _RecipeProfileCardState extends State<RecipeProfileCard> {
+  bool liked = false;
+  int likes = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (!widget.isMyRecipe) {
+      _loadLike();
+    }
+  }
+
+  Future<void> _loadLike() async {
+    final data = await HomeApiService.getRecipeLike(widget.recipe['id']);
+
+    if (!mounted) return;
+
+    setState(() {
+      liked = data['liked'];
+      likes = data['likes'];
+    });
+  }
+
+  Future<void> _toggleLike() async {
+    if (liked) {
+      await HomeApiService.unlikeRecipe(widget.recipe['id']);
+    } else {
+      await HomeApiService.likeRecipe(widget.recipe['id']);
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      liked = !liked;
+      likes += liked ? 1 : -1;
+    });
+  }
+
   Future<void> _deleteRecipe() async {
-    final id = recipe['id'];
+    final id = widget.recipe['id'];
     if (id == null) return;
 
     final success = await ProfileApiService.deleteRecipe(id);
 
     if (success) {
-      await onRefresh();
+      await widget.onRefresh();
       debugPrint("Recette supprimée");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = recipe["image_link"] ?? "";
+    final imageUrl = widget.recipe["image_link"] ?? "";
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -40,7 +84,6 @@ class RecipeProfileCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // IMAGE ?? NULL
               if (imageUrl.isNotEmpty)
                 ClipRRect(
                   borderRadius:
@@ -53,15 +96,13 @@ class RecipeProfileCard extends StatelessWidget {
                     errorBuilder: (_, __, ___) => const SizedBox(),
                   ),
                 ),
-
-              // INFOS
               Padding(
                 padding: const EdgeInsets.all(6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      recipe['name'] ?? 'Sans nom',
+                      widget.recipe['name'] ?? 'Sans nom',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -72,59 +113,76 @@ class RecipeProfileCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     infoChip(
                       Icons.timer_outlined,
-                      "${recipe['preparation_time'] ?? 0} min",
+                      "${widget.recipe['preparation_time'] ?? 0} min",
                     ),
                     infoChip(
                       Icons.local_fire_department_outlined,
-                      "${recipe['baking_time'] ?? 0} min",
+                      "${widget.recipe['baking_time'] ?? 0} min",
                     ),
-                    if (recipe['difficulty'] != null)
+                    if (widget.recipe['difficulty'] != null)
                       infoChip(
                         Icons.trending_up,
-                        "Niv. ${recipe['difficulty']}",
+                        "Niv. ${widget.recipe['difficulty']}",
                       ),
-                    if (recipe['person'] != null)
+                    if (widget.recipe['person'] != null)
                       infoChip(
                         Icons.people_outline,
-                        recipe['person'] > 1
-                            ? "${recipe['person']} personnes"
-                            : "${recipe['person']} personne",
+                        widget.recipe['person'] > 1
+                            ? "${widget.recipe['person']} personnes"
+                            : "${widget.recipe['person']} personne",
+                      ),
+                    if (!widget.isMyRecipe)
+                      Row(
+                        children: [
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: _toggleLike,
+                            icon: Icon(
+                              liked ? Icons.favorite : Icons.favorite_border,
+                              color: liked ? Colors.red : Colors.grey,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            likes.toString(),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
                       ),
                   ],
                 ),
               ),
             ],
           ),
+          if (widget.isMyRecipe)
+            Positioned(
+              top: 4,
+              right: 4,
+              child: PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) async {
+                  if (value == 'edit') {
+                    context.go('/recipe/${widget.recipe["id"]}');
+                  }
 
-          // MENU
-          isMyRecipe
-              ? Positioned(
-                  top: 4,
-                  right: 4,
-                  child: PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                    onSelected: (value) async {
-                      if (value == 'edit') {
-                        context.go('/recipe/${recipe["id"]}');
-                      }
-
-                      if (value == 'delete') {
-                        await _deleteRecipe();
-                      }
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Text('Modifier'),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Supprimer'),
-                      ),
-                    ],
+                  if (value == 'delete') {
+                    await _deleteRecipe();
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Text('Modifier'),
                   ),
-                )
-              : const SizedBox(),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text('Supprimer'),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
