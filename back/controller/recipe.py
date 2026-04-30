@@ -11,7 +11,21 @@ class IngredientCreate(BaseModel):
     name: str
     quantity: float
     unit: models.UnitEnum
+    @field_validator("quantity", mode="before")
+    @classmethod
+    def parse_quantity(cls, v):
+        if isinstance(v, str):
+            v = v.replace(",", ".")
+        return float(v)
 
+def format_quantity(quantity):
+    if quantity is None:
+        return None
+
+    if float(quantity).is_integer():
+        return int(quantity)
+
+    return quantity
 
 class RecipeCreate(BaseModel):
     name: str
@@ -24,6 +38,7 @@ class RecipeCreate(BaseModel):
     video_link: Optional[str] = None
     steps: List[str]
     ingredients: List[IngredientCreate]
+    
 
     @field_validator("steps", "ingredients")
     @classmethod
@@ -131,7 +146,7 @@ def get_recipes(db: Session = Depends(database.get_db)):
                 "ingredients": [
                     {
                         "name": ingredient.ingredient,
-                        "quantity": ingredient.quantity,
+                        "quantity": format_quantity(ingredient.quantity),  
                         "unit": ingredient.unit,
                     }
                     for ingredient in ingredients
@@ -174,7 +189,7 @@ def get_recipes(recipe_id: int, db: Session = Depends(database.get_db)):
         "ingredients": [
             {
                 "name": ingredient.ingredient,
-                "quantity": ingredient.quantity,
+                "quantity": format_quantity(ingredient.quantity),
                 "unit": ingredient.unit,
             }
             for ingredient in ingredients

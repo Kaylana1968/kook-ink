@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/ingredient_input.dart';
 import 'recipe_text_field.dart';
+import 'package:flutter/services.dart';
 
 class RecipeIngredientsSection extends StatelessWidget {
   final List<IngredientInput> ingredients;
@@ -63,8 +64,12 @@ class RecipeIngredientsSection extends StatelessWidget {
                 child: RecipeTextField(
                   label: "Quantité *",
                   controller: ingredient.quantity,
-                  type: TextInputType.number,
-                  hint: "Ex: 3",
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
+                  hint: "Ex: 3 ou 2,5",
                 ),
               ),
               const SizedBox(width: 10),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 const Color themeColor = Color.fromARGB(251, 248, 165, 87);
 
@@ -8,6 +9,8 @@ class RecipeTextField extends StatelessWidget {
   final int maxLines;
   final TextInputType? type;
   final String? hint;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   const RecipeTextField({
     super.key,
@@ -16,6 +19,8 @@ class RecipeTextField extends StatelessWidget {
     this.maxLines = 1,
     this.type,
     this.hint,
+    this.keyboardType,
+    this.inputFormatters,
   });
 
   @override

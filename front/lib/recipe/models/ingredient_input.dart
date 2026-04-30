@@ -6,11 +6,11 @@ class IngredientInput {
   String unit = "u";
 
   Map<String, dynamic> toJson() {
-    final text = quantity.text.trim().replaceAll(',', '.');
-
     return {
       "name": name.text.trim(),
-      "quantity": text.isEmpty ? 0 : double.parse(text),
+      "quantity": double.parse(
+        quantity.text.trim().replaceAll(',', '.'),
+      ),
       "unit": unit,
     };
   }
