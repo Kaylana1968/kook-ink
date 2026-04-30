@@ -5,7 +5,10 @@ import 'package:front/authentification/auth_service.dart';
 
 class HomeApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://127.0.0.1:8000";
+
   static Uri feed() => Uri.parse('$baseUrl/feed');
+  static Uri postLike(dynamic id) => Uri.parse('$baseUrl/post/$id/like');
+  static Uri recipeLike(dynamic id) => Uri.parse('$baseUrl/recipe/$id/like');
 
   // FEED
   static Future<List<dynamic>> fetchFeed() async {
@@ -28,16 +31,11 @@ class HomeApiService {
       return data['feed'] as List<dynamic>;
     }
 
-    print("FEED STATUS: ${response.statusCode}");
-    print("FEED BODY: ${response.body}");
-
-    throw Exception('Erreur serveur: ${response.statusCode}');
+    throw Exception(
+        "Erreur lors du chargement du fil d'actualité (${response.statusCode})");
   }
 
-  // LIKE POST
-
-  static Uri postLike(dynamic id) => Uri.parse('$baseUrl/post/$id/like');
-
+  // RECOVER THE LIKES FROM A POST
   static Future<Map<String, dynamic>> getPostLike(int postId) async {
     final token = await AuthService.getToken();
 
@@ -52,9 +50,10 @@ class HomeApiService {
       return jsonDecode(response.body);
     }
 
-    throw Exception("Erreur get like");
+    throw Exception("Impossible de récupérer les likes du post");
   }
 
+  // LIKE POST
   static Future<void> likePost(int postId) async {
     final token = await AuthService.getToken();
 
@@ -66,10 +65,11 @@ class HomeApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception("Erreur like");
+      throw Exception("Erreur lors du like du post");
     }
   }
 
+  // UNLIKE POST
   static Future<void> unlikePost(int postId) async {
     final token = await AuthService.getToken();
 
@@ -81,12 +81,11 @@ class HomeApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception("Erreur unlike");
+      throw Exception("Erreur lors du retrait du like du post");
     }
   }
 
-  static Uri recipeLike(dynamic id) => Uri.parse('$baseUrl/recipe/$id/like');
-
+  // RECOVER THE LIKES FOR A RECIPE
   static Future<Map<String, dynamic>> getRecipeLike(int recipeId) async {
     final token = await AuthService.getToken();
 
@@ -101,28 +100,38 @@ class HomeApiService {
       return jsonDecode(response.body);
     }
 
-    throw Exception("Erreur get recipe like");
+    throw Exception("Impossible de récupérer les likes de la recette");
   }
 
+  // LIKE RECETTE
   static Future<void> likeRecipe(int recipeId) async {
     final token = await AuthService.getToken();
 
-    await http.post(
+    final response = await http.post(
       recipeLike(recipeId),
       headers: {
         "Authorization": "Bearer $token",
       },
     );
+
+    if (response.statusCode != 200) {
+      throw Exception("Erreur lors du like de la recette");
+    }
   }
 
+  // UNLIKE RECETTE
   static Future<void> unlikeRecipe(int recipeId) async {
     final token = await AuthService.getToken();
 
-    await http.delete(
+    final response = await http.delete(
       recipeLike(recipeId),
       headers: {
         "Authorization": "Bearer $token",
       },
     );
+
+    if (response.statusCode != 200) {
+      throw Exception("Erreur lors du retrait du like de la recette");
+    }
   }
 }

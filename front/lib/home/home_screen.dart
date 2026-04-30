@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildEmptyState() {
     return const Center(
-      child: Text("Aucun contenu à afficher pour le moment."),
+      child: Text("Aucun contenu"),
     );
   }
 }

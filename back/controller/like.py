@@ -5,6 +5,7 @@ from common import database, models, utils
 router = APIRouter()
 
 
+# GET LIKE INFO (POST)
 @router.get("/post/{post_id}/like")
 def get_post_like(
     post_id: int,
@@ -24,7 +25,7 @@ def get_post_like(
 
     return {"liked": liked, "likes": likes}
 
-
+# LIKE POST
 @router.post("/post/{post_id}/like")
 def like_post(
     post_id: int,
@@ -32,7 +33,6 @@ def like_post(
     db: Session = Depends(database.get_db)
 ):
     user_id = int(user["id"])
-
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post introuvable")
@@ -54,6 +54,7 @@ def like_post(
     return {"message": "Post liké"}
 
 
+# UNLIKE POST
 @router.delete("/post/{post_id}/like")
 def unlike_post(
     post_id: int,
@@ -76,6 +77,7 @@ def unlike_post(
     return {"message": "Post unliké"}
 
 
+# GET LIKE INFO (RECIPE)
 @router.get("/recipe/{recipe_id}/like")
 def get_recipe_like(
     recipe_id: int,
@@ -95,7 +97,7 @@ def get_recipe_like(
 
     return {"liked": liked, "likes": likes}
 
-
+# LIKE RECIPE
 @router.post("/recipe/{recipe_id}/like")
 def like_recipe(
     recipe_id: int,
@@ -125,6 +127,7 @@ def like_recipe(
     return {"message": "Recette likée"}
 
 
+# UNLIKE RECIPE
 @router.delete("/recipe/{recipe_id}/like")
 def unlike_recipe(
     recipe_id: int,
