@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/forum/services/forum_service.dart';
+import 'package:front/forum/services/forum_api_service.dart';
 import 'package:front/forum/widgets/question_card.dart';
 import 'package:go_router/go_router.dart';
 
