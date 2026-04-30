@@ -128,9 +128,6 @@ class ProfileApiService {
       },
     );
 
-    debugPrint("FOLLOW STATUS: ${response.statusCode}");
-    debugPrint("FOLLOW STATUS BODY: ${response.body}");
-
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data["is_following"] == true;

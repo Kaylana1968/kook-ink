@@ -91,8 +91,6 @@ class _ProfileHeaderState extends State<ProfileHeader> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 20),
-
-        // AVATAR + STATS
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -125,9 +123,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             ],
           ),
         ),
-
         const SizedBox(height: 12),
-
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -164,8 +160,6 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             ],
           ),
         ),
-
-        // DESCRIPTION
         if (widget.description.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -177,8 +171,6 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               ),
             ),
           ),
-
-        // CREATE POST BUTTON
         if (widget.onCreatePost != null)
           Padding(
             padding: const EdgeInsets.all(16),

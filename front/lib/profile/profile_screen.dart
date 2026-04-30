@@ -6,6 +6,7 @@ import 'widgets/profile_header.dart';
 import 'widgets/post_profile_list.dart';
 import 'widgets/recipe_profile_list.dart';
 import 'widgets/favoris_list.dart';
+import '../authentification/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final int? userId;
@@ -33,7 +34,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String description = "";
 
   // IT'S MY PROFILE ?
-  bool get isMyProfile => widget.userId == null;
+  bool isMyProfile = false;
+  int? currentUserId;
 
   @override
   void initState() {
@@ -44,41 +46,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   //  LOAD POST, RECIPES, PROFILE
-  void _loadData() {
-    if (isMyProfile) {
-      // MY PROFILE DATA
-      _postFuture = ProfileApiService.fetchMyPosts();
-      _recipeFuture = ProfileApiService.fetchMyRecipes();
-    } else {
-      // PROFILE DATA OTHER
-      _postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
-      _recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
-    }
+  Future<void> _loadData() async {
+    final myProfile = await ProfileApiService.fetchMyProfile();
+    currentUserId = myProfile["id"];
 
-    _loadProfile();
-    _loadFollowCount();
+    final bool myProfileBool =
+        widget.userId == null || widget.userId == currentUserId;
+
+    final profile = myProfileBool
+        ? myProfile
+        : await ProfileApiService.fetchUserProfile(widget.userId!);
+
+    setState(() {
+      isMyProfile = myProfileBool;
+      username = profile["username"] ?? "";
+      description = profile["description"] ?? "";
+
+      if (isMyProfile) {
+        _postFuture = ProfileApiService.fetchMyPosts();
+        _recipeFuture = ProfileApiService.fetchMyRecipes();
+      } else {
+        _postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
+        _recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
+      }
+    });
+
+    await _loadFollowCount();
   }
 
   // LOAD PROFILE
   Future<void> _loadProfile() async {
-    try {
-      Map<String, dynamic> data;
+    final myProfile = await ProfileApiService.fetchMyProfile();
+    currentUserId = myProfile["id"];
 
-      if (isMyProfile) {
-        data = await ProfileApiService.fetchMyProfile();
-      } else {
-        data = await ProfileApiService.fetchUserProfile(widget.userId!);
-      }
+    isMyProfile = widget.userId == null || widget.userId == currentUserId;
 
-      if (!mounted) return;
+    final profile = isMyProfile
+        ? myProfile
+        : await ProfileApiService.fetchUserProfile(widget.userId!);
 
-      setState(() {
-        username = data["username"]?.toString() ?? "";
-        description = data["description"]?.toString() ?? "";
-      });
-    } catch (e) {
-      debugPrint("Erreur profil : $e");
-    }
+    setState(() {
+      isMyProfile = isMyProfile;
+    });
   }
 
   // LOAD FOLLOW
@@ -301,11 +310,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 recipeFuture: _recipeFuture,
                 followers: followers,
                 following: following,
-                userId: widget.userId ?? 0,
-                isMyProfile: isMyProfile,
+                userId: widget.userId ?? currentUserId ?? 0,
                 username: username,
                 description: description,
                 onCreatePost: isMyProfile ? _openCreatePostModal : null,
+                isMyProfile: isMyProfile,
                 onRefresh: _refresh,
               ),
               const TabBar(
