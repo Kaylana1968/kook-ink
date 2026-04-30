@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from common import database, models
-from controller import recipe, login, post, profile, favorite, home, forum, like
+from controller import recipe, login, post, profile, favorite, home, forum, like, comment
 
 app = FastAPI()
 
@@ -35,6 +35,7 @@ app.include_router(favorite.router)
 app.include_router(home.router)
 app.include_router(forum.router)
 app.include_router(like.router)
+app.include_router(comment.router)
 
 if __name__ == "__main__":
     import uvicorn

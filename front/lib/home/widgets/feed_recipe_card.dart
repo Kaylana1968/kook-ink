@@ -18,14 +18,23 @@ class FeedRecipeCard extends StatefulWidget {
 }
 
 class _FeedRecipeCardState extends State<FeedRecipeCard> {
+  final TextEditingController commentController = TextEditingController();
+
   bool liked = false;
   int likes = 0;
+  int commentCount = 0;
   String? currentUserId;
 
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  @override
+  void dispose() {
+    commentController.dispose();
+    super.dispose();
   }
 
   Future<void> _init() async {
@@ -43,6 +52,7 @@ class _FeedRecipeCardState extends State<FeedRecipeCard> {
     }
 
     await _loadLike();
+    await _loadCommentCount();
   }
 
   Future<void> _loadLike() async {
@@ -53,6 +63,16 @@ class _FeedRecipeCardState extends State<FeedRecipeCard> {
     setState(() {
       liked = data['liked'];
       likes = data['likes'];
+    });
+  }
+
+  Future<void> _loadCommentCount() async {
+    final data = await HomeApiService.getRecipeComments(widget.recipe['id']);
+
+    if (!mounted) return;
+
+    setState(() {
+      commentCount = data.length;
     });
   }
 
@@ -71,6 +91,166 @@ class _FeedRecipeCardState extends State<FeedRecipeCard> {
     });
   }
 
+  void _openCommentsBottomSheet() async {
+    List<dynamic> comments =
+        await HomeApiService.getRecipeComments(widget.recipe['id']);
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> addComment() async {
+              final text = commentController.text.trim();
+              if (text.isEmpty) return;
+
+              final success = await HomeApiService.createRecipeComment(
+                widget.recipe['id'],
+                text,
+              );
+
+              if (success) {
+                commentController.clear();
+
+                comments = await HomeApiService.getRecipeComments(
+                  widget.recipe['id'],
+                );
+
+                setModalState(() {});
+
+                if (!mounted) return;
+
+                setState(() {
+                  commentCount = comments.length;
+                });
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.65,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "Commentaires",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const Divider(),
+                    Expanded(
+                      child: comments.isEmpty
+                          ? const Center(
+                              child: Text("Aucun commentaire"),
+                            )
+                          : ListView.builder(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: comments.length,
+                              itemBuilder: (context, index) {
+                                final comment = comments[index];
+
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const CircleAvatar(
+                                        radius: 16,
+                                        child: Icon(Icons.person, size: 16),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: RichText(
+                                          text: TextSpan(
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 14,
+                                            ),
+                                            children: [
+                                              TextSpan(
+                                                text:
+                                                    "${comment["username"] ?? "Utilisateur"} ",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: comment["content"] ?? "",
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        top: 8,
+                        bottom: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: commentController,
+                              decoration: InputDecoration(
+                                hintText: "Ajouter un commentaire...",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: addComment,
+                            icon: const Icon(Icons.send),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
@@ -86,87 +266,88 @@ class _FeedRecipeCardState extends State<FeedRecipeCard> {
 
     final isMine = userId == currentUserId;
 
-    return InkWell(
-      onTap: () {
-        context.go('/recipe-detail/${recipe["id"]}');
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FeedUserHeader(username: username, userId: userId),
-
-          // IMAGE
-          if (imageUrl.isNotEmpty)
-            Image.network(
-              imageUrl,
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
-                return Container(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FeedUserHeader(username: username, userId: userId),
+        GestureDetector(
+          onTap: () {
+            context.go('/recipe-detail/${recipe["id"]}');
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (imageUrl.isNotEmpty)
+                Image.network(
+                  imageUrl,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) {
+                    return Container(
+                      height: 200,
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.image_not_supported),
+                      ),
+                    );
+                  },
+                )
+              else
+                Container(
                   height: 200,
                   color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.image_not_supported),
-                  ),
-                );
-              },
-            )
-          else
-            Container(
-              height: 200,
-              color: Colors.grey[300],
-              child: const Center(child: Icon(Icons.image)),
-            ),
-
-          // INFOS
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  child: const Center(child: Icon(Icons.image)),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  "$preparationTime min • "
-                  "$person pers • "
-                  "Niv $difficulty",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          if (!isMine)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: _toggleLike,
-                    child: Icon(
-                      liked ? Icons.favorite : Icons.favorite_border,
-                      color: liked ? Colors.red : Colors.grey,
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(likes.toString()),
-                ],
+                    const SizedBox(height: 6),
+                    Text(
+                      "$preparationTime min • "
+                      "$person pers • "
+                      "Niv $difficulty",
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ],
+          ),
+        ),
+        Row(
+          children: [
+            if (!isMine) ...[
+              IconButton(
+                onPressed: _toggleLike,
+                icon: Icon(
+                  liked ? Icons.favorite : Icons.favorite_border,
+                  color: liked ? Colors.red : Colors.grey,
+                ),
+              ),
+              Text(likes.toString()),
+            ],
+            IconButton(
+              onPressed: _openCommentsBottomSheet,
+              icon: const Icon(Icons.chat_bubble_outline),
             ),
-
-          const Divider(height: 1, thickness: 0.5),
-        ],
-      ),
+            Text(commentCount.toString()),
+          ],
+        ),
+        const Divider(height: 1, thickness: 0.5),
+      ],
     );
   }
 }

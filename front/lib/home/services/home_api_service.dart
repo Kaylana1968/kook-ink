@@ -7,8 +7,16 @@ class HomeApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://127.0.0.1:8000";
 
   static Uri feed() => Uri.parse('$baseUrl/feed');
+
+// LIKE
   static Uri postLike(dynamic id) => Uri.parse('$baseUrl/post/$id/like');
   static Uri recipeLike(dynamic id) => Uri.parse('$baseUrl/recipe/$id/like');
+
+// COMMENT
+  static Uri postComments(dynamic id) =>
+      Uri.parse('$baseUrl/post/$id/comments');
+  static Uri recipeComments(dynamic id) =>
+      Uri.parse('$baseUrl/recipe/$id/comments');
 
   // FEED
   static Future<List<dynamic>> fetchFeed() async {
@@ -133,5 +141,74 @@ class HomeApiService {
     if (response.statusCode != 200) {
       throw Exception("Erreur lors du retrait du like de la recette");
     }
+  }
+
+  // COMMENTS POST
+  static Future<List<dynamic>> getPostComments(int postId) async {
+    final response = await http.get(
+      postComments(postId),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["comments"] as List<dynamic>;
+    }
+
+    return [];
+  }
+
+// CREATE COMMENT POST
+  static Future<bool> createPostComment(int postId, String content) async {
+    final token = await AuthService.getToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/post/$postId/comments'),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({
+        "content": content,
+      }),
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+// COMMENTS RECIPE
+  static Future<List<dynamic>> getRecipeComments(int recipeId) async {
+    final response = await http.get(
+      recipeComments(recipeId),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["comments"] as List<dynamic>;
+    }
+
+    return [];
+  }
+
+  static Future<bool> createRecipeComment(int recipeId, String content) async {
+    final token = await AuthService.getToken();
+
+    final response = await http.post(
+      recipeComments(recipeId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({
+        "content": content,
+      }),
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
   }
 }

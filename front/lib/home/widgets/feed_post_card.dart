@@ -17,14 +17,23 @@ class FeedPostCard extends StatefulWidget {
 }
 
 class _FeedPostCardState extends State<FeedPostCard> {
+  final TextEditingController commentController = TextEditingController();
+
   bool liked = false;
   int likes = 0;
+  int commentCount = 0;
   String? currentUserId;
 
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  @override
+  void dispose() {
+    commentController.dispose();
+    super.dispose();
   }
 
   Future<void> _init() async {
@@ -42,6 +51,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
     }
 
     await _loadLike();
+    await _loadCommentCount();
   }
 
   Future<void> _loadLike() async {
@@ -52,6 +62,16 @@ class _FeedPostCardState extends State<FeedPostCard> {
     setState(() {
       liked = data['liked'];
       likes = data['likes'];
+    });
+  }
+
+  Future<void> _loadCommentCount() async {
+    final data = await HomeApiService.getPostComments(widget.post['id']);
+
+    if (!mounted) return;
+
+    setState(() {
+      commentCount = data.length;
     });
   }
 
@@ -70,6 +90,165 @@ class _FeedPostCardState extends State<FeedPostCard> {
     });
   }
 
+  void _openCommentsBottomSheet() async {
+    List<dynamic> comments =
+        await HomeApiService.getPostComments(widget.post['id']);
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> addComment() async {
+              final text = commentController.text.trim();
+              if (text.isEmpty) return;
+
+              final success = await HomeApiService.createPostComment(
+                widget.post['id'],
+                text,
+              );
+
+              if (success) {
+                commentController.clear();
+
+                comments =
+                    await HomeApiService.getPostComments(widget.post['id']);
+
+                setModalState(() {});
+
+                if (!mounted) return;
+
+                setState(() {
+                  commentCount = comments.length;
+                });
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.65,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "Commentaires",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const Divider(),
+                    Expanded(
+                      child: comments.isEmpty
+                          ? const Center(
+                              child: Text("Aucun commentaire"),
+                            )
+                          : ListView.builder(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: comments.length,
+                              itemBuilder: (context, index) {
+                                final comment = comments[index];
+
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const CircleAvatar(
+                                        radius: 16,
+                                        child: Icon(Icons.person, size: 16),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: RichText(
+                                          text: TextSpan(
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 14,
+                                            ),
+                                            children: [
+                                              TextSpan(
+                                                text:
+                                                    "${comment["username"] ?? "Utilisateur"} ",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: comment["content"] ?? "",
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        top: 8,
+                        bottom: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: commentController,
+                              decoration: InputDecoration(
+                                hintText: "Ajouter un commentaire...",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: addComment,
+                            icon: const Icon(Icons.send),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final username = widget.post['username']?.toString() ?? 'Utilisateur';
@@ -82,7 +261,6 @@ class _FeedPostCardState extends State<FeedPostCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FeedUserHeader(username: username, userId: userId),
-
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
@@ -93,11 +271,9 @@ class _FeedPostCardState extends State<FeedPostCard> {
             ),
           ),
         ),
-
-        // ❤️ seulement si ce n'est pas moi
-        if (!isMine)
-          Row(
-            children: [
+        Row(
+          children: [
+            if (!isMine) ...[
               IconButton(
                 onPressed: _toggleLike,
                 icon: Icon(
@@ -107,8 +283,13 @@ class _FeedPostCardState extends State<FeedPostCard> {
               ),
               Text(likes.toString()),
             ],
-          ),
-
+            IconButton(
+              onPressed: _openCommentsBottomSheet,
+              icon: const Icon(Icons.chat_bubble_outline),
+            ),
+            Text(commentCount.toString()),
+          ],
+        ),
         const SizedBox(height: 12),
         const Divider(height: 1, thickness: 0.5),
       ],
