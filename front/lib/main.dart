@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 import 'package:front/forum_screen.dart';
 import 'package:front/layout.dart';
 import 'package:front/message_screen.dart';
@@ -13,15 +14,26 @@ import 'home/home_screen.dart';
 import 'login_screen.dart';
 import 'profile/profile_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:front/take_picture_screen.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  runApp(const MyApp());
+  List<CameraDescription> cameras = [];
+  try {
+    cameras = await availableCameras();
+  } catch (e) {
+    print("Erreur lors de la récupération des caméras: $e");
+  }
+
+  runApp(MyApp(cameras: cameras));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final List<CameraDescription> cameras;
+
+  const MyApp({super.key, required this.cameras});
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +48,17 @@ class MyApp extends StatelessWidget {
               GoRoute(
                 path: '/',
                 builder: (context, state) => const HomeScreen(),
+              ),
+              GoRoute(
+                path: '/camera',
+                builder: (context, state) {
+                  if (cameras.isEmpty) {
+                    return const Scaffold(
+                      body: Center(child: Text("Aucune caméra disponible sur cet appareil.")),
+                    );
+                  }
+                  return TakePictureScreen(camera: cameras.first);
+                },
               ),
               GoRoute(
                 path: '/login',
