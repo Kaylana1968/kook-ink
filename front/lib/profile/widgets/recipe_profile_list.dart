@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/widgets/like_button.dart';
 import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
 import 'info_chip.dart';
@@ -30,6 +31,7 @@ class RecipeProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl = recipe["image_link"] ?? "";
+    final recipeId = recipe["id"];
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -90,6 +92,14 @@ class RecipeProfileCard extends StatelessWidget {
                             ? "${recipe['person']} personnes"
                             : "${recipe['person']} personne",
                       ),
+                    if (recipeId is int) ...[
+                      const SizedBox(height: 4),
+                      LikeButton(
+                        type: 'recipe',
+                        itemId: recipeId,
+                        compact: true,
+                      ),
+                    ],
                   ],
                 ),
               ),

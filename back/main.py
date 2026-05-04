@@ -2,8 +2,8 @@ from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
-from common import cloudinary, database, models, utils
-from controller import recipe, login, post, profile, favorite, home, forum
+from common import database, models
+from controller import recipe, login, post, profile, favorite, home, forum, like
 
 app = FastAPI()
 
@@ -51,6 +51,7 @@ app.include_router(profile.router)
 app.include_router(favorite.router)
 app.include_router(home.router)
 app.include_router(forum.router)
+app.include_router(like.router)
 
 if __name__ == "__main__":
     import uvicorn

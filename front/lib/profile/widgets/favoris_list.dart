@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/widgets/like_button.dart';
 import '../services/profile_api_service.dart';
 
 class FavorisList extends StatelessWidget {
@@ -8,13 +9,9 @@ class FavorisList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Future<List<dynamic>> future;
-
-    if (userId == null) {
-      future = ProfileApiService.fetchFavorites();
-    } else {
-      future = ProfileApiService.fetchUserFavorites(userId!);
-    }
+    final future = userId == null
+        ? ProfileApiService.fetchFavorites()
+        : ProfileApiService.fetchUserFavorites(userId!);
 
     return FutureBuilder<List<dynamic>>(
       future: future,
@@ -40,27 +37,40 @@ class FavorisList extends StatelessWidget {
             final type = favorite["type"];
             final item = favorite["item"];
 
-            // POST
             if (type == "post") {
               return ListTile(
                 leading: const Icon(Icons.person),
                 title: Text(item["description"] ?? "Post sans description"),
                 subtitle: Text(item["username"] ?? "Utilisateur"),
+                trailing: item["id"] is int
+                    ? LikeButton(
+                        type: 'post',
+                        itemId: item["id"],
+                        compact: true,
+                      )
+                    : null,
               );
             }
 
-            // RECIPE
             if (type == "recipe") {
               return ListTile(
                 leading: const Icon(Icons.restaurant_outlined),
                 title: Text(item["name"] ?? "Recette"),
                 subtitle: Text(
-                  "${item["username"] ?? "Utilisateur"} • "
-                  "${item["preparation_time"] ?? 0} min • "
+                  "${item["username"] ?? "Utilisateur"} - "
+                  "${item["preparation_time"] ?? 0} min - "
                   "${item["person"] ?? 0} pers.",
                 ),
+                trailing: item["id"] is int
+                    ? LikeButton(
+                        type: 'recipe',
+                        itemId: item["id"],
+                        compact: true,
+                      )
+                    : null,
               );
             }
+
             return const SizedBox();
           },
         );

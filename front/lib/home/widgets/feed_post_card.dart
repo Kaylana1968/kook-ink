@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/widgets/like_button.dart';
 import 'feed_user_header.dart';
 
 class FeedPostCard extends StatelessWidget {
@@ -15,6 +16,7 @@ class FeedPostCard extends StatelessWidget {
     final description = post['description']?.toString() ?? '';
     final imageUrl = post['image_link']?.toString() ?? '';
     final userId = post['user_id'];
+    final postId = post['id'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,6 +47,13 @@ class FeedPostCard extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 24),
+        if (postId is int)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: LikeButton(type: 'post', itemId: postId),
+          )
+        else
+          const SizedBox(height: 24),
         const Divider(height: 1, thickness: 0.5),
       ],
     );
