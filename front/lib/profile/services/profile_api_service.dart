@@ -25,6 +25,8 @@ class ProfileApiService {
   //--ROUTES FOLLOW--//
   static Uri followCount() => Uri.parse('$baseUrl/follow/count');
   static Uri userFollowCount(int id) => Uri.parse('$baseUrl/follow/count/$id');
+  static Uri followStatus(int id) => Uri.parse('$baseUrl/follow/status/$id');
+  static Uri followUser(int id) => Uri.parse('$baseUrl/follow/$id');
 
   //--ROUTES FAVOURITE--//
   static Uri favorites() => Uri.parse('$baseUrl/favorite');
@@ -111,6 +113,56 @@ class ProfileApiService {
         "following": 0,
       };
     }
+  }
+
+  // KNOW IF THE LOGGED-IN USER FOLLOWS A USER
+  static Future<bool> fetchFollowStatus(int userId) async {
+    final token = await AuthService.getToken();
+
+    final response = await http.get(
+      followStatus(userId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["is_following"] == true;
+    } else {
+      return false;
+    }
+  }
+
+  // FOLLOW A USER
+  static Future<bool> follow(int userId) async {
+    final token = await AuthService.getToken();
+
+    final response = await http.post(
+      followUser(userId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  // UNFOLLOW A USER
+  static Future<bool> unfollow(int userId) async {
+    final token = await AuthService.getToken();
+
+    final response = await http.delete(
+      followUser(userId),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    return response.statusCode == 200 || response.statusCode == 204;
   }
 
   //FAVOURITES OF THE LOGGED-IN USER

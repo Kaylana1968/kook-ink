@@ -10,6 +10,9 @@ class ProfileHeader extends StatelessWidget {
   final String username;
   final String description;
   final VoidCallback? onCreatePost;
+  final bool isFollowing;
+  final bool isFollowLoading;
+  final VoidCallback? onToggleFollow;
 
   const ProfileHeader({
     super.key,
@@ -20,6 +23,9 @@ class ProfileHeader extends StatelessWidget {
     required this.username,
     required this.description,
     required this.onCreatePost,
+    required this.isFollowing,
+    required this.isFollowLoading,
+    required this.onToggleFollow,
   });
 
   @override
@@ -30,47 +36,87 @@ class ProfileHeader extends StatelessWidget {
 
         // AVATAR + FOLLOW
         Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              const CircleAvatar(
-                radius: 40,
-                child: Icon(Icons.person, size: 40),
-              ),
-              PostCountWidget(
-                  postFuture: postFuture, recipeFuture: recipeFuture),
-              StatWidget(
-                value: followers.toString(),
-                label: 'Followers',
-              ),
-              StatWidget(
-                value: following.toString(),
-                label: 'Suivi(e)s',
-              ),
-            ],
-          ),
-        ),
-
-        // USERNAME + DESCRIPTION
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                username.isEmpty ? "Utilisateur" : username,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const CircleAvatar(
+                          radius: 40,
+                          child: Icon(Icons.person, size: 40),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          username.isEmpty ? "Utilisateur" : username,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (description.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              description,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 18),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        PostCountWidget(
+                            postFuture: postFuture,
+                            recipeFuture: recipeFuture),
+                        const SizedBox(width: 18),
+                        StatWidget(
+                          value: followers.toString(),
+                          label: 'Followers',
+                        ),
+                        const SizedBox(width: 18),
+                        StatWidget(
+                          value: following.toString(),
+                          label: 'Suivi(e)s',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              if (description.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    description,
-                    style: const TextStyle(fontSize: 13),
+              if (onToggleFollow != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(
+                    height: 32,
+                    child: FilledButton(
+                      onPressed: isFollowLoading ? null : onToggleFollow,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        textStyle: const TextStyle(fontSize: 13),
+                      ),
+                      child: isFollowLoading
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(isFollowing ? 'Ne plus suivre' : 'Suivre'),
+                    ),
                   ),
                 ),
             ],

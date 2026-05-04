@@ -26,6 +26,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // NUMBER OF FOLLOWERS
   int followers = 0;
   int following = 0;
+  bool isFollowing = false;
+  bool isFollowLoading = false;
 
   // INFO PROFILE
   String username = "";
@@ -42,6 +44,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadData();
   }
 
+  @override
+  void didUpdateWidget(covariant ProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.userId != widget.userId) {
+      _loadData();
+    }
+  }
+
   //  LOAD POST, RECIPES, PROFILE
   void _loadData() {
     if (isMyProfile) {
@@ -56,6 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     _loadProfile();
     _loadFollowCount();
+    _loadFollowStatus();
   }
 
   // LOAD PROFILE
@@ -102,6 +114,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // LOAD FOLLOW STATUS
+  Future<void> _loadFollowStatus() async {
+    if (isMyProfile) {
+      setState(() {
+        isFollowing = false;
+      });
+      return;
+    }
+
+    try {
+      final data = await ProfileApiService.fetchFollowStatus(widget.userId!);
+
+      if (!mounted) return;
+
+      setState(() {
+        isFollowing = data;
+      });
+    } catch (e) {
+      debugPrint("Erreur follow status : $e");
+    }
+  }
+
+  // FOLLOW / UNFOLLOW
+  Future<void> _toggleFollow() async {
+    if (isMyProfile || isFollowLoading) return;
+
+    setState(() {
+      isFollowLoading = true;
+    });
+
+    try {
+      final success = isFollowing
+          ? await ProfileApiService.unfollow(widget.userId!)
+          : await ProfileApiService.follow(widget.userId!);
+
+      if (!mounted) return;
+
+      if (!success) return;
+
+      setState(() {
+        isFollowing = !isFollowing;
+      });
+
+      await _loadFollowCount();
+    } catch (e) {
+      debugPrint("Erreur follow toggle : $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isFollowLoading = false;
+        });
+      }
+    }
+  }
+
   // LOAD DATA
   Future<void> _refresh() async {
     setState(() {
@@ -118,6 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await _recipeFuture;
     await _loadProfile();
     await _loadFollowCount();
+    await _loadFollowStatus();
   }
 
   // MODAL CREATE POST
@@ -293,6 +361,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 username: username,
                 description: description,
                 onCreatePost: isMyProfile ? _openCreatePostModal : null,
+                isFollowing: isFollowing,
+                isFollowLoading: isFollowLoading,
+                onToggleFollow: isMyProfile ? null : _toggleFollow,
               ),
               const TabBar(
                 labelColor: Colors.black,
