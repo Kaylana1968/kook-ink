@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/widgets/like_button.dart';
 import 'feed_user_header.dart';
 
 class FeedRecipeCard extends StatelessWidget {
@@ -15,6 +16,7 @@ class FeedRecipeCard extends StatelessWidget {
     final username = recipe["username"]?.toString() ?? "Utilisateur";
     final imageUrl = recipe["image_link"]?.toString() ?? "";
     final userId = recipe["user_id"];
+    final recipeId = recipe["id"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,6 +64,10 @@ class FeedRecipeCard extends StatelessWidget {
                   fontSize: 13,
                 ),
               ),
+              if (recipeId is int) ...[
+                const SizedBox(height: 8),
+                LikeButton(type: 'recipe', itemId: recipeId),
+              ],
             ],
           ),
         ),

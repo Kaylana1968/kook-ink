@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/widgets/like_button.dart';
 import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
 
@@ -77,6 +78,8 @@ class PostProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final postId = post['id'];
+
     return Column(
       children: [
         ListTile(
@@ -108,6 +111,14 @@ class PostProfileCard extends StatelessWidget {
                 )
               : null,
         ),
+        if (postId is int)
+          Padding(
+            padding: const EdgeInsets.only(left: 64, right: 12, bottom: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: LikeButton(type: 'post', itemId: postId, compact: true),
+            ),
+          ),
         const Divider(),
       ],
     );
