@@ -3,6 +3,7 @@ import 'package:front/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -40,6 +41,9 @@ class _LoginFormState extends State<LoginForm> {
           final Map<String, dynamic> data = jsonDecode(response.body);
 
           await AuthService.saveToken(data["token"]);
+
+          if (!mounted) return;
+          context.go('/profile');
         } else {
           final data = jsonDecode(response.body);
           setState(() {
