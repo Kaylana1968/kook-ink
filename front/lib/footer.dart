@@ -39,7 +39,7 @@ class Footer extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.search_outlined,
                 size: 30, color: getIconColor("/search")),
-            onPressed: () => context.go("/search"),
+            onPressed: () => context.go("/camera"),
           ),
           IconButton(
             icon: Icon(Icons.add_outlined,
