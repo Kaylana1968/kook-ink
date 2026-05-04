@@ -50,6 +50,38 @@ class RecipeCreate(BaseModel):
         return v
 
 
+class CommentCreate(BaseModel):
+    content: str
+
+
+def serialize_recipe_comment(comment: models.RecipeComment, db: Session):
+    user = db.query(models.User).filter(models.User.id == comment.user_id).first()
+
+    return {
+        "id": comment.id,
+        "content": comment.content,
+        "user_id": comment.user_id,
+        "username": user.username if user else "Utilisateur",
+        "created_at": comment.created_at.isoformat() if comment.created_at else None,
+    }
+
+
+def get_recipe_comments_count(recipe_id: int, db: Session):
+    return (
+        db.query(models.RecipeComment)
+        .filter(models.RecipeComment.recipe_id == recipe_id)
+        .count()
+    )
+
+
+def get_recipe_likes_count(recipe_id: int, db: Session):
+    return (
+        db.query(models.RecipeLike)
+        .filter(models.RecipeLike.recipe_id == recipe_id)
+        .count()
+    )
+
+
 # GET ALL RECIPE ME
 @router.get("/recipe/me")
 def get_my_recipes(
@@ -76,6 +108,8 @@ def get_my_recipes(
                 "baking_time": recipe.baking_time,
                 "person": recipe.person,
                 "image_link": recipe.image_link,
+                "comments_count": get_recipe_comments_count(recipe.id, db),
+                "likes_count": get_recipe_likes_count(recipe.id, db),
             }
         )
 
@@ -92,7 +126,25 @@ def get_user_recipes(user_id: int, db: Session = Depends(database.get_db)):
         .all()
     )
 
-    return {"recipes": recipes}
+    return {
+        "recipes": [
+            {
+                "id": recipe.id,
+                "name": recipe.name,
+                "tips": recipe.tips,
+                "difficulty": recipe.difficulty,
+                "preparation_time": recipe.preparation_time,
+                "baking_time": recipe.baking_time,
+                "person": recipe.person,
+                "image_link": recipe.image_link,
+                "video_link": recipe.video_link,
+                "user_id": recipe.user_id,
+                "comments_count": get_recipe_comments_count(recipe.id, db),
+                "likes_count": get_recipe_likes_count(recipe.id, db),
+            }
+            for recipe in recipes
+        ]
+    }
 
 
 # GET ALL RECIPES
@@ -127,6 +179,8 @@ def get_recipes(db: Session = Depends(database.get_db)):
                 "person": recipe.person,
                 "image_link": recipe.image_link,
                 "video_link": recipe.video_link,
+                "comments_count": get_recipe_comments_count(recipe.id, db),
+                "likes_count": get_recipe_likes_count(recipe.id, db),
                 "steps": [step.content for step in steps],
                 "ingredients": [
                     {
@@ -147,6 +201,9 @@ def get_recipes(db: Session = Depends(database.get_db)):
 def get_recipes(recipe_id: int, db: Session = Depends(database.get_db)):
     recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
 
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
     steps = (
         db.query(models.Step)
         .filter(models.Step.recipe_id == recipe.id)
@@ -160,6 +217,8 @@ def get_recipes(recipe_id: int, db: Session = Depends(database.get_db)):
         .all()
     )
 
+    recipe_user = db.query(models.User).filter(models.User.id == recipe.user_id).first()
+
     to_return = {
         "id": recipe.id,
         "name": recipe.name,
@@ -170,6 +229,10 @@ def get_recipes(recipe_id: int, db: Session = Depends(database.get_db)):
         "person": recipe.person,
         "image_link": recipe.image_link,
         "video_link": recipe.video_link,
+        "user_id": recipe.user_id,
+        "username": recipe_user.username if recipe_user else "Utilisateur",
+        "comments_count": get_recipe_comments_count(recipe.id, db),
+        "likes_count": get_recipe_likes_count(recipe.id, db),
         "steps": [step.content for step in steps],
         "ingredients": [
             {
@@ -182,6 +245,59 @@ def get_recipes(recipe_id: int, db: Session = Depends(database.get_db)):
     }
 
     return {"recipe": to_return}
+
+
+# GET RECIPE COMMENTS
+@router.get("/recipe/{recipe_id}/comments")
+def get_recipe_comments(recipe_id: int, db: Session = Depends(database.get_db)):
+    recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
+
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    comments = (
+        db.query(models.RecipeComment)
+        .filter(models.RecipeComment.recipe_id == recipe_id)
+        .order_by(models.RecipeComment.created_at.asc())
+        .all()
+    )
+
+    return {
+        "comments": [
+            serialize_recipe_comment(comment, db)
+            for comment in comments
+        ]
+    }
+
+
+# CREATE RECIPE COMMENT
+@router.post("/recipe/{recipe_id}/comments", status_code=201)
+def create_recipe_comment(
+    recipe_id: int,
+    comment: CommentCreate,
+    user=Depends(utils.get_user),
+    db: Session = Depends(database.get_db),
+):
+    recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
+
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    content = comment.content.strip()
+    if not content:
+        raise HTTPException(status_code=422, detail="Comment cannot be empty")
+
+    db_comment = models.RecipeComment(
+        content=content,
+        recipe_id=recipe_id,
+        user_id=int(user["id"]),
+    )
+
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+
+    return {"comment": serialize_recipe_comment(db_comment, db)}
 
 
 # CREATE A RECIPE

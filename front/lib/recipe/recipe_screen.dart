@@ -152,24 +152,19 @@ class _RecipeScreenState extends State<RecipeScreen> {
       return "Le nombre de personnes est invalid";
     }
 
-    // Check there is no empty step
     if (stepControllers.any((c) => c.text.trim().isEmpty)) {
       return "Supprimez les étapes vides";
     }
-    // Check there is at least one step
     if (stepControllers.isEmpty) return "Ajoutez au moins une étape";
 
-    // Check there is no empty ingredient name
     if (ingredients.any((ingredient) => ingredient.name.text.trim().isEmpty)) {
       return "Nommez tous les ingrédients";
     }
-    // Check there is no empty or invalid ingredient quantity
     if (ingredients.any((ingredient) =>
         ingredient.quantity.text.trim().isEmpty ||
         int.tryParse(ingredient.quantity.text) == null)) {
       return "La quantité d'un ingrédient est invalide";
     }
-    // Check there is at least one ingredient
     if (ingredients.isEmpty) {
       return "Ajoutez au moins un ingrédient";
     }
@@ -313,6 +308,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 ),
               ),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
@@ -340,16 +336,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 padding: EdgeInsets.only(bottom: 12),
                 child: LinearProgressIndicator(color: Colors.orange),
               ),
-            RecipeTextField(
-              label: "Ajouter une image",
-              controller: imageLinkController,
-              hint: "URL de l’image",
-            ),
-            RecipeTextField(
+            /*RecipeTextField(
               label: "Ajouter une vidéo",
               controller: videoLinkController,
               hint: "URL de la vidéo",
-            ),
+            ),*/
             RecipeTextField(
               label: "Nom *",
               controller: nameController,

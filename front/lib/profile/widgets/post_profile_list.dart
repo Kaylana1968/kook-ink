@@ -81,6 +81,9 @@ class PostProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = post['image_link']?.toString() ?? '';
     final postId = post['id'];
+    final likesCount = int.tryParse(post['likes_count']?.toString() ?? '') ?? 0;
+    final commentsCount =
+        int.tryParse(post['comments_count']?.toString() ?? '') ?? 0;
 
     return Column(
       children: [
@@ -132,11 +135,41 @@ class PostProfileCard extends StatelessWidget {
             padding: const EdgeInsets.only(left: 64, right: 12, bottom: 8),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: LikeButton(type: 'post', itemId: postId, compact: true),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LikeButton(
+                    type: 'post',
+                    itemId: postId,
+                    compact: true,
+                    initialCount: likesCount,
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.mode_comment_outlined,
+                    size: 18,
+                    color: Colors.grey[700],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _commentLabel(commentsCount),
+                    style: TextStyle(
+                      color: Colors.grey[700],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         const Divider(),
       ],
     );
+  }
+
+  String _commentLabel(int count) {
+    if (count == 0) return '0';
+    return count.toString();
   }
 }

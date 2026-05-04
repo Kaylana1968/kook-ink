@@ -36,17 +36,25 @@ class FavorisList extends StatelessWidget {
             final favorite = favorites[index];
             final type = favorite["type"];
             final item = favorite["item"];
+            final likesCount =
+                int.tryParse(item["likes_count"]?.toString() ?? "") ?? 0;
+            final commentsCount =
+                int.tryParse(item["comments_count"]?.toString() ?? "") ?? 0;
 
             if (type == "post") {
               return ListTile(
                 leading: const Icon(Icons.person),
                 title: Text(item["description"] ?? "Post sans description"),
-                subtitle: Text(item["username"] ?? "Utilisateur"),
+                subtitle: Text(
+                  "${item["username"] ?? "Utilisateur"} - "
+                  "$commentsCount commentaire${commentsCount > 1 ? 's' : ''}",
+                ),
                 trailing: item["id"] is int
                     ? LikeButton(
                         type: 'post',
                         itemId: item["id"],
                         compact: true,
+                        initialCount: likesCount,
                       )
                     : null,
               );
@@ -59,13 +67,15 @@ class FavorisList extends StatelessWidget {
                 subtitle: Text(
                   "${item["username"] ?? "Utilisateur"} - "
                   "${item["preparation_time"] ?? 0} min - "
-                  "${item["person"] ?? 0} pers.",
+                  "${item["person"] ?? 0} pers. - "
+                  "$commentsCount commentaire${commentsCount > 1 ? 's' : ''}",
                 ),
                 trailing: item["id"] is int
                     ? LikeButton(
                         type: 'recipe',
                         itemId: item["id"],
                         compact: true,
+                        initialCount: likesCount,
                       )
                     : null,
               );

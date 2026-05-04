@@ -10,6 +10,8 @@ import 'package:front/forum_detail_screen.dart';
 import 'package:front/post_question_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'home/home_screen.dart';
+import 'home/post_detail_screen.dart';
+import 'home/recipe_detail_screen.dart';
 import 'login_screen.dart';
 import 'profile/profile_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -69,6 +71,20 @@ class MyApp extends StatelessWidget {
                   final id = state.pathParameters['recipeId'];
 
                   return RecipeScreen(recipeId: int.parse(id!));
+                },
+              ),
+              GoRoute(
+                path: '/detail/post/:postId',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['postId']!);
+                  return PostDetailScreen(postId: id);
+                },
+              ),
+              GoRoute(
+                path: '/detail/recipe/:recipeId',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['recipeId']!);
+                  return RecipeDetailScreen(recipeId: id);
                 },
               ),
               GoRoute(

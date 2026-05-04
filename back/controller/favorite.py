@@ -4,6 +4,28 @@ from common import database, models, utils
 
 router = APIRouter()
 
+
+def post_counts(post_id: int, db: Session):
+    return {
+        "comments_count": db.query(models.PostComment).filter(
+            models.PostComment.post_id == post_id
+        ).count(),
+        "likes_count": db.query(models.PostLike).filter(
+            models.PostLike.post_id == post_id
+        ).count(),
+    }
+
+
+def recipe_counts(recipe_id: int, db: Session):
+    return {
+        "comments_count": db.query(models.RecipeComment).filter(
+            models.RecipeComment.recipe_id == recipe_id
+        ).count(),
+        "likes_count": db.query(models.RecipeLike).filter(
+            models.RecipeLike.recipe_id == recipe_id
+        ).count(),
+    }
+
 # MY FAVOURITES PROFIL
 @router.get("/favorite")
 def get_favorites(
@@ -37,6 +59,7 @@ def get_favorites(
                     "description": post.description,
                     "user_id": post.user_id,
                     "username": user.username if user else "Utilisateur",
+                    **post_counts(post.id, db),
                 }
             })
 
@@ -59,6 +82,7 @@ def get_favorites(
                     "baking_time": recipe.baking_time,
                     "person": recipe.person,
                     "image_link": recipe.image_link,
+                    **recipe_counts(recipe.id, db),
                 }
             })
 
@@ -103,6 +127,7 @@ def get_user_favorites(
                     "description": post.description,
                     "user_id": post.user_id,
                     "username": user.username if user else "Utilisateur",
+                    **post_counts(post.id, db),
                 }
             })
 
@@ -129,6 +154,7 @@ def get_user_favorites(
                     "baking_time": recipe.baking_time,
                     "person": recipe.person,
                     "image_link": recipe.image_link,
+                    **recipe_counts(recipe.id, db),
                 }
             })
 

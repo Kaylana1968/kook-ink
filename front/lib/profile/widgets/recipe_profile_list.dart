@@ -32,6 +32,10 @@ class RecipeProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = recipe["image_link"] ?? "";
     final recipeId = recipe["id"];
+    final likesCount =
+        int.tryParse(recipe['likes_count']?.toString() ?? '') ?? 0;
+    final commentsCount =
+        int.tryParse(recipe['comments_count']?.toString() ?? '') ?? 0;
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -98,6 +102,12 @@ class RecipeProfileCard extends StatelessWidget {
                         type: 'recipe',
                         itemId: recipeId,
                         compact: true,
+                        initialCount: likesCount,
+                      ),
+                      const SizedBox(height: 4),
+                      infoChip(
+                        Icons.mode_comment_outlined,
+                        "$commentsCount commentaire${commentsCount > 1 ? 's' : ''}",
                       ),
                     ],
                   ],

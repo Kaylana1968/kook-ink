@@ -271,11 +271,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             }
 
-            return Padding(
-              padding: const EdgeInsets.only(
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(
                 left: 16,
                 right: 16,
                 top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -436,41 +437,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
       length: 3,
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              ProfileHeader(
-                postFuture: _postFuture,
-                recipeFuture: _recipeFuture,
-                followers: followers,
-                following: following,
-                username: username,
-                description: description,
-                onCreatePost: isMyProfile ? _openCreatePostModal : null,
-                isFollowing: isFollowing,
-                isFollowLoading: isFollowLoading,
-                onToggleFollow: isMyProfile ? null : _toggleFollow,
-              ),
-              const TabBar(
-                labelColor: Colors.black,
-                indicatorColor: Colors.black,
-                tabs: [
-                  Tab(text: 'Post'),
-                  Tab(text: 'Recettes'),
-                  Tab(text: 'Favoris'),
-                ],
-              ),
-              SizedBox(
-                height: 600,
-                child: TabBarView(
-                  children: [
-                    _postsTab(),
-                    _recipesTab(),
-                    FavorisList(userId: widget.userId),
+        body: RefreshIndicator(
+          onRefresh: _refresh,
+          color: Colors.orange,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                ProfileHeader(
+                  postFuture: _postFuture,
+                  recipeFuture: _recipeFuture,
+                  followers: followers,
+                  following: following,
+                  username: username,
+                  description: description,
+                  onCreatePost: isMyProfile ? _openCreatePostModal : null,
+                  isFollowing: isFollowing,
+                  isFollowLoading: isFollowLoading,
+                  onToggleFollow: isMyProfile ? null : _toggleFollow,
+                ),
+                const TabBar(
+                  labelColor: Colors.black,
+                  indicatorColor: Colors.black,
+                  tabs: [
+                    Tab(text: 'Post'),
+                    Tab(text: 'Recettes'),
+                    Tab(text: 'Favoris'),
                   ],
                 ),
-              ),
-            ],
+                SizedBox(
+                  height: 600,
+                  child: TabBarView(
+                    children: [
+                      _postsTab(),
+                      _recipesTab(),
+                      FavorisList(userId: widget.userId),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

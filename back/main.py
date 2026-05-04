@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
-from common import database, models
+from common import cloudinary, database, models, utils
 from controller import recipe, login, post, profile, favorite, home, forum, like
 
 app = FastAPI()
@@ -43,6 +43,16 @@ def read_user(db: Session = Depends(database.get_db)):
         raise HTTPException(status_code=404, detail="User not found")
 
     return user
+
+
+@app.post("/image")
+def post_image(
+    file: UploadFile = File(...),
+    user=Depends(utils.get_user),
+):
+    image_url = cloudinary.upload_image(file)
+    return {"image_link": image_url}
+
 
 app.include_router(login.router)
 app.include_router(recipe.router)
