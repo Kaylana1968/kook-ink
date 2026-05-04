@@ -44,16 +44,6 @@ def read_user(db: Session = Depends(database.get_db)):
 
     return user
 
-
-@app.post("/image")
-def post_image(
-    file: UploadFile = File(...),
-    user=Depends(utils.get_user),
-):
-    image_url = cloudinary.upload_image(file)
-    return {"image_link": image_url}
-
-
 app.include_router(login.router)
 app.include_router(recipe.router)
 app.include_router(post.router)
