@@ -1,8 +1,8 @@
-import cloudinary.uploader
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
-from common import database, models
+from common import cloudinary, database, models, utils
 from controller import recipe, login, post, profile, favorite, home, forum
 
 app = FastAPI()
@@ -19,6 +19,20 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     models.Base.metadata.create_all(bind=database.engine)
+    ensure_post_image_link_column()
+
+
+def ensure_post_image_link_column():
+    inspector = inspect(database.engine)
+    if "post" not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("post")}
+    if "image_link" in columns:
+        return
+
+    with database.engine.begin() as connection:
+        connection.execute(text("ALTER TABLE post ADD COLUMN image_link VARCHAR"))
 
 
 @app.get("/users")
@@ -32,10 +46,12 @@ def read_user(db: Session = Depends(database.get_db)):
 
 
 @app.post("/image")
-def post_image():
-    response = cloudinary.uploader.upload("./tower.jpg")
-
-    return response["secure_url"]
+def post_image(
+    file: UploadFile = File(...),
+    user=Depends(utils.get_user),
+):
+    image_url = cloudinary.upload_image(file)
+    return {"image_link": image_url}
 
 
 app.include_router(login.router)

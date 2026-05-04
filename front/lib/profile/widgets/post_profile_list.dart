@@ -65,6 +65,7 @@ class PostProfileCard extends StatelessWidget {
     final success = await ProfileApiService.updatePost(
       post['id'],
       newDescription,
+      imageLink: post['image_link']?.toString(),
     );
 
     if (success) {
@@ -77,8 +78,24 @@ class PostProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = post['image_link']?.toString() ?? '';
+
     return Column(
       children: [
+        if (imageUrl.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(),
+              ),
+            ),
+          ),
         ListTile(
           leading: const CircleAvatar(
             child: Icon(Icons.person),

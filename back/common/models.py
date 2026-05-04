@@ -49,6 +49,7 @@ class Post(Base):
 
     id = Column(Integer, primary_key=True)
     description = Column(Text)
+    image_link = Column(String)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 

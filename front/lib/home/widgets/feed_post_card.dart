@@ -13,6 +13,7 @@ class FeedPostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final username = post['username']?.toString() ?? 'Utilisateur';
     final description = post['description']?.toString() ?? '';
+    final imageUrl = post['image_link']?.toString() ?? '';
     final userId = post['user_id'];
 
     return Column(
@@ -29,6 +30,20 @@ class FeedPostCard extends StatelessWidget {
             ),
           ),
         ),
+        if (imageUrl.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                height: 220,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(),
+              ),
+            ),
+          ),
         const SizedBox(height: 24),
         const Divider(height: 1, thickness: 0.5),
       ],

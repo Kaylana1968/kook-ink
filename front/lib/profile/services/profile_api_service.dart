@@ -240,7 +240,7 @@ class ProfileApiService {
   }
 
   // CREATE A POST
-  static Future<bool> createPost(String description) async {
+  static Future<bool> createPost(String description, {String? imageLink}) async {
     final token = await AuthService.getToken();
 
     final response = await http.post(
@@ -251,6 +251,7 @@ class ProfileApiService {
       },
       body: jsonEncode({
         "description": description,
+        "image_link": imageLink,
       }),
     );
 
@@ -258,7 +259,11 @@ class ProfileApiService {
   }
 
   // EDIT A POST
-  static Future<bool> updatePost(int postId, String description) async {
+  static Future<bool> updatePost(
+    int postId,
+    String description, {
+    String? imageLink,
+  }) async {
     final token = await AuthService.getToken();
 
     final response = await http.put(
@@ -269,6 +274,7 @@ class ProfileApiService {
       },
       body: jsonEncode({
         'description': description,
+        'image_link': imageLink,
       }),
     );
 

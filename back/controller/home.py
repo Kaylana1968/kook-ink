@@ -20,6 +20,7 @@ def get_feed(db: Session = Depends(database.get_db)):
             "item": {
                 "id": post.id,
                 "description": post.description,
+                "image_link": post.image_link,
                 "user_id": post.user_id,
                 "username": user.username if user else "Utilisateur",
             }

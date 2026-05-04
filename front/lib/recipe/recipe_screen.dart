@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:front/media_api_service.dart';
 import 'package:front/recipe/models/api_exception.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'models/ingredient_input.dart';
 import 'services/recipe_api_service.dart';
@@ -36,6 +38,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
 
   bool isLoading = false;
   bool isFetching = false;
+  bool isUploadingImage = false;
 
   @override
   void initState() {
@@ -219,6 +222,38 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
   }
 
+  Future<void> _pickAndUploadImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1600,
+      );
+
+      if (image == null) return;
+
+      setState(() => isUploadingImage = true);
+      final imageLink = await MediaApiService.uploadImage(image);
+
+      if (!mounted) return;
+      setState(() {
+        imageLinkController.text = imageLink;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erreur upload image : $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => isUploadingImage = false);
+    }
+  }
+
   void _addStep() {
     setState(() {
       stepControllers.add(TextEditingController());
@@ -263,6 +298,48 @@ class _RecipeScreenState extends State<RecipeScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            if (imageLinkController.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    imageLinkController.text,
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox(),
+                  ),
+                ),
+              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: isUploadingImage
+                        ? null
+                        : () => _pickAndUploadImage(ImageSource.camera),
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: const Text("Photo"),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: isUploadingImage
+                        ? null
+                        : () => _pickAndUploadImage(ImageSource.gallery),
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: const Text("Galerie"),
+                  ),
+                ),
+              ],
+            ),
+            if (isUploadingImage)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: LinearProgressIndicator(color: Colors.orange),
+              ),
             RecipeTextField(
               label: "Ajouter une image",
               controller: imageLinkController,

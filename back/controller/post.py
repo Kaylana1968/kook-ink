@@ -2,16 +2,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from common import database, models, utils
 from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter(tags=["Post"])
 
 
 class PostCreate(BaseModel):
     description: str
+    image_link: Optional[str] = None
 
 
 class PostUpdate(BaseModel):
     description: str
+    image_link: Optional[str] = None
 
 
 # GET ALL POSTS
@@ -31,6 +34,7 @@ def get_all_posts(db: Session = Depends(database.get_db)):
         result.append({
             "id": post.id,
             "description": post.description,
+            "image_link": post.image_link,
             "user_id": post.user_id,
             "username": user.username if user else "Utilisateur",
             "created_at": post.created_at.isoformat() if post.created_at else None,
@@ -54,6 +58,7 @@ def get_my_posts(
             {
                 "id": post.id,
                 "description": post.description,
+                "image_link": post.image_link,
                 "user_id": post.user_id,
                 "created_at": post.created_at.isoformat() if post.created_at else None,
             }
@@ -73,6 +78,7 @@ def get_user_posts(user_id: int, db: Session = Depends(database.get_db)):
             {
                 "id": p.id,
                 "description": p.description,
+                "image_link": p.image_link,
                 "user_id": p.user_id,
             } for p in posts
         ]
@@ -88,6 +94,7 @@ def upload_post(
 ):
     db_post = models.Post(
         description=post.description,
+        image_link=post.image_link,
         user_id=int(user["id"]),
     )
 
@@ -139,6 +146,7 @@ def update_post(
         raise HTTPException(status_code=403, detail="Not allowed to edit this post")
 
     post.description = post_update.description
+    post.image_link = post_update.image_link
 
     db.commit()
     db.refresh(post)
@@ -148,6 +156,7 @@ def update_post(
         "post": {
             "id": post.id,
             "description": post.description,
+            "image_link": post.image_link,
             "user_id": post.user_id,
             "created_at": post.created_at.isoformat() if post.created_at else None,
         },

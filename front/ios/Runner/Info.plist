@@ -24,6 +24,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Prendre une photo pour l'ajouter a une publication ou une recette.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choisir une photo pour l'ajouter a une publication ou une recette.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

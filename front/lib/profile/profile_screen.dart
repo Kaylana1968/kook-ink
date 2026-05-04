@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:front/media_api_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'services/profile_api_service.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/post_profile_list.dart';
@@ -192,6 +194,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openCreatePostModal() {
     final controller = TextEditingController();
     bool isLoading = false;
+    bool isUploadingImage = false;
+    String? imageLink;
 
     showModalBottomSheet(
       context: context,
@@ -213,7 +217,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 isLoading = true;
               });
 
-              final success = await ProfileApiService.createPost(description);
+              final success = await ProfileApiService.createPost(
+                description,
+                imageLink: imageLink,
+              );
 
               if (success) {
                 if (context.mounted) context.go('/profile');
@@ -226,6 +233,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
               setModalState(() {
                 isLoading = false;
               });
+            }
+
+            Future<void> pickAndUploadImage(ImageSource source) async {
+              try {
+                final picker = ImagePicker();
+                final image = await picker.pickImage(
+                  source: source,
+                  imageQuality: 85,
+                  maxWidth: 1600,
+                );
+
+                if (image == null) return;
+
+                setModalState(() {
+                  isUploadingImage = true;
+                });
+
+                final uploadedUrl = await MediaApiService.uploadImage(image);
+
+                setModalState(() {
+                  imageLink = uploadedUrl;
+                });
+              } catch (e) {
+                if (!context.mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Erreur upload image : $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              } finally {
+                setModalState(() {
+                  isUploadingImage = false;
+                });
+              }
             }
 
             return Padding(
@@ -244,6 +287,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  if (imageLink != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          imageLink!,
+                          height: 160,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const SizedBox(),
+                        ),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isUploadingImage
+                              ? null
+                              : () => pickAndUploadImage(ImageSource.camera),
+                          icon: const Icon(Icons.photo_camera_outlined),
+                          label: const Text("Photo"),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isUploadingImage
+                              ? null
+                              : () => pickAndUploadImage(ImageSource.gallery),
+                          icon: const Icon(Icons.photo_library_outlined),
+                          label: const Text("Galerie"),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (isUploadingImage)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: LinearProgressIndicator(color: Colors.orange),
+                    ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: controller,
