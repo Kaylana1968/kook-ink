@@ -1,3 +1,4 @@
+import cloudinary.uploader
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -14,9 +15,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 def on_startup():
     models.Base.metadata.create_all(bind=database.engine)
+
 
 @app.get("/users")
 def read_user(db: Session = Depends(database.get_db)):
@@ -26,6 +29,14 @@ def read_user(db: Session = Depends(database.get_db)):
         raise HTTPException(status_code=404, detail="User not found")
 
     return user
+
+
+@app.post("/image")
+def post_image():
+    response = cloudinary.uploader.upload("./tower.jpg")
+
+    return response["secure_url"]
+
 
 app.include_router(login.router)
 app.include_router(recipe.router)
