@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from common import database, models, utils
 
@@ -22,8 +22,8 @@ class RecipeCreate(BaseModel):
     person: int
     image_link: Optional[str] = None
     video_link: Optional[str] = None
-    steps: List[str]
-    ingredients: List[IngredientCreate]
+    steps: List[str] = Field(..., min_length=1)
+    ingredients: List[IngredientCreate] = Field(..., min_length=1)
 
     @field_validator("steps", "ingredients")
     @classmethod

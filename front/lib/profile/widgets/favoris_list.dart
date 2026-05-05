@@ -43,7 +43,8 @@ class _FavorisListState extends State<FavorisList> {
   int _commentsCount(String type, int itemId, Map<String, dynamic> item) {
     final key = _commentsKey(type, itemId);
     final localCount = _commentsCounts[key] ?? 0;
-    final apiCount = int.tryParse(item["comments_count"]?.toString() ?? "") ?? 0;
+    final apiCount =
+        int.tryParse(item["comments_count"]?.toString() ?? "") ?? 0;
     return localCount > apiCount ? localCount : apiCount;
   }
 
