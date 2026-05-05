@@ -118,8 +118,9 @@ class _CommentSectionState extends State<CommentSection> {
             ...comments.map((comment) {
               return ListTile(
                 leading: const CircleAvatar(
+                  radius: 16,
                   backgroundColor: Colors.orange,
-                  child: Icon(Icons.person, color: Colors.white),
+                  child: Icon(Icons.person, size: 18, color: Colors.white),
                 ),
                 title: Text(comment['username']?.toString() ?? 'Utilisateur'),
                 subtitle: Text(comment['content']?.toString() ?? ''),

@@ -53,12 +53,13 @@ def get_favorites(
             ).first()
             result.append({
                 "type": "post",
-                "created_at": post.created_at.isoformat() if post.created_at else None,
+                "created_at": like.created_at.isoformat() if like.created_at else None,
                 "item": {
                     "id": post.id,
                     "description": post.description,
                     "user_id": post.user_id,
                     "username": user.username if user else "Utilisateur",
+                    "image_link": post.image_link,
                     **post_counts(post.id, db),
                 }
             })
@@ -72,10 +73,11 @@ def get_favorites(
             ).first()
             result.append({
                 "type": "recipe",
-                "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
+                "created_at": like.created_at.isoformat() if like.created_at else None,
                 "item": {
                     "id": recipe.id,
                     "name": recipe.name,
+                    "user_id": recipe.user_id,
                     "username": user.username if user else "Utilisateur",
                     "difficulty": recipe.difficulty,
                     "preparation_time": recipe.preparation_time,
@@ -121,12 +123,13 @@ def get_user_favorites(
 
             result.append({
                 "type": "post",
-                "created_at": post.created_at.isoformat() if post.created_at else None,
+                "created_at": like.created_at.isoformat() if like.created_at else None,
                 "item": {
                     "id": post.id,
                     "description": post.description,
                     "user_id": post.user_id,
                     "username": user.username if user else "Utilisateur",
+                    "image_link": post.image_link,
                     **post_counts(post.id, db),
                 }
             })
@@ -143,7 +146,7 @@ def get_user_favorites(
 
             result.append({
                 "type": "recipe",
-                "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
+                "created_at": like.created_at.isoformat() if like.created_at else None,
                 "item": {
                     "id": recipe.id,
                     "name": recipe.name,

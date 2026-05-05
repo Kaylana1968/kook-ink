@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/media_api_service.dart';
+import 'package:front/services/media_api_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'services/profile_api_service.dart';
@@ -367,20 +367,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       future: _postFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Center(child: Text("Erreur chargement posts"));
+          return _emptyTab("Erreur chargement posts");
         }
 
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return const _LoadingTab();
         }
 
         final posts = snapshot.data!;
 
         if (posts.isEmpty) {
-          return const Center(child: Text("Aucun post"));
+          return _emptyTab("Aucun post");
         }
 
         return ListView.builder(
+          physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.zero,
           itemCount: posts.length,
           itemBuilder: (context, index) {
             return PostProfileCard(
@@ -397,20 +399,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       future: _recipeFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const Center(child: Text("Erreur chargement recettes"));
+          return _emptyTab("Erreur chargement recettes");
         }
 
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return const _LoadingTab();
         }
 
         final recipes = snapshot.data!;
 
         if (recipes.isEmpty) {
-          return const Center(child: Text("Aucune recette"));
+          return _emptyTab("Aucune recette");
         }
 
         return GridView.builder(
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.all(6),
           itemCount: recipes.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -440,46 +443,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: RefreshIndicator(
           onRefresh: _refresh,
           color: Colors.orange,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                ProfileHeader(
-                  postFuture: _postFuture,
-                  recipeFuture: _recipeFuture,
-                  followers: followers,
-                  following: following,
-                  username: username,
-                  description: description,
-                  onCreatePost: isMyProfile ? _openCreatePostModal : null,
-                  isFollowing: isFollowing,
-                  isFollowLoading: isFollowLoading,
-                  onToggleFollow: isMyProfile ? null : _toggleFollow,
-                ),
-                const TabBar(
-                  labelColor: Colors.black,
-                  indicatorColor: Colors.black,
-                  tabs: [
-                    Tab(text: 'Post'),
-                    Tab(text: 'Recettes'),
-                    Tab(text: 'Favoris'),
+          child: Column(
+            children: [
+              ProfileHeader(
+                postFuture: _postFuture,
+                recipeFuture: _recipeFuture,
+                followers: followers,
+                following: following,
+                username: username,
+                description: description,
+                onCreatePost: isMyProfile ? _openCreatePostModal : null,
+                isFollowing: isFollowing,
+                isFollowLoading: isFollowLoading,
+                onToggleFollow: isMyProfile ? null : _toggleFollow,
+              ),
+              const TabBar(
+                labelColor: Colors.black,
+                indicatorColor: Colors.black,
+                tabs: [
+                  Tab(text: 'Post'),
+                  Tab(text: 'Recettes'),
+                  Tab(text: 'Favoris'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _postsTab(),
+                    _recipesTab(),
+                    FavorisList(userId: widget.userId),
                   ],
                 ),
-                SizedBox(
-                  height: 600,
-                  child: TabBarView(
-                    children: [
-                      _postsTab(),
-                      _recipesTab(),
-                      FavorisList(userId: widget.userId),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+}
+
+Widget _emptyTab(String message) {
+  return Center(child: Text(message));
+}
+
+class _LoadingTab extends StatelessWidget {
+  const _LoadingTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: CircularProgressIndicator());
   }
 }

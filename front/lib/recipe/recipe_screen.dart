@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/media_api_service.dart';
+import 'package:front/services/media_api_service.dart';
 import 'package:front/recipe/models/api_exception.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';

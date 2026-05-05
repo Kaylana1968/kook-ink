@@ -59,6 +59,13 @@ class _FeedRecipeCardState extends State<FeedRecipeCard> {
           onTap: recipeId is int
               ? () => context.push('/detail/recipe/$recipeId')
               : null,
+          mouseCursor: recipeId is int
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          focusColor: Colors.transparent,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -118,6 +125,9 @@ class _FeedRecipeCardState extends State<FeedRecipeCard> {
               children: [
                 LikeButton(type: 'recipe', itemId: recipeId),
                 TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black87,
+                  ),
                   onPressed: () async {
                     final hasNewComment = await showCommentsBottomSheet(
                       context: context,

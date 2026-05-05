@@ -58,6 +58,13 @@ class _FeedPostCardState extends State<FeedPostCard> {
         InkWell(
           onTap:
               postId is int ? () => context.push('/detail/post/$postId') : null,
+          mouseCursor: postId is int
+              ? SystemMouseCursors.click
+              : SystemMouseCursors.basic,
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          focusColor: Colors.transparent,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -95,6 +102,9 @@ class _FeedPostCardState extends State<FeedPostCard> {
               children: [
                 LikeButton(type: 'post', itemId: postId),
                 TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black87,
+                  ),
                   onPressed: () async {
                     final hasNewComment = await showCommentsBottomSheet(
                       context: context,
