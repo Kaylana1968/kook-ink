@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:front/forum/forum_service.dart';
+import 'package:front/forum/services/forum_api_service.dart';
+import 'package:front/widgets/app_feedback.dart';
 import 'package:go_router/go_router.dart';
 
 class PostQuestionScreen extends StatefulWidget {
@@ -29,8 +30,10 @@ class _PostQuestionScreenState extends State<PostQuestionScreen> {
     final desc = _descController.text.trim();
 
     if (title.isEmpty || desc.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez remplir le titre et le texte.')),
+      showAppFeedback(
+        context,
+        'Veuillez remplir le titre et le texte.',
+        isError: true,
       );
       return;
     }
@@ -39,12 +42,13 @@ class _PostQuestionScreenState extends State<PostQuestionScreen> {
 
     try {
       await _forumService.createPost(title: title, description: desc);
+      if (!mounted) return;
+      showAppFeedback(context, 'Question publiée');
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur : $e')),
-        );
+        showAppFeedback(context, 'Impossible de publier la question : $e',
+            isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

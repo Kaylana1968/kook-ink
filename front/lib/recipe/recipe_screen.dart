@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'models/ingredient_input.dart';
 import 'services/recipe_api_service.dart';
+import 'package:front/widgets/app_feedback.dart';
 import 'widgets/recipe_text_field.dart';
 import 'widgets/recipe_time_fields.dart';
 import 'widgets/recipe_steps_section.dart';
@@ -168,9 +169,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    showAppFeedback(context, message, isError: true);
   }
 
   Future<void> sendRecipeForm() async {
@@ -192,6 +191,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
       }
 
       if (!mounted) return;
+      showAppFeedback(
+        context,
+        recipeId == null ? "Recette créée" : "Recette modifiée",
+      );
       context.go("/profile");
     } on ApiException catch (e) {
       if (!mounted) return;

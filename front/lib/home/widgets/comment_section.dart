@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/widgets/app_feedback.dart';
 
 class CommentSection extends StatefulWidget {
   final Future<List<dynamic>> Function() loadComments;
@@ -55,16 +56,12 @@ class _CommentSectionState extends State<CommentSection> {
       await widget.onSubmit(text);
       _controller.clear();
       widget.onCommentCreated?.call();
+      if (mounted) showAppFeedback(context, "Commentaire ajouté");
       await _refresh();
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showAppFeedback(context, e.toString(), isError: true);
     } finally {
       if (mounted) setState(() => _isSending = false);
     }

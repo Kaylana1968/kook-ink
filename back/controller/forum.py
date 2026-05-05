@@ -39,6 +39,7 @@ def get_all_posts(db: Session = Depends(database.get_db)):
             "title": post.ForumPost.title,
             "description": post.ForumPost.description,
             "author": post.username,
+            "user_id": post.ForumPost.user_id,
             "responses_count": post.responses_count,
             "created_at": post.ForumPost.created_at,
         }
@@ -65,9 +66,16 @@ def create_post(
 
 @router.get("/forum/posts/{post_id}")
 def get_post_detail(post_id: int, db: Session = Depends(database.get_db)):
-    post = db.query(models.ForumPost).filter(models.ForumPost.id == post_id).first()
-    if not post:
+    post_row = (
+        db.query(models.ForumPost, models.User.username)
+        .join(models.User, models.ForumPost.user_id == models.User.id)
+        .filter(models.ForumPost.id == post_id)
+        .first()
+    )
+    if not post_row:
         raise HTTPException(status_code=404, detail="Post introuvable")
+
+    post, username = post_row
 
     rows = (
         db.query(
@@ -89,6 +97,8 @@ def get_post_detail(post_id: int, db: Session = Depends(database.get_db)):
     return {
         "title": post.title,
         "description": post.description,
+        "author": username,
+        "user_id": post.user_id,
         "responses": [
             {
                 "id": r.ForumPostResponse.id,

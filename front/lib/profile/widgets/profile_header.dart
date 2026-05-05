@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'post_count_widget.dart';
 import 'stat_widget.dart';
 
 class ProfileHeader extends StatelessWidget {
-  final Future<List<dynamic>> postFuture;
-  final Future<List<dynamic>> recipeFuture;
+  final int publicationsCount;
   final int followers;
   final int following;
   final String username;
@@ -16,8 +14,7 @@ class ProfileHeader extends StatelessWidget {
 
   const ProfileHeader({
     super.key,
-    required this.postFuture,
-    required this.recipeFuture,
+    required this.publicationsCount,
     required this.followers,
     required this.following,
     required this.username,
@@ -75,9 +72,9 @@ class ProfileHeader extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        PostCountWidget(
-                          postFuture: postFuture,
-                          recipeFuture: recipeFuture,
+                        StatWidget(
+                          value: publicationsCount.toString(),
+                          label: 'Publications',
                         ),
                         const SizedBox(width: 18),
                         StatWidget(

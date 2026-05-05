@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 class FeedUserHeader extends StatelessWidget {
   final String username;
   final dynamic userId;
+  final EdgeInsetsGeometry padding;
 
   const FeedUserHeader({
     super.key,
     required this.username,
     required this.userId,
+    this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
   });
 
   @override
@@ -24,7 +26,7 @@ class FeedUserHeader extends StatelessWidget {
       highlightColor: Colors.transparent,
       focusColor: Colors.transparent,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: padding,
         child: Row(
           children: [
             const CircleAvatar(

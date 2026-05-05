@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:front/forum/forum_service.dart';
-import 'package:front/forum/question_card.dart';
+import 'package:front/forum/services/forum_api_service.dart';
+import 'package:front/forum/widgets/question_card.dart';
 import 'package:go_router/go_router.dart';
 
 class ForumScreen extends StatefulWidget {
@@ -45,7 +45,8 @@ class _ForumScreenState extends State<ForumScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Forum',
-                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
                   ElevatedButton(
                     onPressed: () async {
                       await context.push('/forum/post');
@@ -61,7 +62,7 @@ class _ForumScreenState extends State<ForumScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              /*const SizedBox(height: 16),
               TextField(
                 decoration: InputDecoration(
                   hintText: 'Rechercher',
@@ -73,7 +74,7 @@ class _ForumScreenState extends State<ForumScreen> {
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: orangeKook)),
                 ),
-              ),
+              ),*/
               const SizedBox(height: 16),
               const SizedBox(height: 20),
               FutureBuilder<List<dynamic>>(
@@ -101,6 +102,8 @@ class _ForumScreenState extends State<ForumScreen> {
                         nbReponses: post['responses_count'] ?? 0,
                         titre: post['title'] ?? "Sans titre",
                         contenu: post['description'] ?? "",
+                        author: post['author']?.toString() ?? "Utilisateur",
+                        authorId: post['user_id'],
                       );
                     },
                   );

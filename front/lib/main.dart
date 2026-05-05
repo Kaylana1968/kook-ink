@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:front/forum/forum_screen.dart';
 import 'package:front/layout.dart';
 import 'package:front/recipe/recipe_screen.dart';
-import 'package:front/forum/forum_detail_screen.dart';
-import 'package:front/forum/post_question_screen.dart';
+import 'package:front/forum/widgets/forum_detail_screen.dart';
+import 'package:front/forum/widgets/post_question_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'home/home_screen.dart';
 import 'home/post_detail_screen.dart';
@@ -11,6 +11,7 @@ import 'home/recipe_detail_screen.dart';
 import 'authentification/login_screen.dart';
 import 'profile/profile_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'widgets/app_feedback.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
@@ -91,8 +92,20 @@ class MyApp extends StatelessWidget {
                 path: '/forum/:postId',
                 builder: (context, state) {
                   final id = int.parse(state.pathParameters['postId']!);
-                  final title = state.extra as String? ?? '';
-                  return ForumDetailScreen(postId: id, title: title);
+                  final extra = state.extra;
+                  final title = extra is Map
+                      ? extra['title']?.toString() ?? ''
+                      : (extra as String?) ?? '';
+                  final author =
+                      extra is Map ? extra['author']?.toString() : null;
+                  final userId = extra is Map ? extra['user_id'] : null;
+
+                  return ForumDetailScreen(
+                    postId: id,
+                    title: title,
+                    initialAuthor: author,
+                    initialAuthorId: userId,
+                  );
                 },
               ),
             ])
@@ -100,6 +113,7 @@ class MyApp extends StatelessWidget {
     );
 
     return MaterialApp.router(
+      scaffoldMessengerKey: appScaffoldMessengerKey,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

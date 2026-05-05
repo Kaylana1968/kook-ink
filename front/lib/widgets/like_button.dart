@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front/services/like_api_service.dart';
+import 'package:front/widgets/app_feedback.dart';
 
 class LikeButton extends StatefulWidget {
   final String type;
@@ -73,8 +74,10 @@ class _LikeButtonState extends State<LikeButton> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Impossible de modifier le like : $e")),
+      showAppFeedback(
+        context,
+        "Impossible de modifier le like : $e",
+        isError: true,
       );
     } finally {
       if (mounted) {

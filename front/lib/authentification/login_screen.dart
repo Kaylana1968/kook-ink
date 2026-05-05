@@ -3,6 +3,7 @@ import 'package:front/authentification/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:front/widgets/app_feedback.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginForm extends StatefulWidget {
@@ -43,20 +44,20 @@ class _LoginFormState extends State<LoginForm> {
           await AuthService.saveToken(data["token"]);
 
           if (!mounted) return;
+          showAppFeedback(context, "Connexion réussie");
           context.go('/profile');
         } else {
           final data = jsonDecode(response.body);
           setState(() {
             errorMessage = data["detail"] ?? "Erreur inconnue";
           });
+          showAppFeedback(context, errorMessage, isError: true);
         }
       }
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur : $e")),
-      );
+      showAppFeedback(context, "Erreur : $e", isError: true);
     }
   }
 

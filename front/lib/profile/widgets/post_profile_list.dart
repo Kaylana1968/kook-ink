@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:front/home/widgets/comment_bottom_sheet.dart';
 import 'package:front/home/widgets/feed_user_header.dart';
+import 'package:front/widgets/app_feedback.dart';
 import 'package:front/widgets/like_button.dart';
 import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
@@ -52,21 +53,28 @@ class _PostProfileCardState extends State<PostProfileCard> {
     final postId = widget.post['id'];
     if (postId is! int) return;
 
-    final success = await ProfileApiService.deletePost(postId);
+    try {
+      final success = await ProfileApiService.deletePost(postId);
 
-    if (success) {
-      await widget.onRefresh();
-      debugPrint("Post supprimé");
-    } else {
+      if (success) {
+        await widget.onRefresh();
+        if (!mounted) return;
+        showAppFeedback(context, "Post supprimé");
+        debugPrint("Post supprimé");
+      } else {
+        if (!mounted) return;
+
+        showAppFeedback(
+          context,
+          "Impossible de supprimer le post",
+          isError: true,
+        );
+        debugPrint("Erreur suppression post");
+      }
+    } catch (e) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Impossible de supprimer le post"),
-          backgroundColor: Colors.red,
-        ),
-      );
-      debugPrint("Erreur suppression post");
+      showAppFeedback(context, "Erreur réseau pendant la suppression : $e",
+          isError: true);
     }
   }
 
@@ -104,17 +112,29 @@ class _PostProfileCardState extends State<PostProfileCard> {
 
     if (newDescription == null || newDescription.isEmpty) return;
 
-    final success = await ProfileApiService.updatePost(
-      widget.post['id'],
-      newDescription,
-      imageLink: widget.post['image_link']?.toString(),
-    );
+    try {
+      final success = await ProfileApiService.updatePost(
+        widget.post['id'],
+        newDescription,
+        imageLink: widget.post['image_link']?.toString(),
+      );
 
-    if (success) {
-      await widget.onRefresh();
-      debugPrint(" modifié");
-    } else {
-      debugPrint("Erreur modification post");
+      if (success) {
+        await widget.onRefresh();
+        if (!mounted) return;
+        showAppFeedback(context, "Post modifié");
+        debugPrint(" modifié");
+      } else {
+        if (mounted) {
+          showAppFeedback(context, "Impossible de modifier le post",
+              isError: true);
+        }
+        debugPrint("Erreur modification post");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showAppFeedback(context, "Erreur réseau pendant la modification : $e",
+          isError: true);
     }
   }
 

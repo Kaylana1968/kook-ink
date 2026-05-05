@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:front/services/media_api_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:front/widgets/app_feedback.dart';
 import 'services/profile_api_service.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/post_profile_list.dart';
@@ -28,8 +29,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // NUMBER OF FOLLOWERS
   int followers = 0;
   int following = 0;
+  int publicationsCount = 0;
   bool isFollowing = false;
   bool isFollowLoading = false;
+  int _loadVersion = 0;
 
   // INFO PROFILE
   String username = "";
@@ -57,84 +60,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   //  LOAD POST, RECIPES, PROFILE
   void _loadData() {
+    final loadVersion = ++_loadVersion;
+    final Future<List<dynamic>> postFuture;
+    final Future<List<dynamic>> recipeFuture;
+
     if (isMyProfile) {
       // MY PROFILE DATA
-      _postFuture = ProfileApiService.fetchMyPosts();
-      _recipeFuture = ProfileApiService.fetchMyRecipes();
+      postFuture = ProfileApiService.fetchMyPosts();
+      recipeFuture = ProfileApiService.fetchMyRecipes();
     } else {
       // PROFILE DATA OTHER
-      _postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
-      _recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
+      postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
+      recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
     }
 
-    _loadProfile();
-    _loadFollowCount();
-    _loadFollowStatus();
+    setState(() {
+      _postFuture = postFuture;
+      _recipeFuture = recipeFuture;
+    });
+
+    _loadProfileInfo(loadVersion);
+    _loadPublicationsCount(postFuture, recipeFuture, loadVersion);
   }
 
-  // LOAD PROFILE
-  Future<void> _loadProfile() async {
+  Future<void> _loadProfileInfo(int loadVersion) async {
     try {
-      Map<String, dynamic> data;
+      final results = await Future.wait([
+        isMyProfile
+            ? ProfileApiService.fetchMyProfile()
+            : ProfileApiService.fetchUserProfile(widget.userId!),
+        isMyProfile
+            ? ProfileApiService.fetchFollowCount()
+            : ProfileApiService.fetchUserFollowCount(widget.userId!),
+        isMyProfile
+            ? Future<bool>.value(false)
+            : ProfileApiService.fetchFollowStatus(widget.userId!),
+      ]);
 
-      if (isMyProfile) {
-        data = await ProfileApiService.fetchMyProfile();
-      } else {
-        data = await ProfileApiService.fetchUserProfile(widget.userId!);
-      }
+      if (!mounted || loadVersion != _loadVersion) return;
 
-      if (!mounted) return;
-
+      final profile = results[0] as Map<String, dynamic>;
+      final followCount = results[1] as Map<String, int>;
+      final followStatus = results[2] as bool;
       setState(() {
-        username = data["username"]?.toString() ?? "";
-        description = data["description"]?.toString() ?? "";
+        username = profile["username"]?.toString() ?? "";
+        description = profile["description"]?.toString() ?? "";
+        followers = followCount["followers"] ?? 0;
+        following = followCount["following"] ?? 0;
+        isFollowing = followStatus;
       });
     } catch (e) {
       debugPrint("Erreur profil : $e");
     }
   }
 
-  // LOAD FOLLOW
-  Future<void> _loadFollowCount() async {
+  Future<void> _loadPublicationsCount(
+    Future<List<dynamic>> postFuture,
+    Future<List<dynamic>> recipeFuture,
+    int loadVersion,
+  ) async {
     try {
-      Map<String, int> data;
-
-      if (isMyProfile) {
-        data = await ProfileApiService.fetchFollowCount();
-      } else {
-        data = await ProfileApiService.fetchUserFollowCount(widget.userId!);
-      }
-
-      if (!mounted) return;
+      final results = await Future.wait([postFuture, recipeFuture]);
+      if (!mounted || loadVersion != _loadVersion) return;
 
       setState(() {
-        followers = data["followers"] ?? 0;
-        following = data["following"] ?? 0;
+        publicationsCount = results[0].length + results[1].length;
       });
     } catch (e) {
-      debugPrint("Erreur follow count : $e");
-    }
-  }
-
-  // LOAD FOLLOW STATUS
-  Future<void> _loadFollowStatus() async {
-    if (isMyProfile) {
-      setState(() {
-        isFollowing = false;
-      });
-      return;
-    }
-
-    try {
-      final data = await ProfileApiService.fetchFollowStatus(widget.userId!);
-
-      if (!mounted) return;
-
-      setState(() {
-        isFollowing = data;
-      });
-    } catch (e) {
-      debugPrint("Erreur follow status : $e");
+      debugPrint("Erreur publications count : $e");
     }
   }
 
@@ -156,11 +149,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!success) return;
 
       setState(() {
-        isFollowing = !isFollowing;
+        final nextFollowing = !isFollowing;
+        isFollowing = nextFollowing;
+        followers += nextFollowing ? 1 : -1;
+        if (followers < 0) followers = 0;
       });
-
-      await _loadFollowCount();
+      showAppFeedback(context, isFollowing ? "Utilisateur suivi" : "Abonnement retiré");
     } catch (e) {
+      if (mounted) {
+        showAppFeedback(
+          context,
+          "Impossible de modifier l'abonnement : $e",
+          isError: true,
+        );
+      }
       debugPrint("Erreur follow toggle : $e");
     } finally {
       if (mounted) {
@@ -173,21 +175,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // LOAD DATA
   Future<void> _refresh() async {
+    final loadVersion = ++_loadVersion;
+    final Future<List<dynamic>> postFuture;
+    final Future<List<dynamic>> recipeFuture;
+
+    if (isMyProfile) {
+      postFuture = ProfileApiService.fetchMyPosts();
+      recipeFuture = ProfileApiService.fetchMyRecipes();
+    } else {
+      postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
+      recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
+    }
+
     setState(() {
-      if (isMyProfile) {
-        _postFuture = ProfileApiService.fetchMyPosts();
-        _recipeFuture = ProfileApiService.fetchMyRecipes();
-      } else {
-        _postFuture = ProfileApiService.fetchUserPosts(widget.userId!);
-        _recipeFuture = ProfileApiService.fetchUserRecipes(widget.userId!);
-      }
+      _postFuture = postFuture;
+      _recipeFuture = recipeFuture;
     });
 
-    await _postFuture;
-    await _recipeFuture;
-    await _loadProfile();
-    await _loadFollowCount();
-    await _loadFollowStatus();
+    await Future.wait([
+      _loadProfileInfo(loadVersion),
+      _loadPublicationsCount(postFuture, recipeFuture, loadVersion),
+    ]);
   }
 
   // MODAL CREATE POST
@@ -211,28 +219,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Future<void> createPost() async {
               final description = controller.text.trim();
 
-              if (description.isEmpty) return;
+              if (description.isEmpty) {
+                showAppFeedback(
+                  context,
+                  "Le post ne peut pas être vide",
+                  isError: true,
+                );
+                return;
+              }
 
               setModalState(() {
                 isLoading = true;
               });
 
-              final success = await ProfileApiService.createPost(
-                description,
-                imageLink: imageLink,
-              );
+              try {
+                final success = await ProfileApiService.createPost(
+                  description,
+                  imageLink: imageLink,
+                );
 
-              if (success) {
-                if (context.mounted) context.go('/profile');
-                await _refresh();
-                debugPrint("Post créé");
-              } else {
-                debugPrint("Erreur création post");
+                if (success) {
+                  showAppFeedback(context, "Post créé");
+                  if (context.mounted) context.go('/profile');
+                  await _refresh();
+                  debugPrint("Post créé");
+                } else {
+                  showAppFeedback(
+                    context,
+                    "Impossible de créer le post",
+                    isError: true,
+                  );
+                  debugPrint("Erreur création post");
+                }
+              } catch (e) {
+                showAppFeedback(
+                  context,
+                  "Erreur réseau pendant la création du post : $e",
+                  isError: true,
+                );
+              } finally {
+                setModalState(() {
+                  isLoading = false;
+                });
               }
-
-              setModalState(() {
-                isLoading = false;
-              });
             }
 
             Future<void> pickAndUploadImage(ImageSource source) async {
@@ -258,11 +287,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               } catch (e) {
                 if (!context.mounted) return;
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Erreur upload image : $e"),
-                    backgroundColor: Colors.red,
-                  ),
+                showAppFeedback(
+                  context,
+                  "Erreur upload image : $e",
+                  isError: true,
                 );
               } finally {
                 setModalState(() {
@@ -450,8 +478,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               ProfileHeader(
-                postFuture: _postFuture,
-                recipeFuture: _recipeFuture,
+                publicationsCount: publicationsCount,
                 followers: followers,
                 following: following,
                 username: username,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:front/forum/forum_service.dart';
+import 'package:front/forum/services/forum_api_service.dart';
+import 'package:front/forum/widgets/forum_response_info.dart';
+import 'package:front/home/widgets/feed_user_header.dart';
+import 'package:front/widgets/app_feedback.dart';
 import 'package:go_router/go_router.dart';
 
 const Color orangeKook = Colors.orange;
@@ -7,8 +10,16 @@ const Color orangeKook = Colors.orange;
 class ForumDetailScreen extends StatefulWidget {
   final int postId;
   final String title;
+  final String? initialAuthor;
+  final dynamic initialAuthorId;
 
-  const ForumDetailScreen({super.key, required this.postId, required this.title});
+  const ForumDetailScreen({
+    super.key,
+    required this.postId,
+    required this.title,
+    this.initialAuthor,
+    this.initialAuthorId,
+  });
 
   @override
   State<ForumDetailScreen> createState() => _ForumDetailScreenState();
@@ -29,6 +40,12 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
         _detailFuture = _forumService.getPostDetail(widget.postId);
       });
 
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
   Future<void> _submitResponse() async {
     final text = _commentController.text.trim();
     if (text.isEmpty) return;
@@ -38,10 +55,12 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
         content: text,
       );
       _commentController.clear();
+      if (!mounted) return;
+      showAppFeedback(context, 'Réponse publiée');
       _refresh();
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      showAppFeedback(context, 'Impossible de publier la réponse : $e',
+          isError: true);
     }
   }
 
@@ -50,8 +69,8 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
       await _forumService.toggleUpvote(responseId: responseId);
       _refresh();
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Erreur upvote : $e')));
+      showAppFeedback(context, 'Impossible de modifier le vote : $e',
+          isError: true);
     }
   }
 
@@ -82,6 +101,9 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
 
           final data = snapshot.data!;
           final responses = data['responses'] as List;
+          final author =
+              data['author']?.toString() ?? widget.initialAuthor ?? 'Utilisateur';
+          final authorId = data['user_id'] ?? widget.initialAuthorId;
 
           return Column(
             children: [
@@ -93,6 +115,19 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
                     Text(data['title'],
                         style: const TextStyle(
                             fontSize: 22, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FeedUserHeader(
+                            username: author,
+                            userId: authorId,
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                        ForumResponseInfo(count: responses.length),
+                      ],
+                    ),
                     const SizedBox(height: 12),
                     Text(data['description'],
                         style: const TextStyle(
@@ -109,8 +144,8 @@ class _ForumDetailScreenState extends State<ForumDetailScreen> {
                     final resp = responses[index];
                     return _ResponseTile(
                       id: resp['id'],
-                      author: resp['author'],
-                      content: resp['content'],
+                      author: resp['author']?.toString() ?? 'Utilisateur',
+                      content: resp['content']?.toString() ?? '',
                       upvotes: resp['upvotes'] ?? 0,
                       onUpvote: () => _handleUpvote(resp['id']),
                     );

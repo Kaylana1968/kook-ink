@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front/home/widgets/comment_bottom_sheet.dart';
+import 'package:front/widgets/app_feedback.dart';
 import 'package:front/widgets/like_button.dart';
 import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
@@ -50,11 +51,22 @@ class _RecipeProfileCardState extends State<RecipeProfileCard> {
     final id = widget.recipe['id'];
     if (id == null) return;
 
-    final success = await ProfileApiService.deleteRecipe(id);
+    try {
+      final success = await ProfileApiService.deleteRecipe(id);
 
-    if (success) {
-      await widget.onRefresh();
-      debugPrint("Recette supprimée");
+      if (success) {
+        await widget.onRefresh();
+        if (!mounted) return;
+        showAppFeedback(context, "Recette supprimée");
+        debugPrint("Recette supprimée");
+      } else if (mounted) {
+        showAppFeedback(context, "Impossible de supprimer la recette",
+            isError: true);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showAppFeedback(context, "Erreur réseau pendant la suppression : $e",
+          isError: true);
     }
   }
 
