@@ -9,6 +9,7 @@ load_dotenv()
 secret_key = os.getenv("SECRET_KEY")
 
 bearer_scheme = HTTPBearer()
+optional_bearer_scheme = HTTPBearer(auto_error=False)
 algorithm = "HS256"
 
 
@@ -17,6 +18,18 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_user(authorization: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     return jwt.decode(authorization.credentials, secret_key, algorithms=[algorithm])
+
+
+def get_optional_user(
+    authorization: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
+):
+    if authorization is None:
+        return None
+
+    try:
+        return jwt.decode(authorization.credentials, secret_key, algorithms=[algorithm])
+    except jwt.PyJWTError:
+        return None
 
 
 def generate_token(user: models.User):

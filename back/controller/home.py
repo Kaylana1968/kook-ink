@@ -1,13 +1,30 @@
-from fastapi import APIRouter, Depends
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from common import database, models
+from common import database, models, utils
 
 router = APIRouter()
 
 @router.get("/feed")
-def get_feed(db: Session = Depends(database.get_db)):
+def get_feed(
+    date_order: str = Query("desc", pattern="^(asc|desc)$"),
+    user=Depends(utils.get_optional_user),
+    db: Session = Depends(database.get_db),
+):
     posts = db.query(models.Post).all()
     recipes = db.query(models.Recipe).all()
+    followed_user_ids = set()
+    current_user_id = None
+
+    if user is not None:
+        current_user_id = int(user["id"])
+        followed_user_ids = {
+            follow.followed_user_id
+            for follow in db.query(models.Follow)
+            .filter(models.Follow.following_user_id == current_user_id)
+            .all()
+        }
 
     result = []
 
@@ -17,6 +34,9 @@ def get_feed(db: Session = Depends(database.get_db)):
         result.append({
             "type": "post",
             "created_at": post.created_at.isoformat() if post.created_at else None,
+            "is_followed_author": post.user_id in followed_user_ids,
+            "is_priority_author": post.user_id == current_user_id
+            or post.user_id in followed_user_ids,
             "item": {
                 "id": post.id,
                 "description": post.description,
@@ -38,6 +58,9 @@ def get_feed(db: Session = Depends(database.get_db)):
         result.append({
             "type": "recipe",
             "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
+            "is_followed_author": recipe.user_id in followed_user_ids,
+            "is_priority_author": recipe.user_id == current_user_id
+            or recipe.user_id in followed_user_ids,
             "item": {
                 "id": recipe.id,
                 "name": recipe.name,
@@ -57,9 +80,13 @@ def get_feed(db: Session = Depends(database.get_db)):
             }
         })
 
-    result.sort(
-        key=lambda x: x["created_at"] or "",
-        reverse=True
-    )
+    reverse_date = date_order == "desc"
+
+    def sort_key(feed_item):
+        created_at = feed_item["created_at"] or datetime.min.isoformat()
+        return (feed_item["is_priority_author"], created_at)
+
+    result.sort(key=sort_key, reverse=reverse_date)
+    result.sort(key=lambda item: item["is_priority_author"], reverse=True)
 
     return {"feed": result}
