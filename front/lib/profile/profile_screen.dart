@@ -154,7 +154,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         followers += nextFollowing ? 1 : -1;
         if (followers < 0) followers = 0;
       });
-      showAppFeedback(context, isFollowing ? "Utilisateur suivi" : "Abonnement retiré");
+      showAppFeedback(
+        context,
+        isFollowing ? "Utilisateur suivi" : "Abonnement retiré",
+      );
     } catch (e) {
       if (mounted) {
         showAppFeedback(
@@ -171,6 +174,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     }
+  }
+
+  Future<void> _openFollowList({
+    required String title,
+    required bool followersList,
+  }) async {
+    final profileContext = context;
+    final usersFuture = followersList
+        ? ProfileApiService.fetchFollowers(userId: widget.userId)
+        : ProfileApiService.fetchFollowing(userId: widget.userId);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: FutureBuilder<List<dynamic>>(
+            future: usersFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 220,
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.orange),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return SizedBox(
+                  height: 220,
+                  child: Center(child: Text(snapshot.error.toString())),
+                );
+              }
+
+              final users = snapshot.data ?? [];
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (users.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 20, 16, 32),
+                      child: Text("Aucun utilisateur pour le moment."),
+                    )
+                  else
+                    Flexible(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: users.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final user = users[index] as Map<String, dynamic>;
+                          final userId = user["id"];
+                          final username =
+                              user["username"]?.toString() ?? "Utilisateur";
+
+                          return ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: Colors.orange,
+                              child: Icon(Icons.person, color: Colors.white),
+                            ),
+                            title: Text(username),
+                            onTap: userId == null
+                                ? null
+                                : () {
+                                    Navigator.of(context).pop();
+                                    final targetId =
+                                        int.tryParse(userId.toString());
+                                    if (targetId == null) return;
+
+                                    if (isMyProfile ||
+                                        targetId != widget.userId) {
+                                      profileContext.go('/profile/$targetId');
+                                    }
+                                  },
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   // LOAD DATA
@@ -487,6 +587,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 isFollowing: isFollowing,
                 isFollowLoading: isFollowLoading,
                 onToggleFollow: isMyProfile ? null : _toggleFollow,
+                onFollowersTap: () => _openFollowList(
+                  title: "Followers",
+                  followersList: true,
+                ),
+                onFollowingTap: () => _openFollowList(
+                  title: "Suivi(e)s",
+                  followersList: false,
+                ),
               ),
               const TabBar(
                 labelColor: Colors.black,

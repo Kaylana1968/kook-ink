@@ -25,6 +25,10 @@ class ProfileApiService {
   //--ROUTES FOLLOW--//
   static Uri followCount() => Uri.parse('$baseUrl/follow/count');
   static Uri userFollowCount(int id) => Uri.parse('$baseUrl/follow/count/$id');
+  static Uri followers() => Uri.parse('$baseUrl/follow/followers');
+  static Uri following() => Uri.parse('$baseUrl/follow/following');
+  static Uri userFollowers(int id) => Uri.parse('$baseUrl/follow/followers/$id');
+  static Uri userFollowing(int id) => Uri.parse('$baseUrl/follow/following/$id');
   static Uri followStatus(int id) => Uri.parse('$baseUrl/follow/status/$id');
   static Uri followUser(int id) => Uri.parse('$baseUrl/follow/$id');
 
@@ -133,6 +137,42 @@ class ProfileApiService {
     } else {
       return false;
     }
+  }
+
+  static Future<List<dynamic>> fetchFollowers({int? userId}) async {
+    final token = await AuthService.getToken();
+    final response = await http.get(
+      userId == null ? followers() : userFollowers(userId),
+      headers: {
+        "Content-Type": "application/json",
+        if (userId == null) "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["users"] as List<dynamic>;
+    }
+
+    throw Exception("Erreur chargement followers");
+  }
+
+  static Future<List<dynamic>> fetchFollowing({int? userId}) async {
+    final token = await AuthService.getToken();
+    final response = await http.get(
+      userId == null ? following() : userFollowing(userId),
+      headers: {
+        "Content-Type": "application/json",
+        if (userId == null) "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["users"] as List<dynamic>;
+    }
+
+    throw Exception("Erreur chargement abonnements");
   }
 
   // FOLLOW A USER

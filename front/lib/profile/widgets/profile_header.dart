@@ -11,6 +11,8 @@ class ProfileHeader extends StatelessWidget {
   final bool isFollowing;
   final bool isFollowLoading;
   final VoidCallback? onToggleFollow;
+  final VoidCallback? onFollowersTap;
+  final VoidCallback? onFollowingTap;
 
   const ProfileHeader({
     super.key,
@@ -23,6 +25,8 @@ class ProfileHeader extends StatelessWidget {
     required this.isFollowing,
     required this.isFollowLoading,
     required this.onToggleFollow,
+    required this.onFollowersTap,
+    required this.onFollowingTap,
   });
 
   @override
@@ -80,11 +84,13 @@ class ProfileHeader extends StatelessWidget {
                         StatWidget(
                           value: followers.toString(),
                           label: 'Followers',
+                          onTap: onFollowersTap,
                         ),
                         const SizedBox(width: 18),
                         StatWidget(
                           value: following.toString(),
                           label: 'Suivi(e)s',
+                          onTap: onFollowingTap,
                         ),
                       ],
                     ),

@@ -1,8 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from common import database, models, utils
 
 router = APIRouter(tags=["Follow"])
+
+
+def serialize_user(user: models.User):
+    return {
+        "id": user.id,
+        "username": user.username,
+        "description": user.description,
+    }
 
 
 # GET FOLLOWERS / FOLLOWING COUNT
@@ -44,6 +52,52 @@ def get_user_follow_count(
         "followers": followers,
         "following": following,
     }
+
+
+def get_followers_for_user(user_id: int, db: Session):
+    return (
+        db.query(models.User)
+        .join(models.Follow, models.Follow.following_user_id == models.User.id)
+        .filter(models.Follow.followed_user_id == user_id)
+        .order_by(models.Follow.created_at.desc())
+        .all()
+    )
+
+
+def get_following_for_user(user_id: int, db: Session):
+    return (
+        db.query(models.User)
+        .join(models.Follow, models.Follow.followed_user_id == models.User.id)
+        .filter(models.Follow.following_user_id == user_id)
+        .order_by(models.Follow.created_at.desc())
+        .all()
+    )
+
+
+@router.get("/follow/followers")
+def get_my_followers(
+    user=Depends(utils.get_user), db: Session = Depends(database.get_db)
+):
+    user_id = int(user["id"])
+    return {"users": [serialize_user(u) for u in get_followers_for_user(user_id, db)]}
+
+
+@router.get("/follow/following")
+def get_my_following(
+    user=Depends(utils.get_user), db: Session = Depends(database.get_db)
+):
+    user_id = int(user["id"])
+    return {"users": [serialize_user(u) for u in get_following_for_user(user_id, db)]}
+
+
+@router.get("/follow/followers/{user_id}")
+def get_user_followers(user_id: int, db: Session = Depends(database.get_db)):
+    return {"users": [serialize_user(u) for u in get_followers_for_user(user_id, db)]}
+
+
+@router.get("/follow/following/{user_id}")
+def get_user_following(user_id: int, db: Session = Depends(database.get_db)):
+    return {"users": [serialize_user(u) for u in get_following_for_user(user_id, db)]}
 
 
 @router.get("/follow/status/{user_id}")
