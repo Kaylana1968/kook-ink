@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
@@ -24,14 +24,6 @@ class RecipeCreate(BaseModel):
     video_link: Optional[str] = None
     steps: List[str] = Field(default_factory=list)
     ingredients: List[IngredientCreate] = Field(..., min_length=1)
-
-    @field_validator("ingredients")
-    @classmethod
-    def lists_must_not_be_empty(cls, v: list):
-        if len(v) == 0:
-            raise ValueError("This list must contain at least one item")
-
-        return v
 
     @field_validator("steps")
     @classmethod
@@ -80,6 +72,25 @@ def get_recipe_likes_count(recipe_id: int, db: Session):
         .filter(models.RecipeLike.recipe_id == recipe_id)
         .count()
     )
+
+
+def add_recipe_steps(recipe_id: int, steps: List[str], db: Session):
+    for number, step in enumerate(steps, start=1):
+        db.add(models.Step(content=step, number=number, recipe_id=recipe_id))
+
+
+def add_recipe_ingredients(
+    recipe_id: int, ingredients: List[IngredientCreate], db: Session
+):
+    for ingredient in ingredients:
+        db.add(
+            models.RecipeIngredient(
+                ingredient=ingredient.name,
+                quantity=ingredient.quantity,
+                unit=ingredient.unit.value,
+                recipe_id=recipe_id,
+            )
+        )
 
 
 # GET ALL RECIPE ME
@@ -323,20 +334,8 @@ def upload_recipe(
     db.commit()
     db.refresh(db_recipe)
 
-    for i in range(len(recipe.steps)):
-        db.add(
-            models.Step(content=recipe.steps[i], number=i + 1, recipe_id=db_recipe.id)
-        )
-
-    for ingredient in recipe.ingredients:
-        db.add(
-            models.RecipeIngredient(
-                ingredient=ingredient.name,
-                quantity=ingredient.quantity,
-                unit=ingredient.unit.value,
-                recipe_id=db_recipe.id,
-            )
-        )
+    add_recipe_steps(db_recipe.id, recipe.steps, db)
+    add_recipe_ingredients(db_recipe.id, recipe.ingredients, db)
 
     db.commit()
 
@@ -377,18 +376,8 @@ def update_recipe(
             models.RecipeIngredient.recipe_id == recipe_id
         ).delete(synchronize_session=False)
 
-        for i, step in enumerate(recipe.steps):
-            db.add(models.Step(content=step, number=i + 1, recipe_id=recipe_id))
-
-        for ingredient in recipe.ingredients:
-            db.add(
-                models.RecipeIngredient(
-                    ingredient=ingredient.name,
-                    quantity=ingredient.quantity,
-                    unit=ingredient.unit.value,
-                    recipe_id=recipe_id,
-                )
-            )
+        add_recipe_steps(recipe_id, recipe.steps, db)
+        add_recipe_ingredients(recipe_id, recipe.ingredients, db)
 
         db.commit()
         db.refresh(db_recipe)

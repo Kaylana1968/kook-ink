@@ -3,7 +3,6 @@ import 'package:front/services/media_api_service.dart';
 import 'package:front/recipe/models/api_exception.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-
 import 'models/ingredient_input.dart';
 import 'services/recipe_api_service.dart';
 import 'widgets/recipe_text_field.dart';
@@ -31,7 +30,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
   final bakingTimeController = TextEditingController();
   final personController = TextEditingController();
   final imageLinkController = TextEditingController();
-  final videoLinkController = TextEditingController();
 
   List<IngredientInput> ingredients = [IngredientInput()];
   List<TextEditingController> stepControllers = [TextEditingController()];
@@ -40,10 +38,22 @@ class _RecipeScreenState extends State<RecipeScreen> {
   bool isFetching = false;
   bool isUploadingImage = false;
 
+  bool get _isEditing => widget.recipeId != null;
+
+  String _text(TextEditingController controller) => controller.text.trim();
+
+  String? _optionalText(TextEditingController controller) {
+    final value = _text(controller);
+    return value.isEmpty ? null : value;
+  }
+
+  List<String> get _steps =>
+      stepControllers.map(_text).where((step) => step.isNotEmpty).toList();
+
   @override
   void initState() {
     super.initState();
-    if (widget.recipeId != null) {
+    if (_isEditing) {
       _fillFormIfEditing();
     }
   }
@@ -57,7 +67,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
     bakingTimeController.dispose();
     personController.dispose();
     imageLinkController.dispose();
-    videoLinkController.dispose();
     for (var controller in stepControllers) {
       controller.dispose();
     }
@@ -81,7 +90,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
         bakingTimeController.text = recipe['baking_time']?.toString() ?? '';
         personController.text = recipe['person']?.toString() ?? '';
         imageLinkController.text = recipe['image_link']?.toString() ?? '';
-        videoLinkController.text = recipe['video_link']?.toString() ?? '';
 
         final steps = recipe['steps'] as List<dynamic>?;
         if (steps != null && steps.isNotEmpty) {
@@ -110,49 +118,29 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   Map<String, dynamic> _buildBody() {
-    final steps = stepControllers
-        .map((controller) => controller.text.trim())
-        .where((step) => step.isNotEmpty)
-        .toList();
-
     return {
-      "name": nameController.text,
-      "tips": tipsController.text.isEmpty ? null : tipsController.text,
-      "difficulty": int.parse(difficultyController.text),
-      "preparation_time": int.parse(preparationTimeController.text),
-      "baking_time": int.parse(bakingTimeController.text),
-      "person": int.parse(personController.text),
-      "image_link":
-          imageLinkController.text.isEmpty ? null : imageLinkController.text,
-      "video_link":
-          videoLinkController.text.isEmpty ? null : videoLinkController.text,
-      "steps": steps,
+      "name": _text(nameController),
+      "tips": _optionalText(tipsController),
+      "difficulty": int.parse(_text(difficultyController)),
+      "preparation_time": int.parse(_text(preparationTimeController)),
+      "baking_time": int.parse(_text(bakingTimeController)),
+      "person": int.parse(_text(personController)),
+      "image_link": _optionalText(imageLinkController),
+      "steps": _steps,
       "ingredients":
           ingredients.map((ingredient) => ingredient.toJson()).toList(),
     };
   }
 
   String? _validateForm() {
-    if (nameController.text.trim().isEmpty) return "Le nom est requis";
+    if (_text(nameController).isEmpty) return "Le nom est requis";
 
-    // Check numbers are valid numbers
-    if (difficultyController.text.isEmpty ||
-        int.tryParse(difficultyController.text) == null) {
-      return "La difficulté est invalide";
-    }
-    if (preparationTimeController.text.isEmpty ||
-        int.tryParse(preparationTimeController.text) == null) {
-      return "Le temps de préparation est invalid";
-    }
-    if (bakingTimeController.text.isEmpty ||
-        int.tryParse(bakingTimeController.text) == null) {
-      return "Le temps de cuisson est invalid";
-    }
-    if (personController.text.isEmpty ||
-        int.tryParse(personController.text) == null) {
-      return "Le nombre de personnes est invalid";
-    }
+    final numberError = _validateNumbers();
+    if (numberError != null) return numberError;
 
+    if (ingredients.isEmpty) {
+      return "Ajoutez au moins un ingrédient";
+    }
     if (ingredients.any((ingredient) => ingredient.name.text.trim().isEmpty)) {
       return "Nommez tous les ingrédients";
     }
@@ -161,19 +149,34 @@ class _RecipeScreenState extends State<RecipeScreen> {
         !IngredientInput.isValidQuantity(ingredient.quantity.text))) {
       return "La quantité d'un ingrédient est invalide";
     }
-    if (ingredients.isEmpty) {
-      return "Ajoutez au moins un ingrédient";
+    return null;
+  }
+
+  String? _validateNumbers() {
+    final fields = [
+      MapEntry(difficultyController, "La difficulté est invalide"),
+      MapEntry(preparationTimeController, "Le temps de préparation est invalide"),
+      MapEntry(bakingTimeController, "Le temps de cuisson est invalide"),
+      MapEntry(personController, "Le nombre de personnes est invalide"),
+    ];
+
+    for (final field in fields) {
+      if (int.tryParse(_text(field.key)) == null) return field.value;
     }
 
     return null;
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
   Future<void> sendRecipeForm() async {
     final errorMessage = _validateForm();
     if (errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-      );
+      _showError(errorMessage);
       return;
     }
 
@@ -193,21 +196,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur ${e.statusCode} : ${e.message}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showError('Erreur ${e.statusCode} : ${e.message}');
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Une erreur réseau est survenue.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showError('Une erreur réseau est survenue.');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -234,12 +227,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Erreur upload image : $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showError("Erreur upload image : $e");
     } finally {
       if (mounted) setState(() => isUploadingImage = false);
     }
@@ -252,9 +240,11 @@ class _RecipeScreenState extends State<RecipeScreen> {
   }
 
   void _removeStep(int index) {
+    final removedController = stepControllers[index];
     setState(() {
       stepControllers.removeAt(index);
     });
+    removedController.dispose();
   }
 
   void _addIngredient() {
@@ -332,11 +322,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 padding: EdgeInsets.only(bottom: 12),
                 child: LinearProgressIndicator(color: Colors.orange),
               ),
-            /*RecipeTextField(
-              label: "Ajouter une vidéo",
-              controller: videoLinkController,
-              hint: "URL de la vidéo",
-            ),*/
             RecipeTextField(
               label: "Nom *",
               controller: nameController,
@@ -382,9 +367,9 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.orange)
                     : Text(
-                        widget.recipeId == null
-                            ? "Créer la recette"
-                            : "Modifier la recette",
+                        _isEditing
+                            ? "Modifier la recette"
+                            : "Créer la recette",
                         style: const TextStyle(color: themeColor),
                       ),
               ),
