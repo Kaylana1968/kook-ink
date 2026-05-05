@@ -56,11 +56,17 @@ class _HomeScreenState extends State<HomeScreen> {
               final feedItem = feed[index];
 
               if (feedItem["type"] == "post") {
-                return FeedPostCard(post: feedItem["item"]);
+                return FeedPostCard(
+                  post: feedItem["item"],
+                  onCommentsChanged: _refresh,
+                );
               }
 
               if (feedItem["type"] == "recipe") {
-                return FeedRecipeCard(recipe: feedItem["item"]);
+                return FeedRecipeCard(
+                  recipe: feedItem["item"],
+                  onCommentsChanged: _refresh,
+                );
               }
 
               return const SizedBox.shrink();

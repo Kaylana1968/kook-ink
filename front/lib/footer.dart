@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/auth_service.dart';
+import 'package:front/authentification/auth_service.dart';
 import 'package:go_router/go_router.dart';
 
 class Footer extends StatelessWidget {
@@ -36,21 +36,21 @@ class Footer extends StatelessWidget {
             icon: Icon(Icons.home_outlined, size: 30, color: getIconColor("/")),
             onPressed: () => context.go("/"),
           ),
-          IconButton(
+          /*IconButton(
             icon: Icon(Icons.search_outlined,
                 size: 30, color: getIconColor("/search")),
-            onPressed: () => context.go("/camera"),
-          ),
+            onPressed: () => context.go("/search"),
+          ),*/
           IconButton(
             icon: Icon(Icons.add_outlined,
                 size: 30, color: getIconColor("/recipe")),
             onPressed: () => context.go("/recipe"),
           ),
-          IconButton(
+          /*IconButton(
             icon: Icon(Icons.web_stories_outlined,
                 size: 30, color: getIconColor("/minis")),
             onPressed: () => context.go("/minis"),
-          ),
+          ),*/
           IconButton(
             icon: Icon(Icons.forum_outlined,
                 size: 30, color: getIconColor("/forum")),

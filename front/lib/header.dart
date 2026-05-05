@@ -36,7 +36,7 @@ class Header extends StatelessWidget {
               ),
             ],
           ),
-          Row(
+          /*Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications_none,
@@ -49,7 +49,7 @@ class Header extends StatelessWidget {
                 onPressed: () => context.go("/messages"),
               ),
             ],
-          ),
+          ),*/
         ],
       ),
     );

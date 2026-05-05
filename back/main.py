@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
-from common import database, models, utils, cloudinary
+from common import cloudinary, database, models, utils
 from controller import recipe, login, post, profile, favorite, home, forum, like
 
 app = FastAPI()
@@ -20,6 +20,7 @@ app.add_middleware(
 def on_startup():
     models.Base.metadata.create_all(bind=database.engine)
     ensure_post_image_link_column()
+    ensure_like_created_at_columns()
 
 
 def ensure_post_image_link_column():
@@ -35,6 +36,39 @@ def ensure_post_image_link_column():
         connection.execute(text("ALTER TABLE post ADD COLUMN image_link VARCHAR"))
 
 
+def ensure_like_created_at_columns():
+    inspector = inspect(database.engine)
+    table_names = inspector.get_table_names()
+
+    for table_name in ("post_like", "recipe_like"):
+        if table_name not in table_names:
+            continue
+
+        columns = {column["name"] for column in inspector.get_columns(table_name)}
+        if "created_at" in columns:
+            continue
+
+        with database.engine.begin() as connection:
+            if database.engine.dialect.name == "sqlite":
+                connection.execute(
+                    text(f"ALTER TABLE {table_name} ADD COLUMN created_at TIMESTAMP")
+                )
+                connection.execute(
+                    text(
+                        f"UPDATE {table_name} "
+                        "SET created_at = CURRENT_TIMESTAMP "
+                        "WHERE created_at IS NULL"
+                    )
+                )
+            else:
+                connection.execute(
+                    text(
+                        f"ALTER TABLE {table_name} "
+                        "ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                    )
+                )
+
+
 @app.get("/users")
 def read_user(db: Session = Depends(database.get_db)):
     user = db.query(models.User).first()
@@ -44,6 +78,7 @@ def read_user(db: Session = Depends(database.get_db)):
 
     return user
 
+
 @app.post("/image")
 def post_image(
     file: UploadFile = File(...),
@@ -51,6 +86,7 @@ def post_image(
 ):
     image_url = cloudinary.upload_image(file)
     return {"image_link": image_url}
+
 
 app.include_router(login.router)
 app.include_router(recipe.router)

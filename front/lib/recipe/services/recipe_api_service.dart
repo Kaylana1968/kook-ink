@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:front/recipe/models/api_exception.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:front/auth_service.dart';
+import 'package:front/authentification/auth_service.dart';
 
 class RecipeApiService {
   static String baseUrl = dotenv.env['BASE_URL'] ?? "http://localhost:8000";
@@ -22,11 +22,8 @@ class RecipeApiService {
     }
   }
 
-  static Future<void> createRecipe(
-    Map<String, dynamic> body, {
-    http.Client? client,
-    String? token
-  }) async {
+  static Future<void> createRecipe(Map<String, dynamic> body,
+      {http.Client? client, String? token}) async {
     final authToken = token ?? await AuthService.getToken();
     final c = client ?? http.Client();
 
@@ -44,12 +41,8 @@ class RecipeApiService {
     }
   }
 
-  static Future<void> updateRecipe(
-    int recipeId,
-    Map<String, dynamic> body, {
-    http.Client? client,
-    String? token
-  }) async {
+  static Future<void> updateRecipe(int recipeId, Map<String, dynamic> body,
+      {http.Client? client, String? token}) async {
     final authToken = token ?? await AuthService.getToken();
     final c = client ?? http.Client();
 

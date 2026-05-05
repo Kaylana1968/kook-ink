@@ -23,6 +23,12 @@ def get_feed(db: Session = Depends(database.get_db)):
                 "image_link": post.image_link,
                 "user_id": post.user_id,
                 "username": user.username if user else "Utilisateur",
+                "comments_count": db.query(models.PostComment).filter(
+                    models.PostComment.post_id == post.id
+                ).count(),
+                "likes_count": db.query(models.PostLike).filter(
+                    models.PostLike.post_id == post.id
+                ).count(),
             }
         })
 
@@ -42,6 +48,12 @@ def get_feed(db: Session = Depends(database.get_db)):
                 "person": recipe.person,
                 "difficulty": recipe.difficulty,
                 "username": user.username if user else "Utilisateur",
+                "comments_count": db.query(models.RecipeComment).filter(
+                    models.RecipeComment.recipe_id == recipe.id
+                ).count(),
+                "likes_count": db.query(models.RecipeLike).filter(
+                    models.RecipeLike.recipe_id == recipe.id
+                ).count(),
             }
         })
 

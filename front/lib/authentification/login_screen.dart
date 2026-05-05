@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/auth_service.dart';
+import 'package:front/authentification/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

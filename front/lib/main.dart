@@ -1,39 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
-import 'package:front/forum_screen.dart';
+import 'package:front/forum/forum_screen.dart';
 import 'package:front/layout.dart';
-import 'package:front/message_screen.dart';
-import 'package:front/mini_screen.dart';
-import 'package:front/notification_screen.dart';
 import 'package:front/recipe/recipe_screen.dart';
-import 'package:front/search_screen.dart';
-import 'package:front/forum_detail_screen.dart';
-import 'package:front/post_question_screen.dart';
+import 'package:front/forum/forum_detail_screen.dart';
+import 'package:front/forum/post_question_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'home/home_screen.dart';
-import 'login_screen.dart';
+import 'home/post_detail_screen.dart';
+import 'home/recipe_detail_screen.dart';
+import 'authentification/login_screen.dart';
 import 'profile/profile_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:front/take_picture_screen.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  List<CameraDescription> cameras = [];
-  try {
-    cameras = await availableCameras();
-  } catch (e) {
-    print("Erreur lors de la récupération des caméras: $e");
-  }
-
-  runApp(MyApp(cameras: cameras));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final List<CameraDescription> cameras;
-
-  const MyApp({super.key, required this.cameras});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -48,17 +34,6 @@ class MyApp extends StatelessWidget {
               GoRoute(
                 path: '/',
                 builder: (context, state) => const HomeScreen(),
-              ),
-              GoRoute(
-                path: '/camera',
-                builder: (context, state) {
-                  if (cameras.isEmpty) {
-                    return const Scaffold(
-                      body: Center(child: Text("Aucune caméra disponible sur cet appareil.")),
-                    );
-                  }
-                  return TakePictureScreen(camera: cameras.first);
-                },
               ),
               GoRoute(
                 path: '/login',
@@ -79,10 +54,6 @@ class MyApp extends StatelessWidget {
                 },
               ),
               GoRoute(
-                path: '/search',
-                builder: (context, state) => const SearchScreen(),
-              ),
-              GoRoute(
                 path: '/recipe',
                 builder: (context, state) => const RecipeScreen(),
               ),
@@ -95,20 +66,22 @@ class MyApp extends StatelessWidget {
                 },
               ),
               GoRoute(
+                path: '/detail/post/:postId',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['postId']!);
+                  return PostDetailScreen(postId: id);
+                },
+              ),
+              GoRoute(
+                path: '/detail/recipe/:recipeId',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['recipeId']!);
+                  return RecipeDetailScreen(recipeId: id);
+                },
+              ),
+              GoRoute(
                 path: '/forum',
                 builder: (context, state) => const ForumScreen(),
-              ),
-              GoRoute(
-                path: '/minis',
-                builder: (context, state) => const MiniScreen(),
-              ),
-              GoRoute(
-                path: '/notifications',
-                builder: (context, state) => const NotificationScreen(),
-              ),
-              GoRoute(
-                path: '/messages',
-                builder: (context, state) => const MessageScreen(),
               ),
               GoRoute(
                 path: '/forum/post',

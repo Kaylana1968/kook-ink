@@ -15,6 +15,13 @@ class FeedUserHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: userId == null ? null : () => context.go("/profile/$userId"),
+      mouseCursor: userId == null
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
+      hoverColor: Colors.transparent,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      focusColor: Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
@@ -32,8 +39,6 @@ class FeedUserHeader extends StatelessWidget {
                 fontSize: 14,
               ),
             ),
-            const Spacer(),
-            const Icon(Icons.more_horiz),
           ],
         ),
       ),

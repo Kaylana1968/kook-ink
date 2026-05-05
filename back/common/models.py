@@ -162,6 +162,7 @@ class RecipeLike(Base):
 
     user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
     recipe_id = Column(Integer, ForeignKey("recipe.id"), primary_key=True)
+    created_at = Column(DateTime, default=func.now(), server_default=func.now())
 
 
 class MiniLike(Base):
@@ -176,6 +177,7 @@ class PostLike(Base):
 
     user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
     post_id = Column(Integer, ForeignKey("post.id"), primary_key=True)
+    created_at = Column(DateTime, default=func.now(), server_default=func.now())
 
 
 class ForumPostResponse(Base):

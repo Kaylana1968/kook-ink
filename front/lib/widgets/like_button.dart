@@ -5,12 +5,14 @@ class LikeButton extends StatefulWidget {
   final String type;
   final int itemId;
   final bool compact;
+  final int? initialCount;
 
   const LikeButton({
     super.key,
     required this.type,
     required this.itemId,
     this.compact = false,
+    this.initialCount,
   });
 
   @override
@@ -25,6 +27,7 @@ class _LikeButtonState extends State<LikeButton> {
   @override
   void initState() {
     super.initState();
+    count = widget.initialCount ?? 0;
     _loadLike();
   }
 
@@ -56,29 +59,22 @@ class _LikeButtonState extends State<LikeButton> {
     });
 
     try {
-      final success = liked
+      final data = liked
           ? await LikeApiService.unlike(widget.type, widget.itemId)
           : await LikeApiService.like(widget.type, widget.itemId);
 
       if (!mounted) return;
 
-      if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Impossible de modifier le like")),
-        );
-        return;
-      }
-
       setState(() {
-        liked = !liked;
-        count += liked ? 1 : -1;
+        liked = data["liked"] == true;
+        count = data["count"] is int ? data["count"] as int : 0;
         if (count < 0) count = 0;
       });
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur like : $e")),
+        SnackBar(content: Text("Impossible de modifier le like : $e")),
       );
     } finally {
       if (mounted) {

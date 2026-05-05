@@ -49,7 +49,12 @@ class ProfileHeader extends StatelessWidget {
                       children: [
                         const CircleAvatar(
                           radius: 40,
-                          child: Icon(Icons.person, size: 40),
+                          backgroundColor: Colors.orange,
+                          child: Icon(
+                            Icons.person,
+                            size: 40,
+                            color: Colors.white,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -61,14 +66,6 @@ class ProfileHeader extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (description.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              description,
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -79,8 +76,9 @@ class ProfileHeader extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         PostCountWidget(
-                            postFuture: postFuture,
-                            recipeFuture: recipeFuture),
+                          postFuture: postFuture,
+                          recipeFuture: recipeFuture,
+                        ),
                         const SizedBox(width: 18),
                         StatWidget(
                           value: followers.toString(),
@@ -96,14 +94,29 @@ class ProfileHeader extends StatelessWidget {
                   ),
                 ],
               ),
+              if (description.isNotEmpty)
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      description,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ),
               if (onToggleFollow != null)
-                Align(
-                  alignment: Alignment.centerRight,
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
                   child: SizedBox(
                     height: 32,
                     child: FilledButton(
                       onPressed: isFollowLoading ? null : onToggleFollow,
                       style: FilledButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black87,
+                        disabledBackgroundColor: Colors.grey.shade100,
+                        disabledForegroundColor: Colors.grey.shade500,
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         textStyle: const TextStyle(fontSize: 13),
                       ),
