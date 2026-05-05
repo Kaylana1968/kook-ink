@@ -153,16 +153,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
       return "Le nombre de personnes est invalid";
     }
 
-    final steps = stepControllers
-        .map((controller) => controller.text.trim())
-        .where((step) => step.isNotEmpty)
-        .toList();
-
-    if (steps.isEmpty) return "Ajoutez au moins une étape";
-    if (stepControllers.any((c) => c.text.trim().isEmpty)) {
-      return "Supprimez les étapes vides";
-    }
-
     if (ingredients.any((ingredient) => ingredient.name.text.trim().isEmpty)) {
       return "Nommez tous les ingrédients";
     }

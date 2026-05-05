@@ -72,9 +72,7 @@ class RecipeStepsSection extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
-                onPressed: stepControllers.length > 1
-                    ? () => onRemoveStep(index)
-                    : null,
+                onPressed: () => onRemoveStep(index),
               ),
             ],
           );

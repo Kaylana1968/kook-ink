@@ -22,10 +22,10 @@ class RecipeCreate(BaseModel):
     person: int
     image_link: Optional[str] = None
     video_link: Optional[str] = None
-    steps: List[str] = Field(..., min_length=1)
+    steps: List[str] = Field(default_factory=list)
     ingredients: List[IngredientCreate] = Field(..., min_length=1)
 
-    @field_validator("steps", "ingredients")
+    @field_validator("ingredients")
     @classmethod
     def lists_must_not_be_empty(cls, v: list):
         if len(v) == 0:

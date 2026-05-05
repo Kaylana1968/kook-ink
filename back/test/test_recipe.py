@@ -25,6 +25,30 @@ def test_upload_recipe_ok_when_everything_ok():
     assert response.status_code == 200
 
 
+def test_upload_recipe_ok_when_steps_is_empty():
+    token = utils.generate_token(fake_user)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    recipe_without_steps = fake_recipe.copy()
+    recipe_without_steps["steps"] = []
+
+    response = client.post("/recipe", json=recipe_without_steps, headers=headers)
+
+    assert response.status_code == 200
+
+
+def test_upload_recipe_ok_when_image_is_missing():
+    token = utils.generate_token(fake_user)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    recipe_without_image = fake_recipe.copy()
+    recipe_without_image.pop("image_link", None)
+
+    response = client.post("/recipe", json=recipe_without_image, headers=headers)
+
+    assert response.status_code == 200
+
+
 def test_upload_recipe_not_ok_when_no_headers_passed():
     response = client.post("/recipe", json=fake_recipe)
 
@@ -95,13 +119,6 @@ def test_upload_recipe_not_ok_when_steps_is_invalid():
     headers = {"Authorization": f"Bearer {token}"}
 
     recipe_with_invalid_steps = fake_recipe.copy()
-
-    # Check when steps is empty
-    recipe_with_invalid_steps["steps"] = []
-
-    response = client.post("/recipe", json=recipe_with_invalid_steps, headers=headers)
-
-    assert response.status_code == 422
 
     # Check when steps has empty entries
     recipe_with_invalid_steps["steps"] = ["step1", " "]
