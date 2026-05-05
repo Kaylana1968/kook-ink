@@ -222,6 +222,15 @@ def delete_post(
         raise HTTPException(status_code=403, detail="Not allowed to delete this post")
 
     try:
+        db.query(models.PostComment).filter(
+            models.PostComment.post_id == post_id
+        ).delete(synchronize_session=False)
+        db.query(models.PostLike).filter(
+            models.PostLike.post_id == post_id
+        ).delete(synchronize_session=False)
+        db.query(models.PostCategory).filter(
+            models.PostCategory.post_id == post_id
+        ).delete(synchronize_session=False)
         db.delete(post)
         db.commit()
         return {"message": "Post supprimé"}

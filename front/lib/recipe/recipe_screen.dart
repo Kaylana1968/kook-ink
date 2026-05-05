@@ -95,7 +95,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
           ingredients = recipeIngredients.map((item) {
             final input = IngredientInput();
             input.name.text = item['name']?.toString() ?? '';
-            input.quantity.text = item['quantity']?.toString() ?? '';
+            input.quantity.text =
+                IngredientInput.formatQuantity(item['quantity']);
             input.unit = item['unit']?.toString() ?? 'u';
             return input;
           }).toList();
@@ -162,7 +163,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     }
     if (ingredients.any((ingredient) =>
         ingredient.quantity.text.trim().isEmpty ||
-        int.tryParse(ingredient.quantity.text) == null)) {
+        !IngredientInput.isValidQuantity(ingredient.quantity.text))) {
       return "La quantité d'un ingrédient est invalide";
     }
     if (ingredients.isEmpty) {

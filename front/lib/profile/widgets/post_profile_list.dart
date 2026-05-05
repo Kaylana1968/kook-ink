@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front/home/widgets/comment_bottom_sheet.dart';
+import 'package:front/home/widgets/feed_user_header.dart';
 import 'package:front/widgets/like_button.dart';
 import 'package:go_router/go_router.dart';
 import '../services/profile_api_service.dart';
@@ -8,12 +9,14 @@ class PostProfileCard extends StatefulWidget {
   final Map<String, dynamic> post;
   final Future<void> Function() onRefresh;
   final bool isMyPost;
+  final String username;
 
   const PostProfileCard({
     super.key,
     required this.post,
     required this.onRefresh,
     required this.isMyPost,
+    required this.username,
   });
 
   @override
@@ -47,7 +50,7 @@ class _PostProfileCardState extends State<PostProfileCard> {
 
   Future<void> _deletePost() async {
     final postId = widget.post['id'];
-    if (postId == null) return;
+    if (postId is! int) return;
 
     final success = await ProfileApiService.deletePost(postId);
 
@@ -55,6 +58,14 @@ class _PostProfileCardState extends State<PostProfileCard> {
       await widget.onRefresh();
       debugPrint("Post supprimé");
     } else {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Impossible de supprimer le post"),
+          backgroundColor: Colors.red,
+        ),
+      );
       debugPrint("Erreur suppression post");
     }
   }
@@ -126,10 +137,13 @@ class _PostProfileCardState extends State<PostProfileCard> {
     final postId = widget.post['id'];
     final likesCount =
         int.tryParse(widget.post['likes_count']?.toString() ?? '') ?? 0;
+    final description =
+        widget.post['description']?.toString() ?? 'Post sans description';
+    final ownerName = _ownerName(widget.post, widget.username);
+    final ownerId = widget.post['user_id'];
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
@@ -137,112 +151,127 @@ class _PostProfileCardState extends State<PostProfileCard> {
           color: Colors.grey.shade200,
         ),
       ),
-      child: Column(
+      child: Stack(
         children: [
-          InkWell(
-            onTap: postId is int
-                ? () => context.push('/detail/post/$postId')
-                : null,
-            mouseCursor: postId is int
-                ? SystemMouseCursors.click
-                : SystemMouseCursors.basic,
-            hoverColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            child: Column(
-              children: [
-                if (imageUrl.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        imageUrl,
-                        height: 180,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const SizedBox(),
-                      ),
-                    ),
-                  ),
-                ListTile(
-                  leading: const CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Colors.orange,
-                    child: Icon(Icons.person, size: 18, color: Colors.white),
-                  ),
-                  title: Text(widget.post['description'] ?? ''),
-                  trailing: widget.isMyPost
-                      ? PopupMenuButton<String>(
-                          onSelected: (value) async {
-                            if (value == 'edit') {
-                              await _editPost(context);
-                            }
-
-                            if (value == 'delete') {
-                              await _deletePost();
-                            }
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                              value: 'edit',
-                              child: Text('Modifier'),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Text('Supprimer'),
-                            ),
-                          ],
-                        )
-                      : null,
-                ),
-              ],
-            ),
-          ),
-          if (postId is int)
-            Padding(
-              padding: const EdgeInsets.only(left: 64, right: 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FeedUserHeader(username: ownerName, userId: ownerId),
+              InkWell(
+                onTap: postId is int
+                    ? () => context.push('/detail/post/$postId')
+                    : null,
+                mouseCursor: postId is int
+                    ? SystemMouseCursors.click
+                    : SystemMouseCursors.basic,
+                hoverColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                focusColor: Colors.transparent,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    LikeButton(
-                      type: 'post',
-                      itemId: postId,
-                      compact: true,
-                      initialCount: likesCount,
-                    ),
-                    const SizedBox(width: 12),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () => _openComments(postId),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.mode_comment_outlined,
-                              size: 18,
-                              color: Colors.grey[700],
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _commentLabel(_commentsCount),
-                              style: TextStyle(
-                                color: Colors.grey[700],
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        description,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
+                    if (imageUrl.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            imageUrl,
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const SizedBox(),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
+              ),
+              if (postId is int)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+                  child: Row(
+                    children: [
+                      LikeButton(
+                        type: 'post',
+                        itemId: postId,
+                        compact: true,
+                        initialCount: likesCount,
+                      ),
+                      const SizedBox(width: 12),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => _openComments(postId),
+                        mouseCursor: SystemMouseCursors.click,
+                        hoverColor: Colors.transparent,
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        focusColor: Colors.transparent,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.mode_comment_outlined,
+                                size: 18,
+                                color: Colors.black87,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _commentLabel(_commentsCount),
+                                style: const TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          if (widget.isMyPost)
+            Positioned(
+              top: 2,
+              right: 4,
+              child: PopupMenuButton<String>(
+                onSelected: (value) async {
+                  if (value == 'edit') {
+                    await _editPost(context);
+                  }
+
+                  if (value == 'delete') {
+                    await _deletePost();
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Text('Modifier'),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text('Supprimer'),
+                  ),
+                ],
               ),
             ),
         ],
@@ -253,5 +282,19 @@ class _PostProfileCardState extends State<PostProfileCard> {
   String _commentLabel(int count) {
     if (count == 0) return '0';
     return count.toString();
+  }
+
+  String _ownerName(Map<String, dynamic> post, String profileUsername) {
+    final postUsername = post['username']?.toString().trim();
+    if (postUsername != null && postUsername.isNotEmpty) {
+      return postUsername;
+    }
+
+    final fallbackUsername = profileUsername.trim();
+    if (fallbackUsername.isNotEmpty) {
+      return fallbackUsername;
+    }
+
+    return 'Utilisateur';
   }
 }

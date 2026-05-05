@@ -63,7 +63,7 @@ class RecipeIngredientsSection extends StatelessWidget {
                 child: RecipeTextField(
                   label: "Quantité *",
                   controller: ingredient.quantity,
-                  type: TextInputType.number,
+                  type: const TextInputType.numberWithOptions(decimal: true),
                   hint: "Ex: 3",
                 ),
               ),

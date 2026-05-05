@@ -386,7 +386,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           itemCount: posts.length,
           itemBuilder: (context, index) {
             return PostProfileCard(
-                post: posts[index], onRefresh: _refresh, isMyPost: isMyProfile);
+              post: posts[index],
+              onRefresh: _refresh,
+              isMyPost: isMyProfile,
+              username: username,
+            );
           },
         );
       },

@@ -36,20 +36,20 @@ class Header extends StatelessWidget {
               ),
             ],
           ),
-          /*Row(
+          Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.notifications_none,
                     size: 30, color: Color.fromARGB(255, 70, 70, 70)),
                 onPressed: () => context.go("/notifications"),
               ),
-              IconButton(
+              /* IconButton(
                 icon: const Icon(Icons.mode_comment_outlined,
                     size: 25, color: Color.fromARGB(255, 70, 70, 70)),
                 onPressed: () => context.go("/messages"),
-              ),
+              ),*/
             ],
-          ),*/
+          ),
         ],
       ),
     );
