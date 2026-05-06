@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         if (snapshot.hasError) {
-          return _buildErrorState(snapshot.error.toString());
+          return _buildErrorState("Une erreur est survenu, vérifiez votre connexion ou ressayez plus tard");
         }
 
         final feed = snapshot.data ?? [];

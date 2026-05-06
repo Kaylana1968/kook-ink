@@ -47,7 +47,7 @@ class _PostQuestionScreenState extends State<PostQuestionScreen> {
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
-        showAppFeedback(context, 'Impossible de publier la question : $e',
+        showAppFeedback(context, "Erreur lors de l'envoie de votre question, vérifiez votre connexion ou ressayez plus tard",
             isError: true);
       }
     } finally {

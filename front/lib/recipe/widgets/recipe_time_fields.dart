@@ -32,6 +32,7 @@ class RecipeTimeFields extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           TextField(
+            maxLength: 5,
             controller: controller,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(

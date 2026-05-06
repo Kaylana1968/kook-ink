@@ -84,7 +84,7 @@ class _ForumScreenState extends State<ForumScreen> {
                     return const Center(
                         child: CircularProgressIndicator(color: orangeKook));
                   } else if (snapshot.hasError) {
-                    return Center(child: Text("Erreur : ${snapshot.error}"));
+                    return Center(child: Text("Impossible de charger la page forum pour le moment, vérifiez votre connexion ou ressayez plus tard"));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return const Center(
                         child: Text("Aucune question pour le moment."));

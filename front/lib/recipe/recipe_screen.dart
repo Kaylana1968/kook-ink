@@ -230,7 +230,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      _showError("Erreur upload image : $e");
+      _showError("Erreur upload image : Vérifiez votre connexion ou ressayez plus tard");
     } finally {
       if (mounted) setState(() => isUploadingImage = false);
     }

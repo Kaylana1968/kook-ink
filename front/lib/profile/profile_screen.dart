@@ -162,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         showAppFeedback(
           context,
-          "Impossible de modifier l'abonnement : $e",
+          "Impossible de modifier l'abonnement : Vérifiez votre connexion ou ressayez plus tard",
           isError: true,
         );
       }
@@ -205,7 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (snapshot.hasError) {
                 return SizedBox(
                   height: 220,
-                  child: Center(child: Text(snapshot.error.toString())),
+                  child: Center(child: Text("Erreur lors de l'affichage des vos followers / suivi(e)s, Vérifiez votre connexion ou ressayez plus tard")),
                 );
               }
 
@@ -354,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               } catch (e) {
                 showAppFeedback(
                   context,
-                  "Erreur réseau pendant la création du post : $e",
+                  "Erreur réseau pendant la création du post",
                   isError: true,
                 );
               } finally {
@@ -389,7 +389,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 showAppFeedback(
                   context,
-                  "Erreur upload image : $e",
+                  "Erreur upload image : Vérifiez votre connexion ou ressayez plus tard",
                   isError: true,
                 );
               } finally {
