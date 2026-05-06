@@ -42,15 +42,15 @@ class Footer extends StatelessWidget {
             onPressed: () => context.go("/search"),
           ),*/
           IconButton(
+            icon: Icon(Icons.web_stories_outlined,
+                size: 30, color: getIconColor("/minis")),
+            onPressed: () => context.go("/minis"),
+          ),
+          IconButton(
             icon: Icon(Icons.add_outlined,
                 size: 30, color: getIconColor("/recipe")),
             onPressed: () => context.go("/recipe"),
           ),
-          /*IconButton(
-            icon: Icon(Icons.web_stories_outlined,
-                size: 30, color: getIconColor("/minis")),
-            onPressed: () => context.go("/minis"),
-          ),*/
           IconButton(
             icon: Icon(Icons.forum_outlined,
                 size: 30, color: getIconColor("/forum")),
