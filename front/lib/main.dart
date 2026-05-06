@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'home/home_screen.dart';
 import 'home/post_detail_screen.dart';
 import 'home/recipe_detail_screen.dart';
+import 'package:front/minis/mini_screen.dart';
 import 'authentification/login_screen.dart';
 import 'profile/profile_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -56,6 +57,10 @@ class MyApp extends StatelessWidget {
               GoRoute(
                 path: '/recipe',
                 builder: (context, state) => const RecipeScreen(),
+              ),
+              GoRoute(
+                path: '/minis',
+                builder: (context, state) => const VideoScrollPage(),
               ),
               GoRoute(
                 path: '/recipe/:recipeId',
