@@ -69,6 +69,11 @@ def ensure_like_created_at_columns():
                 )
 
 
+@app.get("/hello-robin")
+def hello_robin():
+    return {"message": "Salut Robin ! 20/20 ? 👀"}
+
+
 @app.get("/users")
 def read_user(db: Session = Depends(database.get_db)):
     user = db.query(models.User).first()
